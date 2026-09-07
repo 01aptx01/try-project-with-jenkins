@@ -1,1 +1,5 @@
-# try-project-with-jenkins
+# Meridian
+
+เอกสารหลักของโครงงานอยู่ที่ [docs/context/README.md](docs/context/README.md) ซึ่งเป็นชุดเอกสารฉบับปัจจุบันสำหรับการนำเสนอและการพัฒนา
+
+ไฟล์ `meridian_project_context.md` เป็นเอกสารต้นฉบับที่เก็บไว้เพื่ออ้างอิงประวัติและไม่ใช่แหล่งข้อกำหนดหลักหลังจากนี้

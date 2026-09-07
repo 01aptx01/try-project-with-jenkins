@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.local
+
+# Large design assets (exceeds GitHub 100MB limit)
+*.pdf
+docs/*.pdf
+
+# OS files
+Thumbs.db
+.DS_Store
