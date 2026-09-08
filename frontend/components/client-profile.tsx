@@ -8,6 +8,7 @@ import { FinancialProfilePanel, GoalsPanel } from './financial-details.js';
 import { HealthPanel } from './health-panel.js';
 import { SummaryPanel } from './summary-panel.js';
 import { RecommendationCard } from './recommendation-card.js';
+import { FamilySection } from './family-section.js';
 import type { ClientProfileSnapshotResponse } from '../lib/api-contracts.js';
 
 export interface ClientProfileProps {
@@ -278,6 +279,9 @@ export function ClientProfile({ clientId }: ClientProfileProps) {
 
           {/* Goals Panel */}
           <GoalsPanel primaryGoal={data.primaryGoal} goals={data.goals} />
+
+          {/* Family Network (Lazy loaded on-demand) */}
+          <FamilySection clientId={data.client.id} defaultExpanded={false} />
         </div>
       )}
     </div>

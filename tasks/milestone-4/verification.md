@@ -426,6 +426,45 @@
 - [x] Frontend unit tests (80/80 passed), Workspace unit tests (251/251 passed), Lint (0 errors), Typecheck (0 errors), Build (clean), Audit (0 vulnerabilities)
 - [x] Ready to proceed to Checkpoint E (`M4-013` through `M4-015`)
 
+---
+
+## 17. M4-013 Verification Record: On-Demand Family Loading & Independent State
+
+### 17.1 Artifacts Delivered
+- Family graph hook: `frontend/hooks/use-family-graph.ts`
+  - In-memory session cache (`familyMemoryCache`) avoiding redundant network calls.
+  - Abort / late-response protection via active client ID reference tracking.
+  - Independent error handling: 404/403 treated as not found, 401 invalidates cache and triggers session reauth, 5xx supports retry.
+  - Identification of primary-only / zero-relatives state.
+- Family section component: `frontend/components/family-section.tsx`
+  - Expandable / collapsible trigger ("View Family Network" / "Collapse Family Network").
+  - Lazy fetching: zero network requests until opened.
+  - Loading skeleton, Not Found alert, Error banner with functional Retry button.
+  - Primary-only state rendering clear notice when client has zero visible relatives.
+  - Relatives list displaying member name, relationship badge (PARENT, CHILD, SPOUSE, SIBLING), and direct profile link.
+- Integration:
+  - `frontend/components/client-profile.tsx`: embedded with `defaultExpanded={false}` guaranteeing zero prefetch during profile snapshot mount. Failure of family network has zero impact on core profile snapshot sections.
+  - `frontend/app/(authenticated)/clients/[id]/family/page.tsx`: dedicated route rendering FamilySection with breadcrumb back to profile.
+- Unit tests: `frontend/tests/family-section.test.tsx` (7 test cases)
+  - Zero preloading verification on initial render.
+  - Lazy load trigger, loading state, and relationship rendering.
+  - In-memory cache reuse upon collapse and re-expand.
+  - Primary-only / zero relatives state.
+  - Error banner and retry execution.
+  - 404 client not found clean handling.
+  - Client ID route switch with stale data purge and late response rejection.
+
+### 17.2 Test Results
+- **Command:** `npm run test:unit -w @meridian/web`
+- **Output:** 87 tests passed across 13 test files (`api-client.test.ts` 15, `financial-details.test.tsx` 11, `client-filters.test.tsx` 10, `recommendation-summary.test.tsx` 8, `family-section.test.tsx` 7, `client-pagination.test.tsx` 6, `login.test.tsx` 6, `morning-action-plan.test.tsx` 5, `health-panel.test.tsx` 5, `client-list.test.tsx` 5, `session-shell.test.tsx` 4, `client-profile.test.tsx` 4, `home.test.tsx` 1)
+- **All Workspace Unit Tests:** 258 tests passed across 35 test files (Backend 171 tests, Frontend 87 tests)
+- **Lint & Typecheck:** 0 errors across `@meridian/api` and `@meridian/web`
+- **Security Audit:** `npm audit` returned 0 vulnerabilities
+- **Production Build:** `npm run build` cleanly compiled all routes including `ƒ /clients/[id]/family`
+
+**M4-013 Verdict:** **DONE / PASS**
+
+
 
 
 

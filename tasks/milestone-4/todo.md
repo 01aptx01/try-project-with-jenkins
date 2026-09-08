@@ -387,7 +387,7 @@
 
 ## M4-013 — โหลด Family เฉพาะเมื่อเปิดดู
 
-**Status:** TODO  
+**Status:** DONE  
 **Scope:** M  
 **Requirements:** FR-06, FR-11, US-08, BR-10
 
@@ -395,14 +395,14 @@
 
 **Acceptance criteria:**
 
-- [ ] มีปุ่ม/section Family Network ที่เรียก /api/clients/:id/family ครั้งแรกเมื่อเปิด; Profile ไม่ถูก refetch เมื่อเปิด graph และไม่ fetch recursive/per-node endpoints
-- [ ] Graph มี loading/error+Retry และ primary-only/no-visible-relatives state; 401 ส่งให้ session flow, 404 ไม่คงข้อมูล Family เก่า, graph failure ไม่ทำให้ snapshot ส่วนอื่นหาย
-- [ ] Cache เฉพาะ memory ของ current Client/current session; ID หรือ session เปลี่ยนต้อง clear/abort และปฏิเสธ late response; เปิดซ้ำหลัง success ใช้ผลเดิมจน refresh หรือ unmount
+- [x] มีปุ่ม/section Family Network ที่เรียก /api/clients/:id/family ครั้งแรกเมื่อเปิด; Profile ไม่ถูก refetch เมื่อเปิด graph และไม่ fetch recursive/per-node endpoints
+- [x] Graph มี loading/error+Retry และ primary-only/no-visible-relatives state; 401 ส่งให้ session flow, 404 ไม่คงข้อมูล Family เก่า, graph failure ไม่ทำให้ snapshot ส่วนอื่นหาย
+- [x] Cache เฉพาะ memory ของ current Client/current session; ID หรือ session เปลี่ยนต้อง clear/abort และปฏิเสธ late response; เปิดซ้ำหลัง success ใช้ผลเดิมจน refresh หรือ unmount
 
 **Verification:**
 
-- [ ] focused tests tests/family-section.test.tsx ตรวจ lazy request count, retries, route switch และ no relatives
-- [ ] บันทึก evidence ใน verification record และอัปเดตสถานะตามผลจริง
+- [x] focused tests tests/family-section.test.tsx ตรวจ lazy request count, retries, route switch และ no relatives
+- [x] บันทึก evidence ใน verification record (`tasks/milestone-4/verification.md`) และอัปเดตสถานะตามผลจริง
 
 **Dependencies:** M4-009
 
@@ -411,6 +411,7 @@
 - `frontend/components/family-section.tsx`
 - `frontend/hooks/use-family-graph.ts`
 - `frontend/components/client-profile.tsx`
+- `frontend/app/(authenticated)/clients/[id]/family/page.tsx`
 - `frontend/tests/family-section.test.tsx`
 
 <a id="m4-014"></a>
