@@ -53,32 +53,32 @@ Login limiter ใช้ `express-rate-limit` memory store ของ API instance
 | `GET /api/auth/me` | current RM `{id,name,role}` |
 | `GET /api/clients` | `search`, `priority`, `health`, `page` (default 1), `pageSize` (default 20, max 100); returns owned Client only |
 | `GET /api/clients/:id` | owned Client Profile snapshot: client, financialProfile, goals, primaryGoal, health, recommendation, summary และ asOfDate |
-| `GET /api/dashboard/morning-action-plan` | ordered owned Client cards with Health status, Priority, NBA reason |
+| `GET /api/dashboard/morning-action-plan` | ordered owned Client cards with pagination `{items: ClientCard[], page, pageSize, total, asOfDate}` |
 | `GET /api/clients/:id/health` | contract and null behavior in [04-business-rules.md](04-business-rules.md#br-08-insufficient-data) (BR-08) |
 | `GET /api/clients/:id/recommendations` | one `{action, reason, priority, rule}` object ([BR-04](04-business-rules.md#br-04-priority-and-emergency-liquidity-rule), [BR-05](04-business-rules.md#br-05-recommendation-explainability)); plural path remains for compatibility |
 | `GET /api/clients/:id/family` | `{nodes,edges}` filtered by RM visibility |
 | `GET /api/clients/:id/summary` | template-generated `{summary, health, primaryGoal, recommendation}` ([BR-06](04-business-rules.md#br-06-client-summary)) |
 | `GET /health` | unauthenticated `{status:"ok", version:"<commit-sha>"}` เมื่อ API และ database ready; ไม่พร้อมคืน `503` |
 
-Client List response shape is `{items, page, pageSize, total}` Search is partial and case-insensitive against display name and `customerCode`; priority values คือ `HIGH`, `MEDIUM`, `LOW`; health values คือ `GOOD`, `MODERATE`, `AT_RISK`, `INSUFFICIENT_DATA` JSON ใช้ camelCase, วันที่เป็น `YYYY-MM-DD`, monetary values เป็น decimal string และ score เป็น number หรือ `null` Response ที่มีข้อมูล RM/Client ตั้ง `Cache-Control: no-store`
+Client List response shape is `{items, page, pageSize, total}`; Morning Action Plan uses the same query and pagination shape returning `{items, page, pageSize, total, asOfDate}`. Search is partial and case-insensitive against display name and `customerCode`; priority values คือ `HIGH`, `MEDIUM`, `LOW`; health values คือ `GOOD`, `MODERATE`, `AT_RISK`, `INSUFFICIENT_DATA` JSON ใช้ camelCase, วันที่เป็น `YYYY-MM-DD`, monetary values เป็น decimal string และ score เป็น number หรือ `null` Response ที่มีข้อมูล RM/Client ตั้ง `Cache-Control: no-store`
 
 ### Status and wire contract matrix
 
 | Endpoint | Success example / required fields | Expected error status |
 |---|---|---|
-| `POST /api/auth/login` | `200`, `{user:{id,name,role}}` and cookie | `400` invalid body, `401` invalid credential, `403` Origin, `429` limit |
+| `POST /api/auth/login` | `200`, `{user:{id,name,role}}` and cookie | `400` invalid body, `401` invalid credential, `403` Origin, `413` size, `415` media type, `429` limit, `503` db |
 | `POST /api/auth/logout` | `204`, clears `meridian_session` | `403` Origin |
-| `GET /api/auth/me` | `200`, `{id,name,role}` | `401` invalid session |
-| `GET /api/clients` | `200`, `{items: ClientCard[],page:number,pageSize:number,total:number}` | `400` invalid query, `401` session |
-| `GET /api/clients/:id` | `200`, Profile snapshot below | `401` session, `404` missing/not-owned Client, `503` dependency |
-| `GET /api/dashboard/morning-action-plan` | `200`, `{items: ActionPlanCard[],asOfDate}` | `401` session, `503` dependency |
-| `GET /api/clients/:id/health` | `200`, `HealthResult` with nullable score/classification | `401`, `404`, `503` |
-| `GET /api/clients/:id/recommendations` | `200`, `{action,reason,priority,rule}` | `401`, `404`, `503` |
-| `GET /api/clients/:id/family` | `200`, `{nodes:FamilyNode[],edges:FamilyEdge[]}` | `401`, `404`, `503` |
-| `GET /api/clients/:id/summary` | `200`, `{summary,health,primaryGoal,recommendation,asOfDate}` | `401`, `404`, `503` |
+| `GET /api/auth/me` | `200`, `{id,name,role}` | `401` invalid session, `503` db |
+| `GET /api/clients` | `200`, `{items: ClientCard[], page: number, pageSize: number, total: number}` | `400` invalid query, `401` session, `503` dependency |
+| `GET /api/clients/:id` | `200`, Profile snapshot below | `400` malformed id, `401` session, `404` missing/not-owned Client, `503` dependency |
+| `GET /api/dashboard/morning-action-plan` | `200`, `{items: ClientCard[], page: number, pageSize: number, total: number, asOfDate: string}` | `400` invalid query, `401` session, `503` dependency |
+| `GET /api/clients/:id/health` | `200`, `HealthResult` with nullable score/classification | `400` malformed id, `401` session, `404` not found, `503` dependency |
+| `GET /api/clients/:id/recommendations` | `200`, `{action,reason,priority,rule}` | `400` malformed id, `401` session, `404` not found, `503` dependency |
+| `GET /api/clients/:id/family` | `200`, `{nodes:FamilyNode[],edges:FamilyEdge[]}` | `400` malformed id, `401` session, `404` not found, `503` dependency |
+| `GET /api/clients/:id/summary` | `200`, `{summary,health,primaryGoal,recommendation,asOfDate}` | `400` malformed id, `401` session, `404` not found, `503` dependency |
 | `GET /health` | `200`, `{status:"ok",version:"<commit-sha>"}` | `503` API/database unavailable |
 
-`ClientCard` contains `id`, `customerCode`, display name, `riskLevel`, `health` and `recommendation`; `HealthResult` contains nullable `score` and `classification`, a `status` of `COMPLETE` or `INSUFFICIENT_DATA`, `missingFields` and complete/null breakdown fields. `FamilyNode` has `id`, label and type; `FamilyEdge` has `id`, source, target and relationship type. Any error uses the common error object above; no endpoint returns a token or sensitive stack trace
+`ClientCard` contains `id`, `customerCode`, `displayName`, `riskLevel`, `health` and `recommendation`; `HealthResult` contains nullable `score` and `classification`, a `status` of `COMPLETE` or `INSUFFICIENT_DATA`, `missingFields` and complete/null breakdown fields. `FamilyNode` has `id`, label and type; `FamilyEdge` has `id`, source, target and relationship type. Any error uses the common error object `{error:{code,message,details?}}`; no endpoint returns a token, password hash, or sensitive stack trace.
 
 ## Profile snapshot and response examples
 
@@ -86,13 +86,68 @@ Client List response shape is `{items, page, pageSize, total}` Search is partial
 
 ```json
 {
-  "client": { "id": "client-1", "customerCode": "C-001", "riskLevel": "MEDIUM" },
-  "financialProfile": { "monthlyIncome": "80000.00", "monthlyExpense": "35000.00" },
-  "goals": [{ "id": "goal-1", "startDate": "2026-01-01", "targetDate": "2030-01-01" }],
-  "primaryGoal": { "id": "goal-1" },
-  "health": { "score": 74, "classification": "MODERATE", "status": "COMPLETE" },
-  "recommendation": { "action": "Routine Financial Review", "priority": "LOW", "rule": "BR-04.6" },
-  "summary": "…",
+  "client": {
+    "id": "11111111-1111-4111-8111-111111111111",
+    "customerCode": "C-001",
+    "firstName": "Somchai",
+    "lastName": "Prasert",
+    "displayName": "Somchai Prasert",
+    "riskLevel": "MEDIUM",
+    "age": 42,
+    "occupation": "Engineer"
+  },
+  "financialProfile": {
+    "id": "profile-1",
+    "monthlyIncome": "100000.00",
+    "monthlyExpense": "45000.00",
+    "liquidAssets": "300000.00",
+    "totalAssets": "2500000.00",
+    "totalDebt": "800000.00",
+    "savings": "200000.00",
+    "investments": "500000.00"
+  },
+  "goals": [
+    {
+      "id": "goal-1",
+      "goalType": "RETIREMENT",
+      "targetAmount": "5000000.00",
+      "currentAmount": "500000.00",
+      "startDate": "2024-01-01",
+      "targetDate": "2040-01-01"
+    }
+  ],
+  "primaryGoal": {
+    "id": "goal-1",
+    "goalType": "RETIREMENT",
+    "targetAmount": "5000000.00",
+    "currentAmount": "500000.00",
+    "startDate": "2024-01-01",
+    "targetDate": "2040-01-01",
+    "expectedAmount": "450000.00",
+    "progress": 1,
+    "isBehind": false,
+    "isCompleted": false
+  },
+  "health": {
+    "score": 82,
+    "classification": "GOOD",
+    "status": "COMPLETE",
+    "missingFields": [],
+    "breakdown": {
+      "liquidity": 25,
+      "debt": 20,
+      "savings": 20,
+      "goals": 8,
+      "investment": 9
+    }
+  },
+  "recommendation": {
+    "action": "Routine Financial Review",
+    "reason": "All financial health indicators are in healthy ranges",
+    "priority": "LOW",
+    "rule": "BR-04.6"
+  },
+  "summary": "สุขภาพทางการเงินโดยรวมอยู่ในเกณฑ์ดี มีเงินสำรองฉุกเฉินและภาระหนี้สินในระดับที่เหมาะสม แนะนำให้ติดตามเป้าหมายการเงินตามรอบปกติ",
   "asOfDate": "2026-09-08"
 }
 ```

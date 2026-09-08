@@ -6,29 +6,31 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 
 ## M3-001 — ตรวจ prerequisite และกำหนด API contracts
 
-**Status:** TODO
+**Status:** DONE
 
 **Description:**
 ตรวจ baseline หลังแก้ audit จาก commit `b632b03` และจัดทำ types/examples ที่ endpoints ใช้ร่วมกัน เพื่อเป็น contract ตั้งต้นสำหรับทุก endpoints ใน Milestone 3
 
 **Acceptance criteria:**
-- [ ] บันทึก commit, Git status และผลตรวจ M1–M2 โดยเฉพาะ JSON serialization, Goal rounding, Summary และ readiness; regression ที่พบต้องแก้ในงาน prerequisite ก่อนเริ่ม ticket ที่พึ่งพา
-- [ ] กำหนด response types ครบทุก endpoint รวม `ClientCard`, Profile snapshot, Sub-endpoints และ Family Graph; ปรับเอกสาร Dashboard ให้รองรับ pagination ตามข้อตกลง (`{items, page, pageSize, total, asOfDate}`)
-- [ ] ตัวอย่าง success/error มี fields ครบและค่าที่สอดคล้องกัน ไม่ใช้ตัวอย่างย่อเป็น response contract
-- [ ] รายละเอียด types: `ClientCard` ใช้ `id`, `customerCode`, `displayName`, `riskLevel`, `health`, `recommendation`; Profile เพิ่ม personal fields ได้แก่ `firstName`, `lastName`, `age`, `occupation` โดยสองรายการหลัง nullable และไม่ส่งข้อมูล User/credentials ที่ไม่จำเป็น
+- [x] บันทึก commit, Git status และผลตรวจ M1–M2 โดยเฉพาะ JSON serialization, Goal rounding, Summary และ readiness; regression ที่พบต้องแก้ในงาน prerequisite ก่อนเริ่ม ticket ที่พึ่งพา
+- [x] กำหนด response types ครบทุก endpoint รวม `ClientCard`, Profile snapshot, Sub-endpoints และ Family Graph; ปรับเอกสาร Dashboard ให้รองรับ pagination ตามข้อตกลง (`{items, page, pageSize, total, asOfDate}`)
+- [x] ตัวอย่าง success/error มี fields ครบและค่าที่สอดคล้องกัน ไม่ใช้ตัวอย่างย่อเป็น response contract
+- [x] รายละเอียด types: `ClientCard` ใช้ `id`, `customerCode`, `displayName`, `riskLevel`, `health`, `recommendation`; Profile เพิ่ม personal fields ได้แก่ `firstName`, `lastName`, `age`, `occupation` โดยสองรายการหลัง nullable และไม่ส่งข้อมูล User/credentials ที่ไม่จำเป็น
 
 **Verification:**
-- [ ] Baseline unit tests, lint, typecheck และ build ผ่านทั้งหมด:
-  - `npm run lint`
-  - `npm run typecheck`
-  - `npm run test:unit`
-  - `npm run build`
-- [ ] Contract types ใน `backend/src/routes/` หรือ `backend/src/contracts/` ได้รับการ compile ตรวจสอบความถูกต้องร่วมกับ Zod schemas
-- [ ] ตัวอย่าง payload และ contract tests ยืนยันว่า types สอดคล้องกับ [05-architecture-and-data.md](../../docs/context/05-architecture-and-data.md)
+- [x] Baseline unit tests, lint, typecheck และ build ผ่านทั้งหมด:
+  - Commit baseline: `b632b0345598dbc43b5d9294023f74bda70ea9dc`, follow-up docs commit `b8605a3`.
+  - `npm run lint`: 0 errors across `@meridian/api` and `@meridian/web`.
+  - `npm run typecheck`: 0 TypeScript compiler errors across workspaces.
+  - `npm run test:unit`: 16 test files, 120 tests passed (119 in `@meridian/api`, 1 in `@meridian/web`).
+  - `npm run build`: both `@meridian/api` (TypeScript) and `@meridian/web` (Next.js Turbopack) built cleanly.
+- [x] Contract types และ Zod schemas ใน `backend/src/contracts/api.ts` compile ผ่านและมี unit tests รองรับ (`backend/tests/unit/contracts/api-contracts.test.ts` 12 tests passed).
+- [x] ตัวอย่าง payload และ contract specification ใน `docs/context/05-architecture-and-data.md` ได้รับการอัปเดตตรงกับ response types ครบทุก fields รวมถึง pagination ของ Morning Action Plan และ full Profile snapshot.
 
 **Dependencies:** ไม่มี  
 **Files likely touched:**
-- `backend/src/contracts/api.ts` (หรือ shared types)
+- `backend/src/contracts/api.ts`
+- `backend/tests/unit/contracts/api-contracts.test.ts`
 - `docs/context/05-architecture-and-data.md`
 - `tasks/milestone-3/todo.md`  
 **Scope:** M
