@@ -14,6 +14,13 @@ export function createClientRouter(options: ClientRouterOptions): Router {
 
   router.get("/", options.clientController.getClientList);
   router.get("/:id", options.clientController.getProfileSnapshot);
+  router.get("/:id/health", options.clientController.getClientHealth);
+  router.get(
+    "/:id/recommendations",
+    options.clientController.getClientRecommendation
+  );
+  router.get("/:id/summary", options.clientController.getClientSummary);
 
   return router;
 }
+

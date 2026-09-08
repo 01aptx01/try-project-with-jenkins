@@ -454,27 +454,28 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 
 ## M3-014 — เปิด Health, Recommendation และ Summary endpoints
 
-**Status:** TODO
+**Status:** DONE
 
 **Description:**
 พัฒนา sub-endpoints สำหรับดึงข้อมูลเฉพาะส่วน (`/health`, `/recommendations`, `/summary`) โดยนำผลจากการประเมิน Profile ของ RM มาฉาย (project) เป็นคำตอบ
 
 **Acceptance criteria:**
-- [ ] `GET /api/clients/:id/health` คืน `HealthResult`
-- [ ] `GET /api/clients/:id/recommendations` คืน object เดียว `{action, reason, priority, rule}`
-- [ ] `GET /api/clients/:id/summary` คืน `{summary, health, primaryGoal, recommendation, asOfDate}`
-- [ ] ทุก sub-endpoint ต้องตรวจสอบสิทธิ์ RM ownership ของ Client ก่อน และประเมินผลผ่าน service เดียวกัน ห้ามมีสูตรการคำนวณแยกต่างหาก
-- [ ] ข้อมูลที่ส่งคืนต้องตรงกับ Profile snapshot ทุกประการ รวมถึงการจัดการ nullable fields, `404 Not Found`, `401 Unauthorized` และ error handling
+- [x] `GET /api/clients/:id/health` คืน `HealthResult`
+- [x] `GET /api/clients/:id/recommendations` คืน object เดียว `{action, reason, priority, rule}`
+- [x] `GET /api/clients/:id/summary` คืน `{summary, health, primaryGoal, recommendation, asOfDate}`
+- [x] ทุก sub-endpoint ต้องตรวจสอบสิทธิ์ RM ownership ของ Client ก่อน และประเมินผลผ่าน service เดียวกัน ห้ามมีสูตรการคำนวณแยกต่างหาก
+- [x] ข้อมูลที่ส่งคืนต้องตรงกับ Profile snapshot ทุกประการ รวมถึงการจัดการ nullable fields, `404 Not Found`, `401 Unauthorized` และ error handling
 
 **Verification:**
-- [ ] Parameterized integration tests: เปรียบเทียบข้อมูลย่อยจาก sub-endpoints กับข้อมูลใน Profile snapshot
-- [ ] Ownership tests: ปฏิเสธ Client ของ RM อื่นด้วย 404
-- [ ] Incomplete data tests: คืนสถานะ INSUFFICIENT_DATA ที่ตรงกับ Profile snapshot
+- [x] Parameterized integration tests: เปรียบเทียบข้อมูลย่อยจาก sub-endpoints กับข้อมูลใน Profile snapshot ใน `backend/tests/integration/api/client-sub-endpoints.test.ts`
+- [x] Ownership tests: ปฏิเสธ Client ของ RM อื่นด้วย 404
+- [x] Incomplete data tests: คืนสถานะ INSUFFICIENT_DATA ที่ตรงกับ Profile snapshot
+- [x] รวม 56 integration tests และ 164 unit tests ผ่าน 100%, lint 0 errors, typecheck 0 errors, build clean.
 
 **Dependencies:** M3-010  
 **Files likely touched:**
-- `backend/src/routes/client-sub.routes.ts`
-- `backend/src/controllers/client-sub.controller.ts`
+- `backend/src/routes/client.routes.ts`
+- `backend/src/controllers/client.controller.ts`
 - `backend/tests/integration/api/client-sub-endpoints.test.ts`  
 **Scope:** S
 
