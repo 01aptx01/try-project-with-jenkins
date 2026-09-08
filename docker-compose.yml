@@ -36,6 +36,28 @@ services:
     ports: ["127.0.0.1:${CADDY_PORT:-8080}:8080"]
     extra_hosts: ["host.docker.internal:host-gateway"]
     volumes: ["./Caddyfile:/etc/caddy/Caddyfile:ro"]
+  postgres-e2e:
+    image: postgres:17-alpine
+    profiles: ["e2e"]
+    environment:
+      POSTGRES_USER: meridian_e2e
+      POSTGRES_PASSWORD: meridian_e2e_password
+      POSTGRES_DB: meridian_e2e
+    ports: ["127.0.0.1:5544:5432"]
+    volumes: ["meridian-postgres-e2e-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+  caddy-e2e:
+    image: caddy:2.10-alpine
+    profiles: ["e2e"]
+    ports: ["127.0.0.1:8180:8080"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    volumes: ["./Caddyfile.e2e:/etc/caddy/Caddyfile:ro"]
 volumes:
   meridian-postgres-data:
   meridian-postgres-test-data:
+  meridian-postgres-e2e-data:

@@ -19,3 +19,9 @@ docs/*.pdf
 # OS files
 Thumbs.db
 .DS_Store
+
+# Playwright Test Artifacts
+test-results/
+playwright-report/
+.playwright/
+blob-report/
