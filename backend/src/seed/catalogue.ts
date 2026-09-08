@@ -7,10 +7,12 @@ export interface BuildCatalogueOptions {
 
 export const SEED_RM_1_ID = "11111111-1111-4111-8111-111111111111";
 export const SEED_RM_2_ID = "22222222-2222-4222-8222-222222222222";
+export const SEED_RM_1_EMAIL = "rm1@meridian.local";
+export const SEED_RM_2_EMAIL = "rm2@meridian.local";
 
 // Default pre-computed bcrypt cost 12 hash for "Password123!" for local tests / fallback
 export const DEFAULT_DEV_PASSWORD_HASH =
-  "$2b$12$e8x6sY1mRgn8o/93pM0nheQ9O1lS2xXpW4K8o0oPzY3tD2zW3lIqu";
+  "$2b$12$neXnSGaBTJnY3PoGqd2Ube4rMgTx5cb3dHpp6W1QrHEiFvEgbU7xO";
 
 export function addDays(asOfDateStr: string, days: number): string {
   const [y, m, d] = asOfDateStr.split("-").map((v) => parseInt(v, 10)) as [number, number, number];

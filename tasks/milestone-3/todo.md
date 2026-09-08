@@ -525,25 +525,28 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 
 ## M3-016 — ตรวจ auth flow ผ่าน Caddy ใน local
 
-**Status:** TODO
+**Status:** DONE
 
 **Description:**
 ทดสอบการทำงานร่วมกันระหว่าง Browser (Client), Caddy reverse proxy และ Express API ในสภาพแวดล้อม local development
 
 **Acceptance criteria:**
-- [ ] Caddy reverse proxy ส่งผ่านคำขอ `/api/*` และ `/health` ไปยัง Express API (`localhost:3001`) โดยรักษา path เดิม; `APP_ORIGIN` สอดคล้องกับ port ที่ใช้งานจริง (รวมถึงกรณี `CADDY_PORT=8081`)
-- [ ] ตรวจสอบ full auth flow ผ่าน local origin: login → รับ cookie → เรียก `/auth/me` → เข้าถึง List/Profile → logout; cookie บน local HTTP ต้องไม่ตั้ง `Secure` และไม่มี JWT ปรากฏใน body
-- [ ] ตรวจสอบ proxy configuration ของ Express: ระบุเฉพาะ trusted proxy IP ของ Caddy; การส่ง spoofed forwarded headers จาก client ภายนอกต้องไม่สามารถปลอมแปลง IP สำหรับ rate limiter ได้
-- [ ] บันทึกข้อจำกัดของ Docker Desktop / Windows NAT ที่อาจรวบ client IP เข้าด้วยกัน
+- [x] Caddy reverse proxy ส่งผ่านคำขอ `/api/*` และ `/health` ไปยัง Express API (`localhost:3001`) โดยรักษา path เดิม; `APP_ORIGIN` สอดคล้องกับ port ที่ใช้งานจริง (รวมถึงกรณี `CADDY_PORT=8081`)
+- [x] ตรวจสอบ full auth flow ผ่าน local origin: login → รับ cookie → เรียก `/auth/me` → เข้าถึง List/Profile → logout; cookie บน local HTTP ต้องไม่ตั้ง `Secure` และไม่มี JWT ปรากฏใน body
+- [x] ตรวจสอบ proxy configuration ของ Express: ระบุเฉพาะ trusted proxy IP ของ Caddy; การส่ง spoofed forwarded headers จาก client ภายนอกต้องไม่สามารถปลอมแปลง IP สำหรับ rate limiter ได้
+- [x] บันทึกข้อจำกัดของ Docker Desktop / Windows NAT ที่อาจรวบ client IP เข้าด้วยกัน
 
 **Verification:**
-- [ ] Live HTTP smoke tests ผ่าน Caddy proxy: ทดสอบ endpoint `/health`, `/api/auth/login`, `/api/auth/me`, `/api/clients`
-- [ ] Forged header tests: ทดสอบส่ง `X-Forwarded-For` ปลอมและยืนยันว่า Express limiter ไม่ใช้ IP ปลอมแปลงนั้น
+- [x] Live HTTP smoke tests ผ่าน Caddy proxy: ทดสอบ endpoint `/health`, `/api/auth/login`, `/api/auth/me`, `/api/clients` ใน `backend/tests/integration/proxy/caddy-flow.test.ts`
+- [x] Forged header tests: ทดสอบส่ง `X-Forwarded-For` ปลอมและยืนยันว่า Express limiter ไม่ใช้ IP ปลอมแปลงนั้น
+- [x] รวม 65 integration tests และ 164 unit tests ผ่าน 100%, lint 0 errors, typecheck 0 errors, build clean.
 
 **Dependencies:** M3-013, M3-014, M3-015  
 **Files likely touched:**
 - `Caddyfile`
 - `backend/src/config/proxy.ts`
+- `backend/src/server.ts`
+- `backend/src/seed/catalogue.ts`
 - `backend/tests/integration/proxy/caddy-flow.test.ts`  
 **Scope:** M
 

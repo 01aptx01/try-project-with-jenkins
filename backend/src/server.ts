@@ -1,5 +1,6 @@
 import { createApp } from "./app.js";
 import { loadConfig } from "./config/env.js";
+import { resolveTrustProxySetting } from "./config/proxy.js";
 import { AuthController } from "./controllers/auth.controller.js";
 import { ClientController } from "./controllers/client.controller.js";
 import { DashboardController } from "./controllers/dashboard.controller.js";
@@ -48,7 +49,7 @@ const app = createApp({
   readiness: createPrismaReadiness(prisma),
   version: config.APP_VERSION,
   appOrigin: config.APP_ORIGIN,
-  trustProxy: false,
+  trustProxy: resolveTrustProxySetting(config.TRUSTED_PROXIES),
   configureRoutes: (expressApp) => {
     const authRouter = createAuthRouter({
       authController,
