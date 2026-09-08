@@ -21,7 +21,7 @@ describe("Seed Catalogue & Validator (M3-007)", () => {
     expect(report.clientCount).toBe(30);
     expect(report.profileCount).toBe(30);
     expect(report.goalCount).toBeGreaterThanOrEqual(30);
-    expect(report.relationshipCount).toBe(12);
+    expect(report.relationshipCount).toBe(8);
   });
 
   it("ensures each RM owns exactly 15 clients with sequential customer codes", () => {

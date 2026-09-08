@@ -1,8 +1,8 @@
 import type { SeedCatalogue, SeedClient, SeedFamilyRelationship, SeedFinancialProfile, SeedGoal, SeedUser } from "./types.js";
 
 export interface BuildCatalogueOptions {
-  rm1PasswordHash?: string;
-  rm2PasswordHash?: string;
+  rm1PasswordHash?: string | undefined;
+  rm2PasswordHash?: string | undefined;
 }
 
 export const SEED_RM_1_ID = "11111111-1111-4111-8111-111111111111";
@@ -933,7 +933,7 @@ export function buildSeedCatalogue(
 
   let relCounter = 1;
   const relationships: SeedFamilyRelationship[] = [
-    // RM 1 family
+    // RM 1 family (all pairs have clientId < relatedClientId)
     {
       id: relationshipUuid(relCounter++),
       clientId: clientUuid(1),
@@ -942,21 +942,9 @@ export function buildSeedCatalogue(
     },
     {
       id: relationshipUuid(relCounter++),
-      clientId: clientUuid(2),
-      relatedClientId: clientUuid(1),
-      relationshipType: "SPOUSE",
-    },
-    {
-      id: relationshipUuid(relCounter++),
       clientId: clientUuid(1),
       relatedClientId: clientUuid(3),
       relationshipType: "PARENT",
-    },
-    {
-      id: relationshipUuid(relCounter++),
-      clientId: clientUuid(3),
-      relatedClientId: clientUuid(1),
-      relationshipType: "CHILD",
     },
     {
       id: relationshipUuid(relCounter++),
@@ -966,22 +954,16 @@ export function buildSeedCatalogue(
     },
     {
       id: relationshipUuid(relCounter++),
-      clientId: clientUuid(4),
-      relatedClientId: clientUuid(3),
-      relationshipType: "SIBLING",
+      clientId: clientUuid(3),
+      relatedClientId: clientUuid(5),
+      relationshipType: "CHILD",
     },
 
-    // RM 2 family
+    // RM 2 family (all pairs have clientId < relatedClientId)
     {
       id: relationshipUuid(relCounter++),
       clientId: clientUuid(16),
       relatedClientId: clientUuid(17),
-      relationshipType: "SPOUSE",
-    },
-    {
-      id: relationshipUuid(relCounter++),
-      clientId: clientUuid(17),
-      relatedClientId: clientUuid(16),
       relationshipType: "SPOUSE",
     },
     {
@@ -993,20 +975,14 @@ export function buildSeedCatalogue(
     {
       id: relationshipUuid(relCounter++),
       clientId: clientUuid(18),
-      relatedClientId: clientUuid(16),
-      relationshipType: "CHILD",
-    },
-    {
-      id: relationshipUuid(relCounter++),
-      clientId: clientUuid(18),
       relatedClientId: clientUuid(19),
       relationshipType: "SIBLING",
     },
     {
       id: relationshipUuid(relCounter++),
-      clientId: clientUuid(19),
-      relatedClientId: clientUuid(18),
-      relationshipType: "SIBLING",
+      clientId: clientUuid(18),
+      relatedClientId: clientUuid(20),
+      relationshipType: "CHILD",
     },
   ];
 

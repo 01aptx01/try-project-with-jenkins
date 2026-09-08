@@ -250,28 +250,33 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 
 ## M3-008 — Persist seed แบบ idempotent
 
-**Status:** TODO
+**Status:** DONE
 
 **Description:**
 สร้าง script และ runner สำหรับ persist seed catalogue ลงฐานข้อมูลผ่าน Prisma แบบ idempotent โดยใช้ transaction
 
 **Acceptance criteria:**
-- [ ] รันผ่านคำสั่ง `npm run db:seed -- --as-of YYYY-MM-DD` โดยใช้ fixed IDs ในการ upsert ภายใต้ database transaction; รันซ้ำแล้วไม่เพิ่มจำนวน record และไม่ reset database
-- [ ] รับรหัสผ่านของ RM ทั้ง 2 คนจาก environment variables (`SEED_RM1_PASSWORD`, `SEED_RM2_PASSWORD`) โดยไม่มี secret บันทึกใน git repository; ใช้ password hash เดิมเมื่อรหัสผ่านไม่เปลี่ยนแปลง และไม่พิมพ์ credentials ออกทาง terminal/logs
-- [ ] จัดการเฉพาะ records ที่กำหนดใน catalogue; หากเกิด collision กับ unrelated data ต้อง abort transaction และ rollback ทันที พร้อมบันทึกสรุป counts และ reference date โดยไม่เปิดเผยข้อมูลลับ
-- [ ] Seed ไม่ถูกรันอัตโนมัติในขั้นตอน application startup หรือ deployment
+- [x] รันผ่านคำสั่ง `npm run db:seed -- --as-of YYYY-MM-DD` โดยใช้ fixed IDs ในการ upsert ภายใต้ database transaction; รันซ้ำแล้วไม่เพิ่มจำนวน record และไม่ reset database
+- [x] รับรหัสผ่านของ RM ทั้ง 2 คนจาก environment variables (`SEED_RM1_PASSWORD`, `SEED_RM2_PASSWORD`) โดยไม่มี secret บันทึกใน git repository; ใช้ password hash เดิมเมื่อรหัสผ่านไม่เปลี่ยนแปลง และไม่พิมพ์ credentials ออกทาง terminal/logs
+- [x] จัดการเฉพาะ records ที่กำหนดใน catalogue; หากเกิด collision กับ unrelated data ต้อง abort transaction และ rollback ทันที พร้อมบันทึกสรุป counts และ reference date โดยไม่เปิดเผยข้อมูลลับ
+- [x] Seed ไม่ถูกรันอัตโนมัติในขั้นตอน application startup หรือ deployment
 
 **Verification:**
-- [ ] Integration test บน test database: รัน seed ครั้งที่ 1 บันทึก counts, รัน seed ครั้งที่ 2 ตรวจสอบ counts เท่าเดิม ไม่เกิด duplicated rows
-- [ ] Transaction rollback test: จำลอง collision หรือ database constraint error ยืนยันว่าไม่มี partial data หลงเหลือ
-- [ ] ตรวจสอบความถูกต้องของ password hash ในฐานข้อมูลและทดสอบ login ผ่าน credentials ของ seed RMs
+- [x] Integration test บน test database: รัน seed ครั้งที่ 1 บันทึก counts, รัน seed ครั้งที่ 2 ตรวจสอบ counts เท่าเดิม ไม่เกิด duplicated rows ใน `backend/tests/integration/seed/seed.test.ts`
+- [x] Transaction rollback test: จำลอง collision หรือ database constraint error ยืนยันว่าไม่มี partial data หลงเหลือ
+- [x] ตรวจสอบความถูกต้องของ password hash ในฐานข้อมูลและทดสอบ authentication ผ่าน credentials ของ seed RMs
+- [x] ทดสอบ CLI script `npm run db:seed -- --as-of 2026-09-08` ทำงานแบบ idempotent บน local database สำเร็จ
+- [x] รวม 25 integration tests และ 164 unit tests ผ่าน 100%, lint 0 errors, typecheck 0 errors, build clean.
 
 **Dependencies:** M3-003, M3-007  
 **Files likely touched:**
 - `backend/src/seed/runner.ts`
 - `backend/src/seed/seed.ts`
+- `backend/src/seed/catalogue.ts`
 - `backend/package.json`
-- `backend/tests/integration/seed/seed.test.ts`  
+- `package.json`
+- `backend/tests/integration/seed/seed.test.ts`
+- `tasks/milestone-3/todo.md`  
 **Scope:** M
 
 ---

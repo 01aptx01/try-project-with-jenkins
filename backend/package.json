@@ -12,7 +12,8 @@
     "test:unit": "vitest run --config vitest.config.ts --exclude tests/integration/**",
     "test:integration": "node --env-file-if-exists=../.env ../node_modules/vitest/vitest.mjs run --config vitest.config.ts tests/integration",
     "prisma:generate": "node --env-file-if-exists=../.env ../node_modules/prisma/build/index.js generate",
-    "prisma:migrate": "node --env-file-if-exists=../.env ../node_modules/prisma/build/index.js migrate deploy"
+    "prisma:migrate": "node --env-file-if-exists=../.env ../node_modules/prisma/build/index.js migrate deploy",
+    "db:seed": "tsx --env-file-if-exists=../.env src/seed/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.0.0",

@@ -192,8 +192,10 @@ export function validateSeedCatalogue(catalogue: SeedCatalogue): ValidationRepor
     if (!UUID_REGEX.test(rel.id)) {
       errors.push(`Invalid relationship UUID: ${rel.id}`);
     }
-    if (rel.clientId === rel.relatedClientId) {
-      errors.push(`Self-relationship detected on client ${rel.clientId}`);
+    if (rel.clientId >= rel.relatedClientId) {
+      errors.push(
+        `Canonical pair violation: clientId (${rel.clientId}) must be strictly less than relatedClientId (${rel.relatedClientId})`
+      );
     }
     const clientA = clientMap.get(rel.clientId);
     const clientB = clientMap.get(rel.relatedClientId);
