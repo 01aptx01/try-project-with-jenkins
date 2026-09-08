@@ -87,23 +87,25 @@ To verify the integrated system manually on development environment:
    - **Client Directory:** Navigate to `/clients`. Search by name, filter by Priority (`HIGH`) and Health (`AT_RISK`). Verify URL query parameters update and pagination resets.
    - **Client Profile Snapshot:** Click any client name link in the table (which routes to `/clients/[uuid]`). Verify Financial Health score breakdown, Financial Profile figures, Goals progress, Next Best Action card, and Rule-Based Portfolio Summary (deterministic synthesis as designed in M4-012).
    - **Family Network:** Click "View Family Network". Verify on-demand lazy fetch, centered primary client, orbiting relatives, directional labels, and equivalent accessible HTML list.
-   - **Cross-RM Isolation:** Attempt direct URL navigation to a client UUID belonging to RM 2 (or an arbitrary/unknown UUID). Verify privacy-preserving "Client Not Found" (404) response without information leakage.
+   - **Cross-RM Isolation:** Attempt direct URL navigation to a client UUID belonging to RM 2 (e.g. Wichai Wong at `c0000000-0000-0000-0000-000000000016`, or an arbitrary unknown UUID). Verify privacy-preserving "Client Not Found" (404) response without information leakage.
    - **Logout:** Sign out. Verify clean redirection to `/login` and complete state purge.
 
 ---
 
 ## 5. Handover Gaps & Objectives for Milestone 5
 
-Milestone 5 is designated for **Integration and Hardening** (`docs/context/08-delivery-roadmap.md:47-50`). The following areas are explicitly transitioned to Milestone 5:
+Milestone 5 is designated for **Integration and Hardening** (`docs/context/08-delivery-roadmap.md:47-50`). The delivery boundaries and transition areas are:
 
-1. **End-to-End System Integration Verification:**
-   - Milestone 4 thoroughly verified all UI component contracts, user interactions, and failure modes across 122 unit/component tests in jsdom/Vitest.
+1. **End-to-End System Integration Verification (M5):**
+   - Milestone 4 thoroughly verified all UI component contracts, user interactions, accessibility, and failure modes across 127 automated unit/component tests in jsdom/Vitest, plus manual smoke checklist via Caddy.
    - Milestone 5 will execute full-system integration verification against live running services across the Caddy reverse proxy.
-2. **Performance Profiling & Load Testing:**
+2. **Performance Profiling & Load Testing (M5):**
    - Measure live end-to-end response times under multi-client load across the reverse proxy.
-3. **Security Hardening & Penetration Testing:**
+3. **Security Hardening & Penetration Testing (M5):**
    - Cross-RM data isolation validation with concurrent authenticated browser sessions, token/cookie replay prevention, and rate-limiting thresholds.
-4. **Operational Runbooks & Deployment Documentation:**
-   - Production container orchestration, reverse proxy SSL termination, CI/CD pipeline automation, and production monitoring.
+4. **Operational Runbooks & Production Readiness (M5):**
+   - Operational runbooks, failure mode recovery procedures, and readiness reviews.
+5. **CI/CD & Container Orchestration (Transitioned to M6):**
+   - Production container orchestration, reverse proxy SSL termination, CI/CD pipeline automation, and production monitoring are designated for Milestone 6 per the delivery roadmap (`docs/context/08-delivery-roadmap.md:52-54`).
 
 Milestone 4 is signed off with zero defects, zero lint errors, zero type errors, zero audit vulnerabilities, and all test suites passing.

@@ -116,10 +116,18 @@ async function executeRequest<T>(
       },
     });
 
-    if (response.status === 204) {
-      if (path.endsWith('/api/auth/logout')) {
+    if (path.endsWith('/api/auth/logout')) {
+      if (response.status === 204) {
         return undefined as unknown as T;
       }
+      throw new ApiClientError({
+        status: response.status,
+        code: 'INVALID_RESPONSE',
+        message: `Expected HTTP 204 No Content for logout but received ${response.status}`,
+      });
+    }
+
+    if (response.status === 204) {
       throw new ApiClientError({
         status: response.status,
         code: 'INVALID_RESPONSE',
@@ -196,7 +204,15 @@ async function executeRequest<T>(
 
     try {
       responseData = await response.json();
-    } catch {
+    } catch (parseError: unknown) {
+      if (
+        (parseError instanceof Error && parseError.name === 'AbortError') ||
+        controller.signal.aborted ||
+        options?.signal?.aborted ||
+        timedOut
+      ) {
+        throw parseError;
+      }
       throw new ApiClientError({
         status: response.status,
         code: 'INVALID_RESPONSE',

@@ -617,3 +617,34 @@
 - **Production Build:** Clean Next.js compilation with Turbopack
 
 **Audit Remediation Verdict:** **PASSED / COMPLETED**
+
+---
+
+## 24. Comprehensive Audit Remediation Verification Record (AUD-M4-001 through AUD-M4-010)
+
+### 24.1 Remediation Summary & Artifact Changes
+
+| Finding ID | Severity | Description | Implementation Artifacts & Changes | Test Verification |
+|---|---|---|---|---|
+| **AUD-M4-001** | **High** | Cross-RM data leak: Client data remained in React state when RM identity switched without full page reload. | `frontend/components/session-provider.tsx`: Subtree wrapped in container with dynamic `key={user ? `${user.id}:${getSessionGeneration()}` : 'unauthenticated'}` and `style={{ display: 'contents' }}` ensuring full remount and state purge on identity/generation change. In-flight data queries register with `registerInFlightController` and check `sessionGeneration`. | `frontend/tests/session-lifecycle.test.tsx`: "remounts sensitive subtree and purges mounted client data when RM identity switches (AUD-M4-001)" |
+| **AUD-M4-002** | **High** | Sensitive client UI remained visible during background session revalidation and when 503/connection error occurred. | `frontend/components/session-provider.tsx`: Gated sensitive children whenever `isLoading` is true (including during visibilitychange revalidation) and whenever `sessionConnectionError` is non-null. Provided accessible Retry Connection UI. | `frontend/tests/session-lifecycle.test.tsx`: "gates sensitive content during revalidation on visibilitychange, shows retry on 503, and restores view on retry (AUD-M4-002)" |
+| **AUD-M4-003** | **Medium** | Family in-memory cache lifecycle: Cache leaked across clients / unmount, but was discarded on collapse/expand toggle. | `frontend/hooks/use-family-graph.ts`: Separated cache purge into `useEffect(..., [clientId])` unmount/client-change cleanup. Cache is retained across expand/collapse while discarded on unmount or client change. Aborted requests cannot write to cache. | `frontend/tests/family-section.test.tsx`: "preserves cached network data across collapse and expand cycles while active on client" and unmount purge tests |
+| **AUD-M4-004** | **Medium** | Backend MIME parser discrepancy: `request-parser.ts` accepted `application/*+json` while `express.json()` only parsed `application/json`. | `backend/src/app.ts`: Updated middleware configuration to `express.json({ limit: "1mb", type: ["application/json", "application/*+json"] })`. | `backend/tests/unit/app.test.ts`: Added tests verifying `application/vnd.api+json` parses JSON body correctly (173 backend tests passing) |
+| **AUD-M4-005** | **Medium** | API Client logout response contract: Logout accepted 200 JSON instead of strictly requiring HTTP 204 No Content. | `frontend/lib/api-client.ts`: Logout strictly requires `response.status === 204`. Any non-204 response (including 200 with JSON) throws `INVALID_RESPONSE`. | `frontend/tests/api-client.test.ts`: "rejects logout with 200 OK and unexpected JSON payload" and "resolves successfully on HTTP 204 No Content" |
+| **AUD-M4-006** | **Medium** | Hardcoded currency symbol `฿` in `display-format.ts` assumed currency not specified in wire contracts. | `frontend/lib/display-format.ts`: Removed hardcoded `฿` symbol from `formatCurrency`. Formats as standard comma-delimited numeric string per contract design. | `frontend/tests/financial-details.test.tsx`: Updated assertions across all 11 test cases |
+| **AUD-M4-007** | **Medium** | Handover and verification documentation gaps: Missing seed client UUID for RM 2, misaligned M5/M6 scope. | `tasks/milestone-4/handover.md`: Added concrete client UUID for RM 2 (`c0000000-0000-0000-0000-000000000016`). Aligned M5 as Integration/Hardening and M6 as CI/CD/Orchestration per delivery roadmap. | Verified in `tasks/milestone-4/handover.md` and `verification.md` |
+| **AUD-M4-008** | **Medium** | Health null breakdown components rendered `role="progressbar"` with `aria-valuenow="0"`. | `frontend/components/health-panel.tsx`: Render `role="progressbar"` only when `rawVal !== null`. Render non-progressbar fallback placeholder when score is null to avoid misinforming assistive technology. | `frontend/tests/health-panel.test.tsx` and `frontend/tests/accessibility-usability.test.tsx`: Verified 0 progressbars on null scores, 5 on complete scores |
+| **AUD-M4-009** | **Low** | Response body parsing AbortError in `api-client.ts` lost `isAbort`/`isTimeout` flags. | `frontend/lib/api-client.ts`: Caught `response.json()` errors and re-threw as `ApiClientError` with `isAbort: true` or `isTimeout: true` when signal is aborted. | `frontend/tests/api-client.test.ts`: "flags isAbort when AbortSignal triggers during response.json() parsing" |
+| **AUD-M4-010** | **Low** | Backend graceful shutdown `forceTimeout` was cleared before `prisma.$disconnect()` completed. | `backend/src/server.ts`: Moved `clearTimeout(forceTimeout)` to a `finally` block executing strictly after `await prisma.$disconnect()`. | Verified in `backend/src/server.ts` |
+
+### 24.2 Quality Gate Summary After Remediations
+- **Frontend Unit Tests:** 127/127 passed across 16 test files (+14 new tests)
+- **Backend Unit Tests:** 173/173 passed across 22 test files (+2 new tests)
+- **Total Workspace Unit Tests:** 300/300 passed across 38 test files
+- **TypeScript Typecheck:** 0 errors across workspace (`tsc --noEmit`)
+- **ESLint:** 0 errors across workspace
+- **Security Audit:** 0 vulnerabilities (`npm audit`)
+- **Production Build:** Clean Next.js Turbopack compilation and Express TypeScript build
+
+**Comprehensive Audit Remediation Verdict:** **PASSED / COMPLETED**
+

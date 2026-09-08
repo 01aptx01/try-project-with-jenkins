@@ -10,6 +10,10 @@ import type {
 } from '../lib/api-contracts.js';
 import { PriorityBadge, HealthBadge, RiskBadge } from './ui/badges.js';
 import { Pagination } from './pagination.js';
+import {
+  getSessionGeneration,
+  registerInFlightController,
+} from '../lib/session-lifecycle.js';
 
 export interface MorningActionPlanViewProps {
   initialData?: MorningActionPlanResponse | undefined;
@@ -45,6 +49,8 @@ export function MorningActionPlanView({ initialData }: MorningActionPlanViewProp
     const controller = new AbortController();
     activeControllerRef.current = controller;
     const currentRequestId = ++requestIdRef.current;
+    const capturedGeneration = getSessionGeneration();
+    const unregister = registerInFlightController(controller);
 
     setIsLoading(true);
     setErrorMessage(null);
@@ -55,11 +61,18 @@ export function MorningActionPlanView({ initialData }: MorningActionPlanViewProp
         { signal: controller.signal }
       );
 
-      if (currentRequestId === requestIdRef.current) {
+      // Only update state if this is still latest request and session generation unchanged
+      if (
+        currentRequestId === requestIdRef.current &&
+        capturedGeneration === getSessionGeneration()
+      ) {
         setData(response);
       }
     } catch (error: unknown) {
-      if (currentRequestId !== requestIdRef.current) {
+      if (
+        currentRequestId !== requestIdRef.current ||
+        capturedGeneration !== getSessionGeneration()
+      ) {
         return;
       }
 
@@ -76,7 +89,11 @@ export function MorningActionPlanView({ initialData }: MorningActionPlanViewProp
         setErrorMessage('An unexpected error occurred while loading Morning Action Plan.');
       }
     } finally {
-      if (currentRequestId === requestIdRef.current) {
+      unregister();
+      if (
+        currentRequestId === requestIdRef.current &&
+        capturedGeneration === getSessionGeneration()
+      ) {
         setIsLoading(false);
       }
     }

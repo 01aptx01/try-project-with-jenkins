@@ -382,5 +382,49 @@ describe('ApiClient', () => {
 
       await expect(client.logout()).resolves.toBeUndefined();
     });
+
+    it('rejects 200 OK for logout with INVALID_RESPONSE (AUD-M4-005)', async () => {
+      globalThis.fetch = vi.fn().mockResolvedValueOnce(
+        new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          statusText: 'OK',
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+
+      await expect(client.logout()).rejects.toMatchObject({
+        name: 'ApiClientError',
+        status: 200,
+        code: 'INVALID_RESPONSE',
+        message: expect.stringContaining('Expected HTTP 204 No Content for logout'),
+      });
+    });
+
+    it('preserves isAbort when abort occurs during response body read (AUD-M4-009)', async () => {
+      const abortController = new AbortController();
+      // Simulate response whose json() rejects with AbortError
+      const mockResponse = {
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        headers: new Headers({ 'Content-Type': 'application/json' }),
+        json: vi.fn().mockImplementation(async () => {
+          abortController.abort();
+          const err = new Error('The operation was aborted');
+          err.name = 'AbortError';
+          throw err;
+        }),
+      } as unknown as Response;
+
+      globalThis.fetch = vi.fn().mockResolvedValueOnce(mockResponse);
+
+      await expect(
+        client.getClients(undefined, { signal: abortController.signal })
+      ).rejects.toMatchObject({
+        name: 'ApiClientError',
+        code: 'ABORTED',
+        isAbort: true,
+      });
+    });
   });
 });

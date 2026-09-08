@@ -93,7 +93,6 @@ async function shutdown(signal: string) {
 
   server.closeIdleConnections?.();
   server.close(async (error) => {
-    clearTimeout(forceTimeout);
     try {
       await prisma.$disconnect();
     } catch (disconnectError) {
@@ -101,6 +100,8 @@ async function shutdown(signal: string) {
       const errMessage = (disconnectError as Error)?.message || "Unknown error";
       const sanitized = errMessage.replace(/:\/\/([^:]+):([^@]+)@/g, "://$1:******@");
       console.error(`Error disconnecting Prisma [${errName}]: ${sanitized}`);
+    } finally {
+      clearTimeout(forceTimeout);
     }
     process.exit(error ? 1 : 0);
   });

@@ -19,6 +19,10 @@ import {
   buildClientQueryString,
   type ParsedClientQuery,
 } from '../lib/client-query.js';
+import {
+  getSessionGeneration,
+  registerInFlightController,
+} from '../lib/session-lifecycle.js';
 
 export interface ClientListViewProps {
   initialData?: ClientListResponse | undefined;
@@ -49,6 +53,8 @@ export function ClientListView({ initialData }: ClientListViewProps) {
     const controller = new AbortController();
     activeControllerRef.current = controller;
     const currentRequestId = ++requestIdRef.current;
+    const capturedGeneration = getSessionGeneration();
+    const unregister = registerInFlightController(controller);
 
     setIsLoading(true);
     setErrorMessage(null);
@@ -64,13 +70,19 @@ export function ClientListView({ initialData }: ClientListViewProps) {
 
       const response = await api.getClients(queryPayload, { signal: controller.signal });
 
-      // Only update state if this is still the latest request
-      if (currentRequestId === requestIdRef.current) {
+      // Only update state if this is still the latest request and session generation unchanged
+      if (
+        currentRequestId === requestIdRef.current &&
+        capturedGeneration === getSessionGeneration()
+      ) {
         setData(response);
       }
     } catch (error: unknown) {
-      if (currentRequestId !== requestIdRef.current) {
-        // Obsolete request, ignore
+      if (
+        currentRequestId !== requestIdRef.current ||
+        capturedGeneration !== getSessionGeneration()
+      ) {
+        // Obsolete request or session changed, ignore
         return;
       }
 
@@ -90,7 +102,11 @@ export function ClientListView({ initialData }: ClientListViewProps) {
         setErrorMessage('An unexpected error occurred while loading clients.');
       }
     } finally {
-      if (currentRequestId === requestIdRef.current) {
+      unregister();
+      if (
+        currentRequestId === requestIdRef.current &&
+        capturedGeneration === getSessionGeneration()
+      ) {
         setIsLoading(false);
       }
     }

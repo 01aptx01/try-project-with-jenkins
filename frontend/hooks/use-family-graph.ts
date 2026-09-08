@@ -78,8 +78,9 @@ export function useFamilyGraph(clientId: string, enabled = true): UseFamilyGraph
           signal: controller.signal,
         });
 
-        // Guard: only commit if client ID matches, this is latest request, and session unchanged
+        // Guard: only commit if controller not aborted, client ID matches, latest request, and session unchanged
         if (
+          !controller.signal.aborted &&
           activeClientIdRef.current === clientId &&
           requestSequenceRef.current === currentRequestId &&
           capturedGeneration === getSessionGeneration()
@@ -91,6 +92,7 @@ export function useFamilyGraph(clientId: string, enabled = true): UseFamilyGraph
         }
       } catch (err: unknown) {
         if (
+          controller.signal.aborted ||
           activeClientIdRef.current !== clientId ||
           requestSequenceRef.current !== currentRequestId ||
           capturedGeneration !== getSessionGeneration()
@@ -132,6 +134,13 @@ export function useFamilyGraph(clientId: string, enabled = true): UseFamilyGraph
   );
 
   useEffect(() => {
+    return () => {
+      // Clear cache when unmounting or switching client ID (AUD-M4-003)
+      clearFamilyGraphCache();
+    };
+  }, [clientId]);
+
+  useEffect(() => {
     if (!enabled) {
       setIsLoading(false);
       return;
@@ -148,9 +157,11 @@ export function useFamilyGraph(clientId: string, enabled = true): UseFamilyGraph
     }
 
     return () => {
-      // Clean up in-flight requests when component unmounts or parameters change
+      // Invalidate in-flight requests when collapsing or parameters change
+      requestSequenceRef.current += 1;
       if (inFlightControllerRef.current) {
         inFlightControllerRef.current.abort();
+        inFlightControllerRef.current = null;
       }
     };
   }, [clientId, enabled, fetchFamily]);

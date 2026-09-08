@@ -19,17 +19,17 @@ import type {
 describe('M4-010: Display Formatting & Financial Details', () => {
   describe('display-format utilities', () => {
     it('formats currency correctly and preserves exact decimal precision without float loss', () => {
-      expect(formatCurrency('150000.00')).toBe('฿150,000.00');
-      expect(formatCurrency('95000.50')).toBe('฿95,000.50');
+      expect(formatCurrency('150000.00')).toBe('150,000.00');
+      expect(formatCurrency('95000.50')).toBe('95,000.50');
       // Huge amount
-      expect(formatCurrency('1234567890.75')).toBe('฿1,234,567,890.75');
+      expect(formatCurrency('1234567890.75')).toBe('1,234,567,890.75');
     });
 
     it('strictly differentiates between zero and null', () => {
-      // Zero must show ฿0.00
-      expect(formatCurrency('0.00')).toBe('฿0.00');
-      expect(formatCurrency('0')).toBe('฿0.00');
-      expect(formatCurrency(0)).toBe('฿0.00');
+      // Zero must show 0.00
+      expect(formatCurrency('0.00')).toBe('0.00');
+      expect(formatCurrency('0')).toBe('0.00');
+      expect(formatCurrency(0)).toBe('0.00');
 
       // Null or undefined must show fallback
       expect(formatCurrency(null)).toBe('—');
@@ -67,13 +67,13 @@ describe('M4-010: Display Formatting & Financial Details', () => {
 
       render(<FinancialProfilePanel financialProfile={financialProfile} />);
 
-      expect(screen.getByTestId('fin-monthly-income')).toHaveTextContent('฿150,000.00');
-      expect(screen.getByTestId('fin-monthly-expense')).toHaveTextContent('฿95,000.00');
-      expect(screen.getByTestId('fin-liquid-assets')).toHaveTextContent('฿200,000.00');
-      expect(screen.getByTestId('fin-total-assets')).toHaveTextContent('฿5,500,000.00');
-      expect(screen.getByTestId('fin-total-debt')).toHaveTextContent('฿2,100,000.00');
-      expect(screen.getByTestId('fin-savings')).toHaveTextContent('฿350,000.00');
-      expect(screen.getByTestId('fin-investments')).toHaveTextContent('฿1,500,000.00');
+      expect(screen.getByTestId('fin-monthly-income')).toHaveTextContent('150,000.00');
+      expect(screen.getByTestId('fin-monthly-expense')).toHaveTextContent('95,000.00');
+      expect(screen.getByTestId('fin-liquid-assets')).toHaveTextContent('200,000.00');
+      expect(screen.getByTestId('fin-total-assets')).toHaveTextContent('5,500,000.00');
+      expect(screen.getByTestId('fin-total-debt')).toHaveTextContent('2,100,000.00');
+      expect(screen.getByTestId('fin-savings')).toHaveTextContent('350,000.00');
+      expect(screen.getByTestId('fin-investments')).toHaveTextContent('1,500,000.00');
     });
 
     it('distinguishes between zero and null fields in a partial profile', () => {
@@ -90,9 +90,9 @@ describe('M4-010: Display Formatting & Financial Details', () => {
 
       render(<FinancialProfilePanel financialProfile={partialProfile} />);
 
-      // Zero fields show ฿0.00
-      expect(screen.getByTestId('fin-monthly-expense')).toHaveTextContent('฿0.00');
-      expect(screen.getByTestId('fin-total-debt')).toHaveTextContent('฿0.00');
+      // Zero fields show 0.00
+      expect(screen.getByTestId('fin-monthly-expense')).toHaveTextContent('0.00');
+      expect(screen.getByTestId('fin-total-debt')).toHaveTextContent('0.00');
 
       // Null fields show —
       expect(screen.getByTestId('fin-liquid-assets')).toHaveTextContent('—');
@@ -138,9 +138,9 @@ describe('M4-010: Display Formatting & Financial Details', () => {
       );
 
       expect(screen.getByTestId('primary-goal-type')).toHaveTextContent('RETIREMENT');
-      expect(screen.getByTestId('primary-goal-target')).toHaveTextContent('฿10,000,000.00');
-      expect(screen.getByTestId('primary-goal-current')).toHaveTextContent('฿2,500,000.00');
-      expect(screen.getByTestId('primary-goal-expected')).toHaveTextContent('฿4,218,750.00');
+      expect(screen.getByTestId('primary-goal-target')).toHaveTextContent('10,000,000.00');
+      expect(screen.getByTestId('primary-goal-current')).toHaveTextContent('2,500,000.00');
+      expect(screen.getByTestId('primary-goal-expected')).toHaveTextContent('4,218,750.00');
       expect(screen.getByTestId('primary-goal-progress')).toHaveTextContent('59%');
       expect(screen.getByText('On-track progress')).toBeInTheDocument();
       expect(screen.getByTestId('primary-goal-status')).toHaveTextContent('Behind Schedule');
@@ -148,7 +148,7 @@ describe('M4-010: Display Formatting & Financial Details', () => {
 
       // Table displays secondary goal
       expect(screen.getByText('EDUCATION')).toBeInTheDocument();
-      expect(screen.getByText('฿1,500,000.00')).toBeInTheDocument();
+      expect(screen.getByText('1,500,000.00')).toBeInTheDocument();
     });
 
     it('renders Completed status badge when primary goal is completed', () => {

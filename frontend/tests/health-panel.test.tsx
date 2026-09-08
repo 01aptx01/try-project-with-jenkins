@@ -139,6 +139,19 @@ describe('M4-011: HealthPanel Component', () => {
       expect(screen.getByTestId('health-comp-debt-score')).toHaveTextContent('Not available');
       expect(screen.getByTestId('health-comp-goals-score')).toHaveTextContent('12 / 20');
       expect(screen.getByTestId('health-comp-investment-score')).toHaveTextContent('Not available');
+
+      // Accessibility: genuine 0 has progressbar with valuenow=0
+      const liquidityBar = screen.getByRole('progressbar', { name: /liquidity buffer/i });
+      expect(liquidityBar).toHaveAttribute('aria-valuenow', '0');
+
+      // Accessibility: 12 has progressbar with valuenow=12
+      const goalsBar = screen.getByRole('progressbar', { name: /goal funding/i });
+      expect(goalsBar).toHaveAttribute('aria-valuenow', '12');
+
+      // Accessibility: null component (debt, savings, investment) must NOT render role=progressbar
+      expect(screen.queryByRole('progressbar', { name: /debt management/i })).toBeNull();
+      expect(screen.queryByRole('progressbar', { name: /savings rate/i })).toBeNull();
+      expect(screen.queryByRole('progressbar', { name: /investment diversification/i })).toBeNull();
     });
   });
 });

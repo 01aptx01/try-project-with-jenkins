@@ -135,10 +135,7 @@ export function SessionProvider({
         );
       }
     } finally {
-      if (
-        refreshRequestIdRef.current === currentReqId &&
-        getSessionGeneration() === capturedGeneration
-      ) {
+      if (refreshRequestIdRef.current === currentReqId) {
         setIsLoading(false);
       }
     }
@@ -363,7 +360,7 @@ export function SessionProvider({
   }
 
   // Session connection error (e.g. 503 / network issue on /me) with retry option
-  if (requireAuth && sessionConnectionError && !user) {
+  if (requireAuth && sessionConnectionError) {
     return (
       <div
         role="alert"
@@ -419,7 +416,7 @@ export function SessionProvider({
     );
   }
 
-  if (requireAuth && isLoading && !user) {
+  if (requireAuth && isLoading) {
     return (
       <div
         role="status"
@@ -454,7 +451,12 @@ export function SessionProvider({
         refreshSession,
       }}
     >
-      {children}
+      <div
+        key={user ? `${user.id}:${getSessionGeneration()}` : 'unauthenticated'}
+        style={{ display: 'contents' }}
+      >
+        {children}
+      </div>
     </SessionContext.Provider>
   );
 }

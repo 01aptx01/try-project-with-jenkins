@@ -133,8 +133,19 @@ describe('M4-016: Usability & WCAG 2.2 Accessibility Audits', () => {
       expect(screen.getByText('totalDebt')).toBeInTheDocument();
       expect(screen.getByText('monthlyExpense')).toBeInTheDocument();
 
-      const progressBars = screen.getAllByRole('progressbar');
-      expect(progressBars).toHaveLength(5);
+      // On null scores, role="progressbar" is omitted to avoid falsely announcing 0 (AUD-M4-008)
+      expect(screen.queryAllByRole('progressbar')).toHaveLength(0);
+
+      // When scores are present, role="progressbar" is rendered for all 5 components
+      const completeHealth: HealthResult = {
+        status: 'COMPLETE',
+        score: 75,
+        classification: 'GOOD',
+        breakdown: { liquidity: 15, debt: 15, savings: 15, goals: 15, investment: 15 },
+        missingFields: [],
+      };
+      render(<HealthPanel health={completeHealth} />);
+      expect(screen.getAllByRole('progressbar')).toHaveLength(5);
     });
 
     it('RecommendationCard provides section with accessible heading and badge', () => {

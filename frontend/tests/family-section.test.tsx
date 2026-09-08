@@ -363,4 +363,30 @@ describe('FamilySection (M4-013: Lazy On-Demand Loading & Independent State)', (
     expect(screen.getByTestId('relative-link-rel-fresh')).toHaveTextContent('Fresh Relative');
     expect(screen.queryByTestId('relative-link-rel-stale')).toBeNull();
   });
+
+  it('clears cache on unmount so remounting fetches fresh data (AUD-M4-003)', async () => {
+    const getClientFamilySpy = vi
+      .spyOn(api, 'getClientFamily')
+      .mockResolvedValue(mockFamilyResponse);
+
+    const { unmount } = render(<FamilySection clientId={clientId} defaultExpanded={true} />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('family-member-list')).toBeInTheDocument();
+    });
+    expect(getClientFamilySpy).toHaveBeenCalledTimes(1);
+
+    // Unmount component
+    unmount();
+
+    // Remount component for same client ID
+    render(<FamilySection clientId={clientId} defaultExpanded={true} />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('family-member-list')).toBeInTheDocument();
+    });
+
+    // Must fetch fresh data (call count is 2)
+    expect(getClientFamilySpy).toHaveBeenCalledTimes(2);
+  });
 });

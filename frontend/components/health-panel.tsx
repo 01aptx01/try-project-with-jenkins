@@ -202,36 +202,47 @@ export function HealthPanel({ health }: HealthPanelProps) {
                 </div>
 
                 {/* Accessible Visual Progress Bar */}
-                <div
-                  role="progressbar"
-                  aria-valuenow={rawVal ?? 0}
-                  aria-valuemin={0}
-                  aria-valuemax={comp.max}
-                  aria-label={`${comp.label} score progress`}
-                  style={{
-                    height: '6px',
-                    width: '100%',
-                    backgroundColor: 'var(--border-color)',
-                    borderRadius: '3px',
-                    overflow: 'hidden',
-                  }}
-                >
+                {rawVal !== null ? (
                   <div
+                    role="progressbar"
+                    aria-valuenow={rawVal}
+                    aria-valuemin={0}
+                    aria-valuemax={comp.max}
+                    aria-label={`${comp.label} score progress`}
                     style={{
-                      height: '100%',
-                      width: `${percentage}%`,
-                      backgroundColor:
-                        rawVal === null
-                          ? 'transparent'
-                          : rawVal >= 16
+                      height: '6px',
+                      width: '100%',
+                      backgroundColor: 'var(--border-color)',
+                      borderRadius: '3px',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div
+                      style={{
+                        height: '100%',
+                        width: `${percentage}%`,
+                        backgroundColor:
+                          rawVal >= 16
                             ? 'var(--health-good-text)'
                             : rawVal >= 12
                               ? 'var(--health-mod-text)'
                               : 'var(--health-risk-text)',
-                      transition: 'width 0.3s ease',
+                        transition: 'width 0.3s ease',
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div
+                    aria-label={`${comp.label} score not available due to insufficient data`}
+                    style={{
+                      height: '6px',
+                      width: '100%',
+                      backgroundColor: 'var(--border-color)',
+                      borderRadius: '3px',
+                      opacity: 0.4,
                     }}
                   />
-                </div>
+                )}
               </div>
             );
           })}

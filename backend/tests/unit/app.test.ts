@@ -20,4 +20,43 @@ describe("API scaffold", () => {
     expect(response.headers["x-content-type-options"]).toBe("nosniff");
     expect(response.headers["x-frame-options"]).toBe("SAMEORIGIN");
   });
+
+  it("parses structured JSON body with application/*+json content-type (AUD-M4-004)", async () => {
+    const app = createApp({
+      readiness: { check: async () => undefined },
+      version: "test-sha",
+      configureRoutes: (a) => {
+        a.post("/api/test-json", (req, res) => {
+          res.status(200).json({ received: req.body });
+        });
+      },
+    });
+
+    const response = await request(app)
+      .post("/api/test-json")
+      .set("Content-Type", "application/vnd.meridian+json")
+      .send(JSON.stringify({ hello: "world" }));
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ received: { hello: "world" } });
+  });
+
+  it("rejects lookalike MIME types with 415 (AUD-M4-004)", async () => {
+    const app = createApp({
+      readiness: { check: async () => undefined },
+      version: "test-sha",
+      configureRoutes: (a) => {
+        a.post("/api/test-json", (_req, res) => {
+          res.status(200).json({ ok: true });
+        });
+      },
+    });
+
+    const response = await request(app)
+      .post("/api/test-json")
+      .set("Content-Type", "text/application/json")
+      .send(JSON.stringify({ hello: "world" }));
+
+    expect(response.status).toBe(415);
+  });
 });

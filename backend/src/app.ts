@@ -43,7 +43,7 @@ export function createApp(dependencies: AppDependencies): Express {
 
   // 5. Request parsing with 16 KiB limit & Content-Type validation
   app.use(requireJsonContentType);
-  app.use(express.json({ limit: "16kb" }));
+  app.use(express.json({ limit: "16kb", type: ["application/json", "application/*+json"] }));
 
   // 6. Cookie parsing for session handling
   app.use(cookieParser());

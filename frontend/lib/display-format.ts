@@ -7,13 +7,16 @@
  */
 
 /**
- * Formats a decimal string into a localized currency representation (e.g., ฿150,000.00).
+ * Formats a decimal string into a localized numeric representation (e.g., 150,000.00).
+ * Does NOT assume or prepend currency symbols (e.g., ฿) when the API contract does not specify units,
+ * strictly honoring wire contract boundaries.
  * Returns fallback (default: "—") strictly when the input is null or undefined.
- * Zero ("0.00" or "0") is formatted as "฿0.00" and never converted to fallback.
+ * Zero ("0.00" or "0") is formatted as "0.00" and never converted to fallback.
  */
 export function formatCurrency(
   value: string | number | null | undefined,
-  fallback = '—'
+  fallback = '—',
+  currency?: string
 ): string {
   if (value === null || value === undefined) {
     return fallback;
@@ -38,7 +41,10 @@ export function formatCurrency(
   // Ensure at least 2 decimal places preserved
   const formattedDec = rawDec.length === 1 ? `${rawDec}0` : rawDec;
 
-  return `${isNegative ? '-' : ''}฿${formattedInt}.${formattedDec}`;
+  const prefix = isNegative ? '-' : '';
+  const currPrefix = currency ? `${currency} ` : '';
+
+  return `${prefix}${currPrefix}${formattedInt}.${formattedDec}`;
 }
 
 /**
