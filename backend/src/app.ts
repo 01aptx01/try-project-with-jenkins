@@ -1,22 +1,35 @@
 import { randomUUID } from "node:crypto";
-import express, { type NextFunction, type Request, type Response } from "express";
+import express, { type Express } from "express";
 import helmet from "helmet";
-import { ApiError, DependencyUnavailableError } from "./errors.js";
+import { NotFoundError, DependencyUnavailableError } from "./errors.js";
 import { checkReadiness, type DatabaseReadiness } from "./health/readiness.js";
+import { errorHandler } from "./middleware/error-handler.js";
+import { requireJsonContentType, noStoreCache } from "./middleware/request-parser.js";
 
 export interface AppDependencies {
   readiness: DatabaseReadiness;
   version: string;
+  configureRoutes?: (app: Express) => void;
 }
 
-export function createApp(dependencies: AppDependencies) {
+export function createApp(dependencies: AppDependencies): Express {
   const app = express();
+
+  // 1. Security headers & Request ID
   app.use(helmet());
   app.use((_request, response, next) => {
     response.locals.requestId = randomUUID();
     next();
   });
 
+  // 2. Global response cache control
+  app.use(noStoreCache);
+
+  // 3. Request parsing with 16 KiB limit & Content-Type validation
+  app.use(requireJsonContentType);
+  app.use(express.json({ limit: "16kb" }));
+
+  // 4. Public Health Check
   app.get("/health", async (_request, response, next) => {
     try {
       await checkReadiness(dependencies.readiness);
@@ -26,21 +39,18 @@ export function createApp(dependencies: AppDependencies) {
     }
   });
 
-  app.use((_request, _response, next) => next(new ApiError(404, "NOT_FOUND", "Route not found")));
+  // Additional application routes hook
+  dependencies.configureRoutes?.(app);
+
+  // 5. 404 Fallback
+  app.use((_request, _response, next) => {
+    next(new NotFoundError("Route not found"));
+  });
+
+  // 6. Centralized Error Handler
   app.use(errorHandler);
+
   return app;
-}
-
-function errorHandler(error: unknown, _request: Request, response: Response, _next: NextFunction) {
-  void _next;
-  const requestId = (response.locals.requestId as string) || randomUUID();
-  if (error instanceof ApiError) {
-    return response.status(error.status).json({ error: { code: error.code, message: error.message, requestId } });
-  }
-
-  console.error(`[${requestId}] Unhandled internal server error:`, error);
-  const internalError = new ApiError(500, "INTERNAL_ERROR", "An unexpected error occurred");
-  return response.status(internalError.status).json({ error: { code: internalError.code, message: internalError.message, requestId } });
 }
 
 export { DependencyUnavailableError };

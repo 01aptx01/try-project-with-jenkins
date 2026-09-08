@@ -39,29 +39,35 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 
 ## M3-002 — เตรียม HTTP validation และ error handling
 
-**Status:** TODO
+**Status:** DONE
 
 **Description:**
 เพิ่ม request parsing, security headers, configuration loader และ error handling middleware ที่รองรับ auth และ Client APIs
 
 **Acceptance criteria:**
-- [ ] กำหนด JSON body limit 16 KiB; malformed JSON/invalid schema คืน `400 Bad Request`, body เกิน limit คืน `413 Payload Too Large`, login ที่ไม่ใช้ `application/json` คืน `415 Unsupported Media Type`; ทุก error ใช้ common error envelope `{error: {code, message, details?}}` เดิมทั้งหมด
-- [ ] ตรวจ `APP_ORIGIN`, `JWT_SECRET`, environment mode และ proxy configuration ตอนเริ่ม process; production ต้องใช้ HTTPS origin ไม่มี secret default และไม่แสดงค่าลับเมื่อ configuration ผิด
-- [ ] `JWT_SECRET` ใช้ base64 ของ random bytes อย่างน้อย 32 bytes พร้อมระบุคำสั่งสร้างด้วย Node crypto (`node -e "console.log(crypto.randomBytes(32).toString('base64'))"`); validation ตรวจสอบรูปแบบ base64 และจำนวน bytes
-- [ ] แยก dependency failure `503 Service Unavailable` จาก programming/query/schema failure `500 Internal Server Error`; logs บันทึกเฉพาะ request ID, route template, status และ safe error code (ห้ามบันทึก stack trace หรือ credentials)
+- [x] กำหนด JSON body limit 16 KiB; malformed JSON/invalid schema คืน `400 Bad Request`, body เกิน limit คืน `413 Payload Too Large`, login ที่ไม่ใช้ `application/json` คืน `415 Unsupported Media Type`; ทุก error ใช้ common error envelope `{error: {code, message, details?}}` เดิมทั้งหมด
+- [x] ตรวจ `APP_ORIGIN`, `JWT_SECRET`, environment mode และ proxy configuration ตอนเริ่ม process; production ต้องใช้ HTTPS origin ไม่มี secret default และไม่แสดงค่าลับเมื่อ configuration ผิด
+- [x] `JWT_SECRET` ใช้ base64 ของ random bytes อย่างน้อย 32 bytes พร้อมระบุคำสั่งสร้างด้วย Node crypto (`node -e "console.log(crypto.randomBytes(32).toString('base64'))"`); validation ตรวจสอบรูปแบบ base64 และจำนวน bytes
+- [x] แยก dependency failure `503 Service Unavailable` จาก programming/query/schema failure `500 Internal Server Error`; logs บันทึกเฉพาะ request ID, route template, status และ safe error code (ห้ามบันทึก stack trace หรือ credentials)
 
 **Verification:**
-- [ ] Supertest suite สำหรับ body parsing, size limits, content types และ error status code (`400`, `413`, `415`, `500`, `503`)
-- [ ] Environment validation tests ตรวจสอบ rejection เมื่อ `JWT_SECRET` สั้นเกิน 32 bytes หรือ `APP_ORIGIN` ผิด format
-- [ ] Log-redaction assertions ตรวจสอบว่าไม่มี secret หรือ sensitive payload หลุดออกทาง console
+- [x] Supertest suite สำหรับ body parsing, size limits, content types และ error status code (`400`, `413`, `415`, `500`, `503`): ผ่านครบ 8 tests ใน `backend/tests/unit/middleware/error-handler.test.ts`.
+- [x] Environment validation tests ตรวจสอบ rejection เมื่อ `JWT_SECRET` สั้นเกิน 32 bytes, format ผิด, production non-HTTPS origin, หรือ default secret: ผ่านครบ 7 tests ใน `backend/tests/unit/env.test.ts`.
+- [x] Log-redaction assertions ตรวจสอบว่าไม่มี secret หรือ sensitive payload หลุดออกทาง console โดย log บันทึกเฉพาะ safe request ID, route path, status 500, และ error code name.
+- [x] ทั้งหมด 133 unit tests ผ่าน 100%, lint 0 errors, typecheck 0 errors, build clean.
 
 **Dependencies:** M3-001  
 **Files likely touched:**
 - `backend/src/config/env.ts`
+- `backend/src/errors.ts`
 - `backend/src/middleware/error-handler.ts`
 - `backend/src/middleware/request-parser.ts`
 - `backend/src/app.ts`
-- `backend/tests/unit/middleware/error-handler.test.ts`  
+- `backend/tests/unit/env.test.ts`
+- `backend/tests/unit/middleware/error-handler.test.ts`
+- `.env`
+- `.env.example`
+- `tasks/milestone-3/todo.md`  
 **Scope:** M
 
 ---
