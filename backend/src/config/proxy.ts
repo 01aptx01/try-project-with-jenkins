@@ -19,20 +19,30 @@ export function resolveTrustProxySetting(
   if (rawSetting === undefined || rawSetting === false) {
     return false;
   }
-  if (rawSetting === true) {
-    return true;
+  if (
+    rawSetting === true ||
+    (typeof rawSetting === "string" && rawSetting.trim().toLowerCase() === "true")
+  ) {
+    throw new Error(
+      "Global 'trust proxy: true' is insecure and strictly disallowed. Specify trusted proxy IP/subnet (e.g. 'loopback', '127.0.0.1', CIDR) or set to 'false'."
+    );
   }
 
   const trimmed = rawSetting.trim();
   if (trimmed === "false") return false;
-  if (trimmed === "true") return true;
   if (trimmed === "loopback") return "loopback";
 
   if (trimmed.includes(",")) {
-    return trimmed
+    const list = trimmed
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean);
+    if (list.some((item) => item.toLowerCase() === "true")) {
+      throw new Error(
+        "Global 'trust proxy: true' is insecure and strictly disallowed. Specify trusted proxy IP/subnet (e.g. 'loopback', '127.0.0.1', CIDR) or set to 'false'."
+      );
+    }
+    return list;
   }
 
   return trimmed;

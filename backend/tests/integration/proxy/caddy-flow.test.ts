@@ -192,7 +192,7 @@ describe("Caddy Proxy & Local Auth Flow Verification (M3-016)", () => {
     expect(forbiddenRes.body.error.message).toBe("Origin mismatch or missing");
   });
 
-  it("prevents rate limiter evasion via forged X-Forwarded-For headers", async () => {
+  it("prevents rate limiter evasion for untrusted direct clients (trust proxy: false)", async () => {
     // App with trustProxy: false (untrusted direct client)
     const app = createTestAppWithProxy({
       appOrigin: defaultProxyOrigin,
@@ -230,5 +230,77 @@ describe("Caddy Proxy & Local Auth Flow Verification (M3-016)", () => {
     expect(blockedRes.body.error.message).toBe(
       "Too many login attempts, please try again later"
     );
+  });
+
+  it("handles trusted Caddy proxy hop and prevents upstream spoofing (trust proxy: loopback)", async () => {
+    // App behind trusted Caddy proxy (loopback)
+    const app = createTestAppWithProxy({
+      appOrigin: defaultProxyOrigin,
+      trustProxySetting: "loopback",
+      rateLimiterMax: 3,
+    });
+
+    const clientA = "203.0.113.10";
+    const clientB = "203.0.113.20";
+
+    // Client A exhausts attempts
+    for (let i = 1; i <= 3; i++) {
+      const res = await request(app)
+        .post("/api/auth/login")
+        .set("Origin", defaultProxyOrigin)
+        .set("Content-Type", "application/json")
+        .set("X-Forwarded-For", clientA)
+        .send({
+          email: SEED_RM_1_EMAIL,
+          password: "WrongPassword!",
+        });
+      expect(res.status).toBe(401);
+    }
+
+    // 4th request from Client A is rate limited
+    const blockedRes = await request(app)
+      .post("/api/auth/login")
+      .set("Origin", defaultProxyOrigin)
+      .set("Content-Type", "application/json")
+      .set("X-Forwarded-For", clientA)
+      .send({
+        email: SEED_RM_1_EMAIL,
+        password: "WrongPassword!",
+      });
+    expect(blockedRes.status).toBe(429);
+
+    // Client A attempts to spoof by prepending upstream IPs: "1.2.3.4, 203.0.113.10"
+    // Express trusts only the loopback hop and inspects 203.0.113.10 -> still blocked!
+    const spoofAttemptRes = await request(app)
+      .post("/api/auth/login")
+      .set("Origin", defaultProxyOrigin)
+      .set("Content-Type", "application/json")
+      .set("X-Forwarded-For", `1.2.3.4, ${clientA}`)
+      .send({
+        email: SEED_RM_1_EMAIL,
+        password: "WrongPassword!",
+      });
+    expect(spoofAttemptRes.status).toBe(429);
+
+    // Meanwhile, Client B (different forwarded IP from trusted Caddy) is NOT blocked
+    const clientBRes = await request(app)
+      .post("/api/auth/login")
+      .set("Origin", defaultProxyOrigin)
+      .set("Content-Type", "application/json")
+      .set("X-Forwarded-For", clientB)
+      .send({
+        email: SEED_RM_1_EMAIL,
+        password: "WrongPassword!",
+      });
+    expect(clientBRes.status).toBe(401);
+  });
+
+  it("strictly rejects global trust proxy true in configuration", () => {
+    expect(() =>
+      createTestAppWithProxy({
+        appOrigin: defaultProxyOrigin,
+        trustProxySetting: "true",
+      })
+    ).toThrow("Global 'trust proxy: true' is insecure and strictly disallowed");
   });
 });

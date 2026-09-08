@@ -19,6 +19,13 @@ import { createFamilyRouter } from "../../../src/routes/family.routes.js";
 import { AuthService } from "../../../src/services/auth.service.js";
 import { createTestHarness, type TestHarness } from "../../support/test-harness.js";
 import { SEED_RM_1_ID, SEED_RM_2_ID } from "../../../src/seed/catalogue.js";
+import { PrismaClient } from "@prisma/client";
+import { getTestDatabaseUrl } from "../test-database.js";
+import {
+  createTestClient,
+  createTestFinancialProfile,
+  createTestGoal,
+} from "../../fixtures/client.fixtures.js";
 
 describe("Milestone 3 Acceptance Matrix (M3-017)", () => {
   let harness: TestHarness;
@@ -307,8 +314,73 @@ describe("Milestone 3 Acceptance Matrix (M3-017)", () => {
     });
   });
 
-  describe("4. Performance & Batch Query Instrumentation", () => {
-    it("guarantees 1 batch query without N+1 query regression for client list", async () => {
+  describe("4. Performance & Zero N+1 Batch Query Instrumentation", () => {
+    let instrumentedPrisma: PrismaClient;
+    let queryLog: string[] = [];
+
+    beforeAll(() => {
+      instrumentedPrisma = new PrismaClient({
+        datasources: { db: { url: getTestDatabaseUrl() } },
+        log: [{ emit: "event", level: "query" }],
+      });
+      instrumentedPrisma.$on("query" as never, (e: { query: string }) => {
+        queryLog.push(e.query);
+      });
+    });
+
+    afterAll(async () => {
+      await instrumentedPrisma.$disconnect();
+    });
+
+    it("guarantees O(1) constant SQL query count independent of client count (Zero N+1 proof)", async () => {
+      const instrumentedRepo = new PrismaClientRepository(instrumentedPrisma);
+
+      // Phase 1: Measure exact SQL queries for RM 1 with baseline 15 clients
+      queryLog = [];
+      const baselineClients = await instrumentedRepo.findAllClientsByRmId(SEED_RM_1_ID);
+      expect(baselineClients).toHaveLength(15);
+      const baselineQueryCount = queryLog.length;
+      expect(baselineQueryCount).toBeGreaterThan(0);
+      expect(baselineQueryCount).toBeLessThanOrEqual(3); // 1 clients query + 1 profiles IN query + 1 goals IN query
+
+      // Phase 2: Add 5 additional clients (with profiles and goals) to RM 1
+      for (let i = 1; i <= 5; i++) {
+        const client = await createTestClient(
+          harness.database,
+          {
+            rmId: SEED_RM_1_ID,
+            customerCode: `PERF-${i.toString().padStart(3, "0")}`,
+            firstName: `Perf${i}`,
+            lastName: "Tester",
+          },
+          harness.registry
+        );
+        await createTestFinancialProfile(harness.database, { clientId: client.id });
+        await createTestGoal(harness.database, {
+          clientId: client.id,
+          targetAmount: "100000.00",
+          currentAmount: "20000.00",
+          startDate: new Date("2026-01-01"),
+          targetDate: new Date("2027-01-01"),
+        });
+      }
+
+      // Phase 3: Query RM 1 now containing 20 clients (33% increase in client volume)
+      queryLog = [];
+      const expandedClients = await instrumentedRepo.findAllClientsByRmId(SEED_RM_1_ID);
+      expect(expandedClients).toHaveLength(20);
+      const expandedQueryCount = queryLog.length;
+
+      // MATHEMATICAL PROOF OF ZERO N+1:
+      // If N+1 existed, expanded queries would be baseline + (5 clients * 2 relations) = baseline + 10.
+      // With true O(1) batching, expandedQueryCount is strictly EQUAL to baselineQueryCount!
+      expect(expandedQueryCount).toBe(baselineQueryCount);
+
+      // Clean up fixture clients
+      await harness.cleanupFixtures();
+    });
+
+    it("guarantees HTTP /api/clients invokes exactly 1 repository batch load without N+1", async () => {
       const repoSpy = vi.spyOn(
         PrismaClientRepository.prototype,
         "findAllClientsByRmId"
@@ -320,7 +392,6 @@ describe("Milestone 3 Acceptance Matrix (M3-017)", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.items).toHaveLength(15);
-      // findAllClientsByRmId was called exactly 1 time for the batch of 15 clients!
       expect(repoSpy).toHaveBeenCalledTimes(1);
       repoSpy.mockRestore();
     });
