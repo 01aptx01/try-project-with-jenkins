@@ -418,7 +418,7 @@
 
 ## M4-014 — แสดง one-hop Family Graph ที่อ่านได้
 
-**Status:** TODO  
+**Status:** DONE  
 **Scope:** M  
 **Requirements:** FR-11, US-08, NFR-06, BR-10
 
@@ -426,14 +426,14 @@
 
 **Acceptance criteria:**
 
-- [ ] แสดง PRIMARY กับ RELATED nodes และ edges ที่ API ส่งเท่านั้น; source/target อ้าง node ที่มีอยู่, deduplicate ด้วย IDs และไม่เพิ่มชื่อ/จำนวนสมาชิกที่ backend ไม่เปิดเผย
-- [ ] Relationship type หมายถึง source ต่อ target; primary เป็น target ต้องแสดงกลับ PARENT↔CHILD อย่างถูกต้อง ส่วน SPOUSE/SIBLING คงเดิม; ไม่สรุปความสัมพันธ์ทอดถัดไป
-- [ ] SVG มีคำอธิบายและ HTML relationship list เป็นทางเลือกที่มีข้อมูลเท่ากัน; related node links เปิด Profile ได้ด้วย keyboard, labels ยาวไม่ทับกัน และ primary-only graph อ่านได้
+- [x] แสดง PRIMARY กับ RELATED nodes และ edges ที่ API ส่งเท่านั้น; source/target อ้าง node ที่มีอยู่, deduplicate ด้วย IDs และไม่เพิ่มชื่อ/จำนวนสมาชิกที่ backend ไม่เปิดเผย
+- [x] Relationship type หมายถึง source ต่อ target; primary เป็น target ต้องแสดงกลับ PARENT↔CHILD อย่างถูกต้อง ส่วน SPOUSE/SIBLING คงเดิม; ไม่สรุปความสัมพันธ์ทอดถัดไป
+- [x] SVG มีคำอธิบายและ HTML relationship list เป็นทางเลือกที่มีข้อมูลเท่ากัน; related node links เปิด Profile ได้ด้วย keyboard, labels ยาวไม่ทับกัน และ primary-only graph อ่านได้
 
 **Verification:**
 
-- [ ] focused tests tests/family-graph.test.tsx มี primary ทั้งสองด้าน, duplicate/dangling edge input safety และ filtered cross-RM fixture; manual keyboard; เชื่อม API isolation evidence ของ M3 โดยไม่อ้างว่า mock พิสูจน์ backend
-- [ ] บันทึก evidence ใน verification record และอัปเดตสถานะตามผลจริง
+- [x] focused tests tests/family-graph.test.tsx มี primary ทั้งสองด้าน, duplicate/dangling edge input safety และ filtered cross-RM fixture; manual keyboard; เชื่อม API isolation evidence ของ M3 โดยไม่อ้างว่า mock พิสูจน์ backend
+- [x] บันทึก evidence ใน verification record (`tasks/milestone-4/verification.md`) และอัปเดตสถานะตามผลจริง
 
 **Dependencies:** M4-013
 

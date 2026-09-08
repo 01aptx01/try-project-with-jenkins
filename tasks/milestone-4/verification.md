@@ -464,6 +464,43 @@
 
 **M4-013 Verdict:** **DONE / PASS**
 
+---
+
+## 18. M4-014 Verification Record: Readable One-Hop Family Graph & Accessibility
+
+### 18.1 Artifacts Delivered
+- Normalization & sanitation: `frontend/components/family-graph.tsx`
+  - `normalizeRelationship`: maps relationship from primary's viewpoint. When primary is target, correctly inverts `PARENT` <-> `CHILD` while preserving `SPOUSE` and `SIBLING`.
+  - `sanitizeGraph`: deduplicates nodes and edges by ID, safely filters out dangling edges and self-loops, and ensures no fabricated members/counts are added beyond backend payload.
+- Graph visualization & accessibility:
+  - SVG diagram with `role="img"` and `aria-label="Family relationship graph for {primaryName}"` with `<desc>` element.
+  - Interactive SVG nodes with `tabIndex={0}`, `role="button"`, focus styles, and keyboard handlers (Enter/Space to view profile).
+  - Prominent center PRIMARY node with high-contrast accent ring.
+  - Surrounding RELATED nodes with relationship labels at edge midpoints.
+  - Accessible HTML relationship list (`<ul data-testid="family-member-list">`) providing 100% equivalent structured data and semantic links (`<Link href="/clients/:id">`).
+  - Primary-only state handling without crashes or broken edges.
+- Styling: `frontend/components/family-graph.module.css`
+- Integration: `frontend/components/family-section.tsx` renders `FamilyGraph` when active data exists.
+- Unit tests: `frontend/tests/family-graph.test.tsx` (7 test cases)
+  - Primary as source preserving relationship type.
+  - Primary as target inverting PARENT <-> CHILD while preserving SPOUSE and SIBLING.
+  - Deduplication and dangling edge filtering.
+  - SVG graphic rendering and accessibility attributes.
+  - Accessible HTML relationship list and direct links.
+  - Keyboard navigation (Enter key navigation via Next.js router).
+  - Primary-only data handling.
+
+### 18.2 Test Results
+- **Command:** `npm run test:unit -w @meridian/web`
+- **Output:** 94 tests passed across 14 test files (`api-client.test.ts` 15, `financial-details.test.tsx` 11, `client-filters.test.tsx` 10, `recommendation-summary.test.tsx` 8, `family-section.test.tsx` 7, `family-graph.test.tsx` 7, `client-pagination.test.tsx` 6, `login.test.tsx` 6, `morning-action-plan.test.tsx` 5, `health-panel.test.tsx` 5, `client-list.test.tsx` 5, `session-shell.test.tsx` 4, `client-profile.test.tsx` 4, `home.test.tsx` 1)
+- **All Workspace Unit Tests:** 265 tests passed across 36 test files (Backend 171 tests, Frontend 94 tests)
+- **Lint & Typecheck:** 0 errors across `@meridian/api` and `@meridian/web`
+- **Security Audit:** `npm audit` returned 0 vulnerabilities
+- **Production Build:** `npm run build` cleanly compiled all routes with Turbopack
+
+**M4-014 Verdict:** **DONE / PASS**
+
+
 
 
 

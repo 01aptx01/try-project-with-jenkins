@@ -1,0 +1,99 @@
+.graphContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.svgWrapper {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.graphSvg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.edgeLine {
+  stroke: var(--border-color);
+  stroke-width: 2;
+  stroke-dasharray: 4 2;
+}
+
+.edgeLabel {
+  font-size: 10px;
+  fill: var(--text-muted);
+  font-weight: 600;
+  text-anchor: middle;
+}
+
+.primaryNodeCircle {
+  fill: var(--primary);
+  stroke: var(--primary-contrast);
+  stroke-width: 3;
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.primaryNodeCircle:hover,
+.primaryNodeCircle:focus {
+  filter: drop-shadow(0 0 6px rgba(10, 37, 64, 0.4));
+  outline: none;
+}
+
+.relatedNodeCircle {
+  fill: var(--bg-surface);
+  stroke: var(--primary);
+  stroke-width: 2;
+  cursor: pointer;
+  transition: transform 0.2s ease, fill 0.2s ease;
+}
+
+.relatedNodeCircle:hover,
+.relatedNodeCircle:focus {
+  fill: var(--bg-muted);
+  outline: none;
+}
+
+.nodeTextPrimary {
+  font-size: 11px;
+  font-weight: 700;
+  fill: var(--text-primary);
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+.nodeTextSecondary {
+  font-size: 9px;
+  font-weight: 500;
+  fill: var(--text-muted);
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+.relationshipList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.relationshipItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.875rem 1rem;
+  background-color: var(--bg-muted);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}

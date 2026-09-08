@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { useFamilyGraph } from '../hooks/use-family-graph.js';
+import { FamilyGraph } from './family-graph.js';
 
 export interface FamilySectionProps {
   clientId: string;
@@ -164,99 +164,10 @@ export function FamilySection({ clientId, defaultExpanded = false }: FamilySecti
             </div>
           )}
 
-          {/* Active Family Network List */}
+          {/* Active Family Network Graph & Accessible List */}
           {data && !hasNoRelatives && !isLoading && !errorMessage && (
             <div data-testid="family-relationships-container">
-              <div
-                style={{
-                  marginBottom: '1rem',
-                  fontSize: '0.875rem',
-                  color: 'var(--text-secondary)',
-                }}
-              >
-                Showing {data.nodes.length - 1} related member(s) and {data.edges.length} edge(s).
-              </div>
-
-              <ul
-                data-testid="family-member-list"
-                style={{
-                  listStyle: 'none',
-                  padding: 0,
-                  margin: 0,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.75rem',
-                }}
-              >
-                {data.edges.map((edge) => {
-                  const isPrimarySource = edge.source === clientId;
-                  const relativeId = isPrimarySource ? edge.target : edge.source;
-                  const relativeNode = data.nodes.find((n) => n.id === relativeId);
-                  const relativeName = relativeNode ? relativeNode.label : relativeId;
-
-                  // Compute relative relationship label from primary's viewpoint
-                  let relationshipLabel: string = edge.relationshipType;
-                  if (!isPrimarySource) {
-                    if (edge.relationshipType === 'PARENT') relationshipLabel = 'CHILD';
-                    else if (edge.relationshipType === 'CHILD') relationshipLabel = 'PARENT';
-                  }
-
-                  return (
-                    <li
-                      key={edge.id}
-                      data-testid={`family-edge-${edge.id}`}
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '0.875rem 1rem',
-                        backgroundColor: 'var(--bg-muted)',
-                        borderRadius: 'var(--radius-sm)',
-                        border: '1px solid var(--border-color)',
-                      }}
-                    >
-                      <div>
-                        <Link
-                          href={`/clients/${relativeId}`}
-                          data-testid={`relative-link-${relativeId}`}
-                          style={{
-                            fontWeight: 600,
-                            color: 'var(--primary)',
-                            textDecoration: 'none',
-                            fontSize: '0.9375rem',
-                          }}
-                        >
-                          {relativeName}
-                        </Link>
-                        <div
-                          style={{
-                            fontSize: '0.75rem',
-                            color: 'var(--text-muted)',
-                            marginTop: '0.125rem',
-                          }}
-                        >
-                          Client ID: {relativeId}
-                        </div>
-                      </div>
-
-                      <span
-                        data-testid={`relationship-badge-${edge.id}`}
-                        style={{
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          padding: '0.2rem 0.5rem',
-                          backgroundColor: 'var(--bg-surface)',
-                          color: 'var(--text-secondary)',
-                          borderRadius: 'var(--radius-sm)',
-                          border: '1px solid var(--border-color)',
-                        }}
-                      >
-                        {relationshipLabel}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
+              <FamilyGraph data={data} primaryClientId={clientId} />
             </div>
           )}
         </div>

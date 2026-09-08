@@ -94,7 +94,7 @@ describe('FamilySection (M4-013: Lazy On-Demand Loading & Independent State)', (
     });
 
     expect(screen.getByTestId('family-relationships-container')).toBeInTheDocument();
-    expect(screen.getByText(/Showing 2 related member\(s\) and 2 edge\(s\)/i)).toBeInTheDocument();
+    expect(screen.getByText('Relationship List (2)')).toBeInTheDocument();
     expect(screen.getByTestId('relative-link-c0000000-0000-0000-0000-000000000002')).toHaveTextContent(
       'Suda Prasert'
     );
@@ -216,7 +216,9 @@ describe('FamilySection (M4-013: Lazy On-Demand Loading & Independent State)', (
     const { rerender } = render(<FamilySection clientId={clientId} defaultExpanded={true} />);
 
     await waitFor(() => {
-      expect(screen.getByText('Suda Prasert')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('relative-link-c0000000-0000-0000-0000-000000000002')
+      ).toHaveTextContent('Suda Prasert');
     });
     expect(getClientFamilySpy).toHaveBeenCalledWith(clientId);
 
@@ -224,10 +226,12 @@ describe('FamilySection (M4-013: Lazy On-Demand Loading & Independent State)', (
     rerender(<FamilySection clientId={otherClientId} defaultExpanded={true} />);
 
     await waitFor(() => {
-      expect(screen.getByText('Malee Wong')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('relative-link-c0000000-0000-0000-0000-000000000098')
+      ).toHaveTextContent('Malee Wong');
     });
 
-    expect(screen.queryByText('Suda Prasert')).toBeNull();
+    expect(screen.queryByTestId('relative-link-c0000000-0000-0000-0000-000000000002')).toBeNull();
     expect(getClientFamilySpy).toHaveBeenCalledWith(otherClientId);
   });
 });
