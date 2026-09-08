@@ -258,7 +258,7 @@
 
 ## M4-009 — สร้าง Client Profile จาก snapshot เดียว
 
-**Status:** TODO  
+**Status:** DONE  
 **Scope:** M  
 **Requirements:** FR-06, US-05, BR-09
 
@@ -266,14 +266,14 @@
 
 **Acceptance criteria:**
 
-- [ ] /clients/[id] โหลด /api/clients/:id แล้วแสดง personal data, Risk Level และ asOfDate; ไม่เรียก health/recommendations/summary sub-endpoints เพิ่มเพื่อประกอบหน้า
-- [ ] Financial Profile/primaryGoal ที่ null ยังเป็น success; malformed ID/404/error มี state ของตน และ missing/not-owned ใช้ Client not found เหมือนกัน
-- [ ] เมื่อ route ID เปลี่ยนหรือออกจากหน้าให้ abort และ clear snapshot; late response ของ Client A ห้ามแสดงใน Client B และ Family ยังไม่ถูก fetch ก่อนเปิด
+- [x] /clients/[id] โหลด /api/clients/:id แล้วแสดง personal data, Risk Level และ asOfDate; ไม่เรียก health/recommendations/summary sub-endpoints เพิ่มเพื่อประกอบหน้า
+- [x] Financial Profile/primaryGoal ที่ null ยังเป็น success; malformed ID/404/error มี state ของตน และ missing/not-owned ใช้ Client not found เหมือนกัน
+- [x] เมื่อ route ID เปลี่ยนหรือออกจากหน้าให้ abort และ clear snapshot; late response ของ Client A ห้ามแสดงใน Client B และ Family ยังไม่ถูก fetch ก่อนเปิด
 
 **Verification:**
 
-- [ ] focused tests tests/client-profile.test.tsx ยืนยัน fetch paths/count และ out-of-order responses; frontend build
-- [ ] บันทึก evidence ใน verification record และอัปเดตสถานะตามผลจริง
+- [x] focused tests tests/client-profile.test.tsx (4 passed) ยืนยัน fetch paths/count และ out-of-order responses; frontend build
+- [x] บันทึก evidence ใน verification record (`tasks/milestone-4/verification.md`) และอัปเดตสถานะตามผลจริง
 
 **Dependencies:** M4-004
 
@@ -286,8 +286,8 @@
 
 ### Checkpoint C — Dashboard และ Profile snapshot
 
-- [ ] Pagination/history ถูกต้อง; Dashboard link ไป Profile ได้; Profile ใช้ snapshot request และไม่ preload Family; frontend suite/build ผ่าน
-- [ ] ทบทวนผลและ blockers ก่อนงานที่พึ่งพา; ไม่ใช้จำนวน tests หรือคะแนน audit แทน acceptance evidence
+- [x] Pagination/history ถูกต้อง; Dashboard link ไป Profile ได้; Profile ใช้ snapshot request และไม่ preload Family; frontend suite/build ผ่าน
+- [x] ทบทวนผลและ blockers ก่อนงานที่พึ่งพา; ไม่ใช้จำนวน tests หรือคะแนน audit แทน acceptance evidence
 
 <a id="m4-010"></a>
 

@@ -275,5 +275,53 @@
 
 **M4-008 Verdict:** **DONE / PASS**
 
+---
+
+## 11. M4-009 Verification Record: Client Profile Snapshot View
+
+### 11.1 Artifacts Delivered
+- Client profile hook: `frontend/hooks/use-client-profile.ts`
+  - Fetches `/api/clients/:id` with single snapshot request.
+  - Zero extra calls to sub-endpoints (`/health`, `/recommendations`, `/summary`) or `/family`.
+  - Privacy preservation (BR-09): Treats both 404 (not found) and 403 (unowned client) as identical "Client Not Found" to prevent portfolio enumeration.
+  - Race condition prevention: Aborts in-flight request when `clientId` changes, clears previous client data immediately, and rejects late responses from previous clients.
+- Client profile view component: `frontend/components/client-profile.tsx`
+  - Top breadcrumb navigation link back to `/clients`.
+  - Header displays client name, customer code, age, occupation, risk level badge, asOfDate badge, and health status badge.
+  - Link to Family Network (`/clients/:id/family`) without preloading family data.
+  - Executive summary section.
+  - Next Best Action section with priority badge, action title, and reason narrative.
+  - Financial profile section handling both complete metrics and incomplete profiles safely.
+  - Unified "Client Not Found" alert with link back to Client Directory.
+- Dynamic page route: `frontend/app/(authenticated)/clients/[id]/page.tsx`
+  - Uses `await params` and wraps `ClientProfile` in `<Suspense>` boundary.
+- Component & hook unit tests: `frontend/tests/client-profile.test.tsx` (4 test cases)
+  - Verifies exactly 1 call to `getClientProfile`, zero calls to `getClientFamily`.
+  - Verifies incomplete profile safe rendering with null financialProfile and primaryGoal.
+  - Verifies unified "Client Not Found" for 404 missing and 403 unowned clients (BR-09).
+  - Verifies immediate clearance on client ID switch and suppression of late responses.
+
+### 11.2 Test Results
+- **Command:** `npm run test:unit -w @meridian/web`
+- **Output:** 56 tests passed across 9 test files (`api-client.test.ts` 15, `client-filters.test.tsx` 10, `client-pagination.test.tsx` 6, `login.test.tsx` 6, `morning-action-plan.test.tsx` 5, `client-list.test.tsx` 5, `session-shell.test.tsx` 4, `client-profile.test.tsx` 4, `home.test.tsx` 1)
+- **All Workspace Unit Tests:** 227 tests passed across 31 test files (Backend 171 tests, Frontend 56 tests)
+- **Lint & Typecheck:** 0 errors across `@meridian/api` and `@meridian/web`
+- **Security Audit:** `npm audit` returned 0 vulnerabilities
+- **Production Build:** `npm run build` cleanly compiled dynamic route `ƒ /clients/[id]` and all static routes with Turbopack
+
+**M4-009 Verdict:** **DONE / PASS**
+
+---
+
+## 12. Checkpoint C Verification Sign-off
+
+- [x] Client pagination and browser history operating correctly without client-side re-sorting.
+- [x] Morning Action Plan on `/dashboard` displays prioritized clients and links directly to `/clients/:id`.
+- [x] Client Profile loads via single snapshot request without preloading Family Network or calling sub-endpoints.
+- [x] Missing and unowned clients display unified "Client Not Found" without privacy leak (BR-09).
+- [x] Full test suite (227 unit tests), lint (0 errors), typecheck (0 errors), build (clean), and audit (0 vulnerabilities) verified.
+- [x] Ready to proceed to Checkpoint D (`M4-010` through `M4-012`).
+
+
 
 
