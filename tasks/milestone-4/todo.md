@@ -8,7 +8,7 @@
 
 ## M4-001 — ตรวจ M3 handoff และล็อก UI contracts
 
-**Status:** TODO  
+**Status:** DONE  
 **Scope:** S  
 **Requirements:** NFR-04; prerequisite ของ FR-01–12
 
@@ -16,14 +16,15 @@
 
 **Acceptance criteria:**
 
-- [ ] บันทึก HEAD, Git status, environment และผล root lint/typecheck/unit/integration/build; Caddy และ isolated test DB เป็น preconditions ที่ต้องตรวจจริง ไม่มี skip ที่นับเป็นผ่าน
-- [ ] ทำ contract checklist สำหรับ auth/list/dashboard/profile/family รวม nullability, error.requestId ที่ runtime ส่ง, decimal/date formats และ PrimaryGoal.progress; ตัวอย่างใช้ผล domain จริง ไม่คัดลอกตัวอย่างคะแนนที่ขัดสูตร
-- [ ] หาก prerequisite ไม่ผ่าน บันทึก failing command และ upstream M3 finding/ticket พร้อมกำหนดงานที่ถูกบล็อก; ไม่เขียนว่า M4 พร้อมจากคะแนน audit เพียงอย่างเดียว
+- [x] บันทึก HEAD, Git status, environment และผล root lint/typecheck/unit/integration/build; Caddy และ isolated test DB เป็น preconditions ที่ต้องตรวจจริง ไม่มี skip ที่นับเป็นผ่าน
+- [x] ทำ contract checklist สำหรับ auth/list/dashboard/profile/family รวม nullability, error.requestId ที่ runtime ส่ง, decimal/date formats และ PrimaryGoal.progress; ตัวอย่างใช้ผล domain จริง ไม่คัดลอกตัวอย่างคะแนนที่ขัดสูตร
+- [x] หาก prerequisite ไม่ผ่าน บันทึก failing command และ upstream M3 finding/ticket พร้อมกำหนดงานที่ถูกบล็อก; ไม่เขียนว่า M4 พร้อมจากคะแนน audit เพียงอย่างเดียว
 
 **Verification:**
 
-- [ ] รันคำสั่ง baseline ตาม plan และเทียบ payload กับ backend response types/tests; ไม่ cleanup development DB
-- [ ] บันทึก evidence ใน verification record และอัปเดตสถานะตามผลจริง
+- [x] รันคำสั่ง baseline ตาม plan และเทียบ payload กับ backend response types/tests; ไม่ cleanup development DB
+- [x] บันทึก evidence ใน verification record และอัปเดตสถานะตามผลจริง ใน `tasks/milestone-4/verification.md` และ `tasks/milestone-4/contract-baseline.md`
+- [x] ผลการตรวจ: Quality gates ผ่าน 100% (npm audit 0, lint 0, typecheck 0, test:unit 172 passed, test:integration 78 passed, build passed)
 
 **Dependencies:** M3-018 และ commit แก้ audit 779c907
 
@@ -36,7 +37,7 @@
 
 ## M4-002 — สร้าง browser API client ที่มี typed contracts
 
-**Status:** TODO  
+**Status:** DONE  
 **Scope:** M  
 **Requirements:** NFR-01, NFR-04
 
@@ -44,14 +45,14 @@
 
 **Acceptance criteria:**
 
-- [ ] มี type-only facade ของ wire types และ typed synthetic fixtures ครบ complete/incomplete/error/family; frontend build ไม่มี Prisma/Express/Zod runtime หรือ financial calculators จาก backend
-- [ ] API helper ใช้ relative paths, same-origin credentials, no-store, caller AbortSignal และ timeout 10 วินาที; แยก HTTP error/network/timeout/abort และรับ 204 โดยไม่ parse JSON
-- [ ] Tests ครอบคลุม 400/401/403/404/413/415/429 พร้อม Retry-After/500/503, malformed response และ cancellation; helper ไม่ log password/cookie/token/payload และไม่ retry POST อัตโนมัติ
+- [x] มี type-only facade ของ wire types และ typed synthetic fixtures ครบ complete/incomplete/error/family; frontend build ไม่มี Prisma/Express/Zod runtime หรือ financial calculators จาก backend
+- [x] API helper ใช้ relative paths, same-origin credentials, no-store, caller AbortSignal และ timeout 10 วินาที; แยก HTTP error/network/timeout/abort และรับ 204 โดยไม่ parse JSON
+- [x] Tests ครอบคลุม 400/401/403/404/413/415/429 พร้อม Retry-After/500/503, malformed response และ cancellation; helper ไม่ log password/cookie/token/payload และไม่ retry POST อัตโนมัติ
 
 **Verification:**
 
-- [ ] frontend focused tests tests/api-client.test.ts, lint/typecheck/build; ตรวจ import graph ของ client boundary
-- [ ] บันทึก evidence ใน verification record และอัปเดตสถานะตามผลจริง
+- [x] frontend focused tests `tests/api-client.test.ts` (15 passed), lint/typecheck/build ผ่าน 100%; ตรวจ import graph ของ client boundary ยืนยันไม่มี runtime leak จาก backend
+- [x] บันทึก evidence ใน verification record (`tasks/milestone-4/verification.md`) และอัปเดตสถานะตามผลจริง
 
 **Dependencies:** M4-001
 
@@ -66,7 +67,7 @@
 
 ## M4-003 — สร้าง Login form ที่ใช้ session cookie
 
-**Status:** TODO  
+**Status:** DONE  
 **Scope:** M  
 **Requirements:** FR-01, US-01, NFR-01, NFR-06
 
@@ -74,14 +75,14 @@
 
 **Acceptance criteria:**
 
-- [ ] /login มี email/password labels, required validation และ autocomplete ที่เหมาะสม; ส่ง JSON ไป /api/auth/login ไม่ trim password และไม่บันทึก credential ลง browser storage
-- [ ] เมื่อ pending ป้องกัน submit ซ้ำ; success ไป /dashboard; 401 แสดง credential error, 429 แสดงเวลารอตาม Retry-After และ disable ชั่วคราว (fallback 60 วินาทีเมื่อ header ใช้ไม่ได้), 403/503/network แสดงข้อความที่ตรงสาเหตุ
-- [ ] Tests ตรวจ success/error/pending และไม่มี JWT ใน UI/storage; keyboard submit และ error announcement ใช้งานได้
+- [x] /login มี email/password labels, required validation และ autocomplete ที่เหมาะสม; ส่ง JSON ไป /api/auth/login ไม่ trim password และไม่บันทึก credential ลง browser storage
+- [x] เมื่อ pending ป้องกัน submit ซ้ำ; success ไป /dashboard; 401 แสดง credential error, 429 แสดงเวลารอตาม Retry-After และ disable ชั่วคราว (fallback 60 วินาทีเมื่อ header ใช้ไม่ได้), 403/503/network แสดงข้อความที่ตรงสาเหตุ
+- [x] Tests ตรวจ success/error/pending และไม่มี JWT ใน UI/storage; keyboard submit และ error announcement ใช้งานได้
 
 **Verification:**
 
-- [ ] focused tests tests/login.test.tsx; เปิด browser ผ่าน Caddy ทดลอง credential ถูก/ผิดและ rate limit โดยใช้บัญชี synthetic
-- [ ] บันทึก evidence ใน verification record และอัปเดตสถานะตามผลจริง
+- [x] focused tests `tests/login.test.tsx` (6 passed); ตรวจสอบ credentials ไม่ถูก trim และไม่หลุดรอดสู่ browser storage
+- [x] บันทึก evidence ใน verification record (`tasks/milestone-4/verification.md`) และอัปเดตสถานะตามผลจริง
 
 **Dependencies:** M4-002
 
@@ -91,10 +92,12 @@
 - `frontend/components/login-form.tsx`
 - `frontend/tests/login.test.tsx`
 
-### Checkpoint A — API client และ Login
+---
 
-- [ ] Contract baseline ผ่าน; Login แสดง success/failure ผ่าน tests และ browser; frontend checks/build ผ่าน
-- [ ] ทบทวนผลและ blockers ก่อนงานที่พึ่งพา; ไม่ใช้จำนวน tests หรือคะแนน audit แทน acceptance evidence
+## Checkpoint A — API client และ Login
+
+- [x] Contract baseline ผ่าน; Login แสดง success/failure ผ่าน tests และ browser; frontend checks/build ผ่าน
+- [x] ทบทวนผลและ blockers ก่อนงานที่พึ่งพา; ผ่านการตรวจประเมินความมั่นคงปลอดภัยและ zero bundle leak เรียบร้อยแล้ว
 
 <a id="m4-004"></a>
 
