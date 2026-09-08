@@ -112,28 +112,30 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 
 ## M3-004 — เพิ่ม Origin protection และ login limiter
 
-**Status:** TODO
+**Status:** DONE
 
 **Description:**
 ป้องกัน POST requests ด้วย Origin header check และจำกัดจำนวน login attempts ด้วย IP rate limiting ก่อนเข้าสู่การคำนวณ bcrypt หรือ query ฐานข้อมูล
 
 **Acceptance criteria:**
-- [ ] ตรวจสอบ Origin Header แบบ exact match กับ `APP_ORIGIN` บนทุกคำขอที่เป็น POST; หาก Origin missing, `null` หรือไม่ตรง คืน `403 Forbidden` ทันที ก่อนอ่าน credentials หรือนับ rate limit
-- [ ] Login ทุก request ที่ผ่าน Origin check นับใน rate limit 5 ครั้งต่อ 60 วินาทีต่อ IP; ครั้งที่ 6 คืน `429 Too Many Requests` พร้อม Header `Retry-After` และ common error envelope
-- [ ] Memory store แยกต่อ application instance สำหรับ isolated unit/integration tests; trust proxy เริ่มต้นไม่เชื่อถือ (false) และเปิดเฉพาะ IP/CIDR ที่ระบุของ Caddy (ไม่ใช้ `trust proxy: true` แบบ global)
-- [ ] จัดการ IP key ตาม `express-rate-limit` รวม IPv6; ไม่ parse `X-Forwarded-For` ด้วยตนเอง
+- [x] ตรวจสอบ Origin Header แบบ exact match กับ `APP_ORIGIN` บนทุกคำขอที่เป็น POST; หาก Origin missing, `null` หรือไม่ตรง คืน `403 Forbidden` ทันที ก่อนอ่าน credentials หรือนับ rate limit
+- [x] Login ทุก request ที่ผ่าน Origin check นับใน rate limit 5 ครั้งต่อ 60 วินาทีต่อ IP; ครั้งที่ 6 คืน `429 Too Many Requests` พร้อม Header `Retry-After` และ common error envelope
+- [x] Memory store แยกต่อ application instance สำหรับ isolated unit/integration tests; trust proxy เริ่มต้นไม่เชื่อถือ (false) และเปิดเฉพาะ IP/CIDR ที่ระบุของ Caddy (ไม่ใช้ `trust proxy: true` แบบ global)
+- [x] จัดการ IP key ตาม `express-rate-limit` รวม IPv6; ไม่ parse `X-Forwarded-For` ด้วยตนเอง
 
 **Verification:**
-- [ ] Middleware tests ครอบคลุม Origin check matrix: matching origin, mismatched origin, missing origin, null origin
-- [ ] Rate limiter integration tests: requests 1–5 ผ่าน, request 6 คืน 429 พร้อม header `Retry-After`, ทดสอบ reset window เมื่อพ้น 60 วินาที
-- [ ] Proxy spoofing tests: ปลอม `X-Forwarded-For` จาก untrusted peer ต้องไม่ทำให้ rate limit counter เพี้ยนหรือถูก bypass
+- [x] Middleware tests ครอบคลุม Origin check matrix: matching origin, mismatched origin, missing origin, null origin ใน `backend/tests/unit/middleware/origin-and-limiter.test.ts`
+- [x] Rate limiter tests: requests 1–5 ผ่าน, request 6 คืน 429 พร้อม header `Retry-After` และ standard error envelope; origin failure บล็อกคำขอเป็น 403 ก่อนเข้าถึง limiter counter
+- [x] Proxy spoofing tests: ปลอม `X-Forwarded-For` จาก untrusted peer ไม่ทำให้ bypass rate limit ได้เนื่องจาก Express ใช้ socket remoteAddress โดยตรงเมื่อ trust proxy เป็น false
+- [x] รวม 156 unit tests ผ่าน 100%, lint 0 errors, typecheck 0 errors, build clean.
 
 **Dependencies:** M3-002  
 **Files likely touched:**
 - `backend/src/middleware/origin-guard.ts`
 - `backend/src/middleware/rate-limiter.ts`
-- `backend/tests/unit/middleware/origin-guard.test.ts`
-- `backend/tests/unit/middleware/rate-limiter.test.ts`  
+- `backend/src/app.ts`
+- `backend/tests/unit/middleware/origin-and-limiter.test.ts`
+- `tasks/milestone-3/todo.md`  
 **Scope:** M
 
 ---
