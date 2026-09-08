@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import express, { type Express } from "express";
 import helmet from "helmet";
+import cookieParser from "cookie-parser";
 import { NotFoundError, DependencyUnavailableError } from "./errors.js";
 import { checkReadiness, type DatabaseReadiness } from "./health/readiness.js";
 import { errorHandler } from "./middleware/error-handler.js";
@@ -44,7 +45,10 @@ export function createApp(dependencies: AppDependencies): Express {
   app.use(requireJsonContentType);
   app.use(express.json({ limit: "16kb" }));
 
-  // 6. Public Health Check
+  // 6. Cookie parsing for session handling
+  app.use(cookieParser());
+
+  // 7. Public Health Check
   app.get("/health", async (_request, response, next) => {
     try {
       await checkReadiness(dependencies.readiness);
@@ -57,12 +61,12 @@ export function createApp(dependencies: AppDependencies): Express {
   // Additional application routes hook
   dependencies.configureRoutes?.(app);
 
-  // 7. 404 Fallback
+  // 8. 404 Fallback
   app.use((_request, _response, next) => {
     next(new NotFoundError("Route not found"));
   });
 
-  // 8. Centralized Error Handler
+  // 9. Centralized Error Handler
   app.use(errorHandler);
 
   return app;

@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import type { AuthService } from "../services/auth.service.js";
+import { UnauthorizedError } from "../errors.js";
 import {
   SESSION_COOKIE_NAME,
   getSessionCookieOptions,
@@ -40,6 +41,17 @@ export class AuthController {
         getClearSessionCookieOptions(this.isProduction)
       );
       response.status(204).end();
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  me = async (request: Request, response: Response, next: NextFunction) => {
+    try {
+      if (!request.user) {
+        throw new UnauthorizedError("Authentication session required");
+      }
+      response.status(200).json(request.user);
     } catch (error) {
       next(error);
     }

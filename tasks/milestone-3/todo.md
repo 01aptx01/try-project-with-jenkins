@@ -174,37 +174,42 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 
 ## M3-006 — ยืนยัน RM session และเปิด `/auth/me`
 
-**Status:** TODO
+**Status:** DONE
 
 **Description:**
 สร้าง authenticated request context middleware และ guard สำหรับ Client/Dashboard endpoints พร้อมเปิดเส้นทาง `GET /api/auth/me`
 
 **Acceptance criteria:**
-- [ ] Middleware ตรวจสอบ session cookie, verify JWT token และ query User จากฐานข้อมูล; หาก missing cookie, invalid token, หรือ User ถูกลบ/ไม่มีอยู่จริง คืน `401 Unauthorized`
-- [ ] ตรวจสอบว่า User ที่ล็อกอินมี role เป็น `RM`; หากไม่ใช่ role `RM` ปฏิเสธคำขอด้วย `403 Forbidden` หรือ `401 Unauthorized` ตาม policy
-- [ ] เปิดเส้นทาง `GET /api/auth/me` คืนเฉพาะ `{id, name, role}`; authenticated context ส่งต่อ RM identity สู่ routes ถัดไปอย่างปลอดภัย โดยไม่เชื่อถือ RM ID จาก client input
-- [ ] เส้นทาง login, logout, `/health` ยังคงเป็น public; error จากฐานข้อมูลขณะตรวจ User คืน `503` และ response ทุกเส้นทางมี header `Cache-Control: no-store`
+- [x] Middleware ตรวจสอบ session cookie, verify JWT token และ query User จากฐานข้อมูล; หาก missing cookie, invalid token, หรือ User ถูกลบ/ไม่มีอยู่จริง คืน `401 Unauthorized`
+- [x] ตรวจสอบว่า User ที่ล็อกอินมี role เป็น `RM`; หากไม่ใช่ role `RM` ปฏิเสธคำขอด้วย `401 Unauthorized` (เมื่อ role ไม่ใช่ RM)
+- [x] เปิดเส้นทาง `GET /api/auth/me` คืนเฉพาะ `{id, name, role}`; authenticated context ส่งต่อ RM identity สู่ routes ถัดไปอย่างปลอดภัย โดยไม่เชื่อถือ RM ID จาก client input
+- [x] เส้นทาง login, logout, `/health` ยังคงเป็น public; error จากฐานข้อมูลขณะตรวจ User คืน `503` และ response ทุกเส้นทางมี header `Cache-Control: no-store`
 
 **Verification:**
-- [ ] Supertest session matrix: valid session, missing session, expired token, signature mismatch, deleted user
-- [ ] Role verification tests: non-RM role rejection
-- [ ] Verification tests ยืนยันว่า public routes (`/health`, `/api/auth/login`, `/api/auth/logout`) ไม่ถูก block
-- [ ] Header checks ยืนยัน `Cache-Control: no-store` บน authenticated responses
+- [x] Supertest session matrix: valid session, missing session, expired token, signature mismatch, deleted user
+- [x] Role verification tests: non-RM role rejection (คืน 401 Unauthorized พร้อม message ชัดเจน)
+- [x] Verification tests ยืนยันว่า public routes (`/health`, `/api/auth/login`, `/api/auth/logout`) ไม่ถูก block
+- [x] Header checks ยืนยัน `Cache-Control: no-store` บน authenticated responses
+- [x] Full end-to-end integration test ครอบคลุม login -> cookie -> /auth/me -> logout -> /auth/me rejection ใน `backend/tests/integration/api/auth-me.test.ts`
+- [x] รวม 177 tests ผ่าน 100%, lint 0 errors, typecheck 0 errors, build clean.
 
 **Dependencies:** M3-003, M3-005  
 **Files likely touched:**
 - `backend/src/middleware/auth-guard.ts`
 - `backend/src/routes/auth.routes.ts`
+- `backend/src/controllers/auth.controller.ts`
+- `backend/src/app.ts`
 - `backend/src/types/express.d.ts`
-- `backend/tests/integration/api/auth-me.test.ts`  
+- `backend/tests/integration/api/auth-me.test.ts`
+- `tasks/milestone-3/todo.md`  
 **Scope:** M
 
 ---
 
 ## Checkpoint B — Authentication & Session Context
-- [ ] Exact Origin protection และ Login rate limiter (5 req / 60s) ป้องกัน routes ได้อย่างรัดกุม
-- [ ] End-to-end login flow ผ่าน Supertest: login → cookie → `/auth/me` → logout
-- [ ] Auth guard แนบ RM identity เข้า request context ได้อย่างถูกต้องและปฏิเสธคำขอที่ไม่ได้รับอนุญาต
+- [x] Exact Origin protection และ Login rate limiter (5 req / 60s) ป้องกัน routes ได้อย่างรัดกุม
+- [x] End-to-end login flow ผ่าน Supertest: login → cookie → `/auth/me` → logout
+- [x] Auth guard แนบ RM identity เข้า request context ได้อย่างถูกต้องและปฏิเสธคำขอที่ไม่ได้รับอนุญาต
 
 ---
 
