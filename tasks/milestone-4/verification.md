@@ -241,4 +241,39 @@
 
 **M4-007 Verdict:** **DONE / PASS**
 
+---
+
+## 10. M4-008 Verification Record: Morning Action Plan Dashboard
+
+### 10.1 Artifacts Delivered
+- Morning Action Plan view component: `frontend/components/morning-action-plan.tsx`
+  - Fetches `/api/dashboard/morning-action-plan` with query `{ page, pageSize }`.
+  - Displays asOfDate badge ("As of: YYYY-MM-DD") and Total Actions count badge.
+  - Faithful response order display: zero client-side reordering, sorting, or synthetic KPI calculations from single-page slices.
+  - Displays client name (links to `/clients/:id`), customer code, risk badge, health badge (with safe null display), priority badge, NBA action label, and recommendation rationale narrative.
+  - Profile review button linking directly to `/clients/:id`.
+  - Empty state distinguishing between zero total actions ("All client portfolios are currently in order") and out-of-range empty page ("Page X has no records" with "Back to First Page" button).
+  - Integrated `Pagination` component syncing `page` and `pageSize` to URL history.
+  - In-flight request cancellation via `AbortController`.
+- Dashboard page: `frontend/app/(authenticated)/dashboard/page.tsx` wrapped in `<Suspense>` for search parameter compatibility.
+- API Client enhancement: `frontend/lib/api-client.ts` `getMorningActionPlan` supports optional `{ page, pageSize }` query parameters.
+- Component unit tests: `frontend/tests/morning-action-plan.test.tsx` (5 test cases)
+  - Loading skeleton state and faithful rendering of plan items in response order.
+  - AsOfDate and Total Actions header badges.
+  - Direct Profile links (`/clients/:id`).
+  - Pagination navigation updating URL query (`/dashboard?page=2`).
+  - Empty state when action plan items is empty.
+  - 503 error alert and retry button functionality.
+
+### 10.2 Test Results
+- **Command:** `npm run test:unit -w @meridian/web`
+- **Output:** 52 tests passed across 8 test files (`api-client.test.ts` 15, `client-filters.test.tsx` 10, `client-pagination.test.tsx` 6, `login.test.tsx` 6, `morning-action-plan.test.tsx` 5, `client-list.test.tsx` 5, `session-shell.test.tsx` 4, `home.test.tsx` 1)
+- **All Workspace Unit Tests:** 223 tests passed across 30 test files (Backend 171 tests, Frontend 52 tests)
+- **Lint & Typecheck:** 0 errors across `@meridian/api` and `@meridian/web`
+- **Security Audit:** `npm audit` returned 0 vulnerabilities
+- **Production Build:** `npm run build` cleanly compiled all routes including `/dashboard` with Turbopack
+
+**M4-008 Verdict:** **DONE / PASS**
+
+
 

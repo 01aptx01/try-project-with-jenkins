@@ -229,7 +229,7 @@
 
 ## M4-008 — สร้าง Morning Action Plan
 
-**Status:** TODO  
+**Status:** DONE  
 **Scope:** M  
 **Requirements:** FR-05, FR-09, US-02, NFR-06
 
@@ -237,14 +237,14 @@
 
 **Acceptance criteria:**
 
-- [ ] /dashboard ใช้ /api/dashboard/morning-action-plan แสดงชื่อ/รหัส, Health, Priority, action/reason และ asOfDate; ไม่คำนวณหรือเรียงใหม่บน frontend และไม่สร้าง recent-event signals
-- [ ] ใช้ pagination เพื่อเข้าถึงทุก Client พร้อม link ไป Profile; loading/empty/error/incomplete แยกกัน และไม่สร้าง KPI รวมจากข้อมูลเพียงหน้าเดียว
-- [ ] Tests ยืนยัน HIGH→MEDIUM→LOW และ customerCode tie ตาม response, pagination, asOfDate และการ reuse recommendation เดียวกับ fixtures ของ Profile
+- [x] /dashboard ใช้ /api/dashboard/morning-action-plan แสดงชื่อ/รหัส, Health, Priority, action/reason และ asOfDate; ไม่คำนวณหรือเรียงใหม่บน frontend และไม่สร้าง recent-event signals
+- [x] ใช้ pagination เพื่อเข้าถึงทุก Client พร้อม link ไป Profile; loading/empty/error/incomplete แยกกัน และไม่สร้าง KPI รวมจากข้อมูลเพียงหน้าเดียว
+- [x] Tests ยืนยัน HIGH→MEDIUM→LOW และ customerCode tie ตาม response, pagination, asOfDate และการ reuse recommendation เดียวกับ fixtures ของ Profile
 
 **Verification:**
 
-- [ ] focused tests tests/morning-action-plan.test.tsx; manual เปิด Dashboard ผ่าน Caddy และเปลี่ยนหน้า
-- [ ] บันทึก evidence ใน verification record และอัปเดตสถานะตามผลจริง
+- [x] focused tests tests/morning-action-plan.test.tsx (5 passed); manual เปิด Dashboard ผ่าน Caddy และเปลี่ยนหน้า
+- [x] บันทึก evidence ใน verification record (`tasks/milestone-4/verification.md`) และอัปเดตสถานะตามผลจริง
 
 **Dependencies:** M4-007
 

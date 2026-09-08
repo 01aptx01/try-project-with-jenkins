@@ -1,4 +1,6 @@
+import React, { Suspense } from 'react';
 import type { Metadata } from 'next';
+import { MorningActionPlanView } from '../../../components/morning-action-plan.js';
 
 export const metadata: Metadata = {
   title: 'Morning Action Plan — Meridian',
@@ -7,13 +9,14 @@ export const metadata: Metadata = {
 
 export default function DashboardPage() {
   return (
-    <section>
-      <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-        Morning Action Plan
-      </h1>
-      <p style={{ color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-        Review prioritized clients and immediate action recommendations
-      </p>
-    </section>
+    <Suspense
+      fallback={
+        <div role="status" aria-label="Loading morning action plan">
+          Loading morning action plan...
+        </div>
+      }
+    >
+      <MorningActionPlanView />
+    </Suspense>
   );
 }

@@ -267,10 +267,19 @@ export class ApiClient {
   }
 
   async getMorningActionPlan(
+    query?: { page?: number; pageSize?: number },
     options?: RequestOptions
   ): Promise<MorningActionPlanResponse> {
+    const params = new URLSearchParams();
+    if (query?.page && query.page > 1) params.set('page', String(query.page));
+    if (query?.pageSize && query.pageSize !== 20)
+      params.set('pageSize', String(query.pageSize));
+
+    const queryString = params.toString();
+    const url = `${this.baseUrl}/api/dashboard/morning-action-plan${queryString ? `?${queryString}` : ''}`;
+
     return executeRequest<MorningActionPlanResponse>(
-      `${this.baseUrl}/api/dashboard/morning-action-plan`,
+      url,
       {
         method: 'GET',
       },
