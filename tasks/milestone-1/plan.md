@@ -35,4 +35,10 @@ M1-001 → M1-002 → M1-004 → M1-005 → M1-006 → M1-007 → M1-008
 
 ## Definition of done for this milestone
 
-The technical exit criteria have passing evidence: `npm ci`, lint, typecheck, unit tests, build, migrations against development/test databases, repeated integration tests, health recovery and Caddy route checks. M1-010 remains open until this working tree has its own commit SHA and the evidence is associated with it.
+The technical exit criteria have passing evidence: `npm ci`, lint, typecheck, unit tests, build, migrations against development/test databases, repeated integration tests, health recovery and Caddy route checks. M1-010 was completed and closed under commit SHA `662e15d`.
+
+## Next Milestone
+
+- Milestone 2 plan: [tasks/milestone-2/plan.md](../milestone-2/plan.md)
+- Milestone 2 tickets: [tasks/milestone-2/todo.md](../milestone-2/todo.md)
+

@@ -140,3 +140,11 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 **Verification:** Committed under `662e15d` (based on `2933d9e`); Node `v25.2.1`, npm `11.6.2`; `npm ci`, Prisma generation, lint, typecheck, 14 unit tests, 2 integration tests and both builds passed on 2026-09-08. Development/test migrations, volume persistence, health recovery and Caddy routing have live evidence. `npm run test:integration` loads `.env` automatically via `--env-file-if-exists=../.env`. `npm audit --omit=dev` reports three high-severity records through Prisma CLI's `deepmerge-ts` dependency; no forced upgrade was applied.
 
 **Dependencies:** M1-001–M1-009
+
+---
+
+## Milestone 2
+
+- Milestone 2 plan: [tasks/milestone-2/plan.md](../milestone-2/plan.md)
+- Milestone 2 tickets: [tasks/milestone-2/todo.md](../milestone-2/todo.md)
+

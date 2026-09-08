@@ -30,6 +30,8 @@ Financial Health เป็นผลรวม 100 คะแนนจาก five c
 | Goals | `15 × average(capped goal progress)` | 15 |
 | Investment | `investments / total_assets`: ≥20% = 15, ≥10% = 10, >0 = 5, ≤0 = 0 | 15 |
 
+*หมายเหตุสำหรับ Savings Score:* สูตรคำนวณพิจารณาจากกระแสเงินสด `(monthly_income - monthly_expense) / monthly_income` เท่านั้น ฟิลด์ `financial_profiles.savings` ที่เก็บในฐานข้อมูลเป็นยอดเงินออมสะสม แต่ไม่ได้นำมาใช้ในสูตรคะแนน Savings Score นี้
+
 ตรวจ `targetAmount > 0` และ `targetDate > startDate` ก่อนคำนวณ มิฉะนั้น Goal เป็นข้อมูลไม่เพียงพอ ใช้ `asOfDate` วัน UTC เดียวตลอด evaluation เมื่อ `asOfDate <= startDate` ให้ `expectedAmount = 0`, `cappedGoalProgress = 1`, `isBehind = false` และห้ามหาร เมื่ออยู่หลังวันเริ่มแต่ก่อนวันครบกำหนด ให้ `expectedAmount = targetAmount × elapsedDays / totalDays` จำกัดระหว่าง 0 และ target amount, `cappedGoalProgress = min(1, max(0, currentAmount / expectedAmount))`, `isBehind = currentAmount < expectedAmount` เมื่อถึงหรือหลัง `targetDate` ใช้ `expectedAmount = targetAmount` และ `isBehind = currentAmount < targetAmount` ปัดเฉพาะคะแนน Goals ขั้นสุดท้ายแบบ half-up เป็นทศนิยมสองตำแหน่งก่อนรวม
 
 component ที่เป็น table score เป็นจำนวนเต็ม ตัวอย่าง ณ `2026-09-08`: Goal เริ่ม `2026-09-08`, เป้าหมาย 12,000, ยอดปัจจุบัน 0 และครบกำหนด `2027-09-08` ต้องคืน `expectedAmount = 0`, `cappedGoalProgress = 1`, `isBehind = false` จึงไม่มีเส้นทางที่ให้ `NaN` หรือ `Infinity`
@@ -58,16 +60,27 @@ component ที่เป็น table score เป็นจำนวนเต็
 
 ตรวจตามลำดับต่อไปนี้แล้วหยุดที่กฎแรกที่เข้าเงื่อนไข เพื่อคืน NBA เพียงหนึ่งรายการและ Priority เดียวกัน:
 
-| ลำดับ | เงื่อนไข | NBA | Priority |
-|---:|---|---|---|
-| 1 | ข้อมูลไม่เพียงพอ | `Review Client Data` | MEDIUM |
-| 2 | liquidity months <3 | `Review Emergency Fund` | HIGH |
-| 3 | debt ratio >60% | `Review Debt Position` | HIGH |
-| 4 | อย่างน้อยหนึ่ง Goal ล่าช้า และวันถึง/ผ่าน target date ≤365 | `Review Goal Funding` | MEDIUM |
-| 5 | Health <60 | `Schedule Financial Health Review` | MEDIUM |
-| 6 | ไม่มีข้อข้างต้น | `Routine Financial Review` | LOW |
+| ลำดับ | Rule ID | เงื่อนไข | NBA | Priority |
+|---:|---|---|---|---|
+| 1 | `BR-04.1` | ข้อมูลไม่เพียงพอ (`status == INSUFFICIENT_DATA`) | `Review Client Data` | MEDIUM |
+| 2 | `BR-04.2` | liquidity months < 3 | `Review Emergency Fund` | HIGH |
+| 3 | `BR-04.3` | debt ratio > 60% | `Review Debt Position` | HIGH |
+| 4 | `BR-04.4` | อย่างน้อยหนึ่ง Goal ล่าช้า และวันถึง/ผ่าน target date ≤ 365 วัน | `Review Goal Funding` | MEDIUM |
+| 5 | `BR-04.5` | Health score < 60 | `Schedule Financial Health Review` | MEDIUM |
+| 6 | `BR-04.6` | ไม่มีข้อข้างต้น | `Routine Financial Review` | LOW |
 
-เหตุผลต้องแสดงค่าหรือสถานะที่ทำให้กฎเข้าเงื่อนไข เช่น “Current liquidity covers 2.3 months of estimated expenses.” Goal “ล่าช้า” คือ `current_amount < expected_amount` ณ วัน UTC นั้น กฎ 4 ครอบคลุมเป้าหมายที่เลยกำหนดแล้วด้วย
+## BR-05: Recommendation explainability
+
+คำแนะนำ (NBA) ทุกรายการต้องส่งคืนเป็น object `{ action, reason, priority, rule }` โดย:
+- `rule` ระบุ Rule ID ตั้งแต่ `BR-04.1` ถึง `BR-04.6` ตามกฎที่เข้าเงื่อนไข
+- `reason` ต้องอธิบายด้วยค่าตัวเลขจริงหรือสถานะที่ทำให้กฎนั้นเข้าเงื่อนไข เช่น:
+  - `BR-04.1`: ข้อมูลการเงินไม่ครบถ้วน (ระบุ fields ที่ขาด เช่น `financialProfile`, `goals`)
+  - `BR-04.2`: ระบุจำนวนเดือนสภาพคล่องจริง (เช่น "สภาพคล่องครอบคลุมค่าใช้จ่าย 2.3 เดือน ต่ำกว่าเกณฑ์ 3 เดือน")
+  - `BR-04.3`: ระบุสัดส่วนหนี้สินจริง (เช่น "สัดส่วนหนี้สินต่อสินทรัพย์อยู่ที่ 65.00% สูงกว่าเกณฑ์ 60%")
+  - `BR-04.4`: ระบุเป้าหมายที่ล่าช้า (หากมีหลายเป้าหมาย ให้ระบุเป้าหมายที่ targetDate เร็วสุด หากเท่ากันใช้ ID ตัดสิน)
+  - `BR-04.5`: ระบุคะแนนสุขภาพจริง (เช่น "คะแนนสุขภาพทางการเงินอยู่ที่ 55.00 ต่ำกว่า 60")
+  - `BR-04.6`: ระบุสถานะปกติ (เช่น "สถานะทางการเงินและเป้าหมายอยู่ในเกณฑ์ปกติ")
+- การตรวจ Goal ล่าช้าในกฎ 4 ต้องตรวจจาก *ทุก Goal* ของ Client ไม่ใช่เฉพาะ Primary Goal; และคำว่า "ล่าช้า" คือ `currentAmount < expectedAmount` ณ `asOfDate`
 
 ## BR-09: Derived Client Results
 
@@ -81,7 +94,16 @@ Summary สร้างจาก template เท่านั้น ประก�
 
 ## BR-10: Primary Goal and Family Wealth Network
 
+### Primary Goal Selection Rule
+Primary Goal คัดเลือกจากผลการประเมิน Goals ของ Client ดังนี้:
+1. **คัดกรองเฉพาะ Valid Goals:** Goal ต้องมี `targetAmount > 0` และ `targetDate > startDate` (Goal ที่ผิดรูปแบบจะไม่ถูกเลือกเป็น Primary Goal แต่ยังคงทำให้ Goals component และ Health score รวมกลายเป็น `null` ตาม BR-08)
+2. **เลือกเป้าหมายที่ยังไม่สำเร็จ:** ค้นหา Goal ที่ยังไม่บรรลุเป้าหมาย (`currentAmount < targetAmount`) ที่มี `targetDate` เร็วที่สุด หากวันครบกำหนดเท่ากัน ให้ใช้ `id` เรียงลำดับตัวอักษรแบบแน่นอน (lexical/ordinal ascending)
+3. **กรณีบรรลุเป้าหมายครบทุกเป้าหมาย:** หาก valid Goals ทั้งหมดสำเร็จแล้ว (`currentAmount >= targetAmount`) ให้เลือก Goal ที่มี `targetDate` เร็วที่สุด (เสมอใช้ `id`)
+4. **กรณีไม่มี Valid Goal:** คืนค่า `null`
+
+### Family Wealth Network
 Client หลักเป็น primary node; edge มี relationship type (`SPOUSE`, `PARENT`, `CHILD`, `SIBLING`) ค่าที่เกี่ยวข้องต้องเป็น Client ที่ RM เดียวกันเป็นเจ้าของก่อนแสดง node และ edge หาก related Client อยู่ต่าง RM ให้ไม่ส่งข้อมูลหรือ edge นั้นออกมา Graph จำกัด member ที่สัมพันธ์โดยตรงหนึ่ง hop Query ต้องตรวจทั้ง `clientId = :id` และ `relatedClientId = :id` แล้วตรวจ ownership ของ Client หลักและปลายทั้งสองก่อนคืนผล เก็บ relation หนึ่งแถวต่อ canonical pair, ห้าม self relation และห้ามคู่ที่ขัดแย้งกัน; `SPOUSE`/`SIBLING` เป็น symmetric, `PARENT` แปล parent → child และ `CHILD` แปล child → parent
+
 
 ## BR-07: Deployment gate
 

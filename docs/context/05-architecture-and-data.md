@@ -54,10 +54,10 @@ Login limiter ใช้ `express-rate-limit` memory store ของ API instance
 | `GET /api/clients` | `search`, `priority`, `health`, `page` (default 1), `pageSize` (default 20, max 100); returns owned Client only |
 | `GET /api/clients/:id` | owned Client Profile snapshot: client, financialProfile, goals, primaryGoal, health, recommendation, summary และ asOfDate |
 | `GET /api/dashboard/morning-action-plan` | ordered owned Client cards with Health status, Priority, NBA reason |
-| `GET /api/clients/:id/health` | contract and null behavior in [04-business-rules.md](04-business-rules.md) |
-| `GET /api/clients/:id/recommendations` | one `{action, reason, priority, rule}` object; plural path remains for compatibility |
+| `GET /api/clients/:id/health` | contract and null behavior in [04-business-rules.md](04-business-rules.md#br-08-insufficient-data) (BR-08) |
+| `GET /api/clients/:id/recommendations` | one `{action, reason, priority, rule}` object ([BR-04](04-business-rules.md#br-04-priority-and-emergency-liquidity-rule), [BR-05](04-business-rules.md#br-05-recommendation-explainability)); plural path remains for compatibility |
 | `GET /api/clients/:id/family` | `{nodes,edges}` filtered by RM visibility |
-| `GET /api/clients/:id/summary` | template-generated `{summary, health, primaryGoal, recommendation}` |
+| `GET /api/clients/:id/summary` | template-generated `{summary, health, primaryGoal, recommendation}` ([BR-06](04-business-rules.md#br-06-client-summary)) |
 | `GET /health` | unauthenticated `{status:"ok", version:"<commit-sha>"}` เมื่อ API และ database ready; ไม่พร้อมคืน `503` |
 
 Client List response shape is `{items, page, pageSize, total}` Search is partial and case-insensitive against display name and `customerCode`; priority values คือ `HIGH`, `MEDIUM`, `LOW`; health values คือ `GOOD`, `MODERATE`, `AT_RISK`, `INSUFFICIENT_DATA` JSON ใช้ camelCase, วันที่เป็น `YYYY-MM-DD`, monetary values เป็น decimal string และ score เป็น number หรือ `null` Response ที่มีข้อมูล RM/Client ตั้ง `Cache-Control: no-store`
