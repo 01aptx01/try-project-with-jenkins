@@ -8,11 +8,13 @@ import {
   registerInFlightController,
 } from '../lib/session-lifecycle.js';
 
-// In-memory session cache for family graphs: Map<clientId, FamilyGraphResponse>
-const familyMemoryCache = new Map<string, FamilyGraphResponse>();
+// In-memory cache scoped to the current client under active RM session
+let currentCachedClientId: string | null = null;
+let currentCachedData: FamilyGraphResponse | null = null;
 
 export function clearFamilyGraphCache(): void {
-  familyMemoryCache.clear();
+  currentCachedClientId = null;
+  currentCachedData = null;
 }
 
 export interface UseFamilyGraphReturn {
@@ -27,27 +29,29 @@ export interface UseFamilyGraphReturn {
 export function useFamilyGraph(clientId: string, enabled = true): UseFamilyGraphReturn {
   const [data, setData] = useState<FamilyGraphResponse | null>(() => {
     if (!enabled) return null;
-    return familyMemoryCache.get(clientId) ?? null;
+    return currentCachedClientId === clientId ? currentCachedData : null;
   });
   const [isLoading, setIsLoading] = useState<boolean>(() => {
     if (!enabled) return false;
-    return !familyMemoryCache.has(clientId);
+    return currentCachedClientId !== clientId;
   });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isNotFound, setIsNotFound] = useState<boolean>(false);
 
-  // Track active client ID to prevent late responses from overwriting when ID changes
+  // Track active client ID and request sequence
   const activeClientIdRef = useRef(clientId);
   activeClientIdRef.current = clientId;
+
+  const requestSequenceRef = useRef(0);
+  const inFlightControllerRef = useRef<AbortController | null>(null);
 
   const fetchFamily = useCallback(
     async (force = false) => {
       if (!clientId || !enabled) return;
 
-      // Check in-memory cache if not forced
-      if (!force && familyMemoryCache.has(clientId)) {
-        const cached = familyMemoryCache.get(clientId)!;
-        setData(cached);
+      // Check current client cache if not forced
+      if (!force && currentCachedClientId === clientId && currentCachedData) {
+        setData(currentCachedData);
         setIsLoading(false);
         setErrorMessage(null);
         setIsNotFound(false);
@@ -58,8 +62,15 @@ export function useFamilyGraph(clientId: string, enabled = true): UseFamilyGraph
       setErrorMessage(null);
       setIsNotFound(false);
 
+      // Abort previous in-flight request for this hook
+      if (inFlightControllerRef.current) {
+        inFlightControllerRef.current.abort();
+      }
+
       const controller = new AbortController();
+      inFlightControllerRef.current = controller;
       const unregister = registerInFlightController(controller);
+      const currentRequestId = ++requestSequenceRef.current;
       const capturedGeneration = getSessionGeneration();
 
       try {
@@ -67,20 +78,27 @@ export function useFamilyGraph(clientId: string, enabled = true): UseFamilyGraph
           signal: controller.signal,
         });
 
-        // Check if client ID is still current and session generation hasn't changed
+        // Guard: only commit if client ID matches, this is latest request, and session unchanged
         if (
           activeClientIdRef.current === clientId &&
+          requestSequenceRef.current === currentRequestId &&
           capturedGeneration === getSessionGeneration()
         ) {
-          familyMemoryCache.set(clientId, response);
+          currentCachedClientId = clientId;
+          currentCachedData = response;
           setData(response);
           setIsLoading(false);
         }
-      } catch (err) {
+      } catch (err: unknown) {
         if (
           activeClientIdRef.current !== clientId ||
+          requestSequenceRef.current !== currentRequestId ||
           capturedGeneration !== getSessionGeneration()
         ) {
+          return;
+        }
+
+        if (err instanceof ApiClientError && err.isAbort) {
           return;
         }
 
@@ -92,7 +110,7 @@ export function useFamilyGraph(clientId: string, enabled = true): UseFamilyGraph
             return;
           }
           if (err.status === 401) {
-            familyMemoryCache.delete(clientId);
+            clearFamilyGraphCache();
             setData(null);
             setErrorMessage('Authentication required');
             setIsLoading(false);
@@ -105,6 +123,9 @@ export function useFamilyGraph(clientId: string, enabled = true): UseFamilyGraph
         setIsLoading(false);
       } finally {
         unregister();
+        if (inFlightControllerRef.current === controller) {
+          inFlightControllerRef.current = null;
+        }
       }
     },
     [clientId, enabled]
@@ -116,9 +137,8 @@ export function useFamilyGraph(clientId: string, enabled = true): UseFamilyGraph
       return;
     }
 
-    const cached = familyMemoryCache.get(clientId);
-    if (cached) {
-      setData(cached);
+    if (currentCachedClientId === clientId && currentCachedData) {
+      setData(currentCachedData);
       setIsLoading(false);
       setErrorMessage(null);
       setIsNotFound(false);
@@ -126,6 +146,13 @@ export function useFamilyGraph(clientId: string, enabled = true): UseFamilyGraph
       setData(null);
       void fetchFamily();
     }
+
+    return () => {
+      // Clean up in-flight requests when component unmounts or parameters change
+      if (inFlightControllerRef.current) {
+        inFlightControllerRef.current.abort();
+      }
+    };
   }, [clientId, enabled, fetchFamily]);
 
   const hasNoRelatives = Boolean(

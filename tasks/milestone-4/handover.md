@@ -16,8 +16,8 @@ All 17 tickets (M4-001 through M4-017) and 6 Checkpoints (A through F) are 100% 
 ### Quality Gates Summary
 | Quality Gate | Target | Result | Status |
 |---|---|---|---|
-| **Workspace Unit Tests** | 100% pass | 284/284 passed (Frontend: 113, Backend: 171) | **PASS** |
-| **Frontend Test Suites** | All suites green | 16/16 suites passed | **PASS** |
+| **Workspace Unit Tests** | 100% pass | 293/293 passed (Frontend: 122, Backend: 171) | **PASS** |
+| **Frontend Test Suites** | All suites green | 16/16 suites passed (122/122 tests) | **PASS** |
 | **TypeScript Typecheck** | 0 errors | `tsc --noEmit` across `@meridian/api` and `@meridian/web` passed with 0 errors | **PASS** |
 | **ESLint** | 0 errors | 0 errors across workspace | **PASS** |
 | **Security Audit** | 0 vulnerabilities | `npm audit` found 0 vulnerabilities | **PASS** |
@@ -79,29 +79,31 @@ To verify the integrated system manually on development environment:
 1. **Start Services:**
    - Terminal 1: `npm run dev:api` (Express backend on `localhost:3001`)
    - Terminal 2: `npm run dev:web` (Next.js frontend on `localhost:3000`)
-   - Terminal 3: `npm run proxy:up` (Caddy reverse proxy on `localhost:8080`)
+   - Terminal 3: `npm run proxy:up` (Caddy reverse proxy on `http://localhost:${CADDY_PORT:-8080}` or `8081` if port 8080 is in use)
 2. **Execute Flow:**
-   - Open browser at `http://localhost:8080/`.
+   - Open browser at `http://localhost:8080/` (or `http://localhost:8081/` depending on your configured `CADDY_PORT`).
    - **Login:** Sign in with `rm1@meridian.local` / `Password123!`. Verify successful redirect to `/dashboard`.
    - **Morning Action Plan:** Verify prioritized client table, rule badges, and as-of date badge.
    - **Client Directory:** Navigate to `/clients`. Search by name, filter by Priority (`HIGH`) and Health (`AT_RISK`). Verify URL query parameters update and pagination resets.
-   - **Client Profile Snapshot:** Click client `C-001` (`/clients/c-001`). Verify Financial Health score breakdown, Financial Profile numbers, Goals progress, Next Best Action card, and AI Executive Summary.
+   - **Client Profile Snapshot:** Click any client name link in the table (which routes to `/clients/[uuid]`). Verify Financial Health score breakdown, Financial Profile figures, Goals progress, Next Best Action card, and Rule-Based Portfolio Summary (deterministic synthesis as designed in M4-012).
    - **Family Network:** Click "View Family Network". Verify on-demand lazy fetch, centered primary client, orbiting relatives, directional labels, and equivalent accessible HTML list.
-   - **Cross-RM Isolation:** Attempt navigation to `/clients/c-016` (owned by RM 2). Verify "Client Not Found" (404/403) privacy banner.
-   - **Logout:** Sign out. Verify redirection to `/login` and complete state purge.
+   - **Cross-RM Isolation:** Attempt direct URL navigation to a client UUID belonging to RM 2 (or an arbitrary/unknown UUID). Verify privacy-preserving "Client Not Found" (404) response without information leakage.
+   - **Logout:** Sign out. Verify clean redirection to `/login` and complete state purge.
 
 ---
 
 ## 5. Handover Gaps & Objectives for Milestone 5
 
-Milestone 5 is designated for **Integration, ownership and acceptance verification** (`docs/context/08-delivery-roadmap.md:47-50`). The following areas are explicitly handed over to Milestone 5:
+Milestone 5 is designated for **Integration and Hardening** (`docs/context/08-delivery-roadmap.md:47-50`). The following areas are explicitly transitioned to Milestone 5:
 
-1. **Automated End-to-End Acceptance Tests (Playwright / Cypress):**
-   - Milestone 4 proved UI component behavior and contract fidelity with 113 unit/component tests in jsdom/Vitest.
-   - Milestone 5 will introduce automated browser E2E test suites operating through the live Caddy reverse proxy.
-2. **Full End-to-End Traceability Matrix:**
-   - Formal verification against all user stories (US-01 through US-16) and requirements (FR-01 through FR-12, NFR-01 through NFR-10).
-3. **Cross-RM Penetration & Ownership Acceptance:**
-   - Live multi-user integration tests verifying strict HTTP cookie isolation, rate limiter triggers, and edge-case session transitions under live network latency.
+1. **End-to-End System Integration Verification:**
+   - Milestone 4 thoroughly verified all UI component contracts, user interactions, and failure modes across 122 unit/component tests in jsdom/Vitest.
+   - Milestone 5 will execute full-system integration verification against live running services across the Caddy reverse proxy.
+2. **Performance Profiling & Load Testing:**
+   - Measure live end-to-end response times under multi-client load across the reverse proxy.
+3. **Security Hardening & Penetration Testing:**
+   - Cross-RM data isolation validation with concurrent authenticated browser sessions, token/cookie replay prevention, and rate-limiting thresholds.
+4. **Operational Runbooks & Deployment Documentation:**
+   - Production container orchestration, reverse proxy SSL termination, CI/CD pipeline automation, and production monitoring.
 
 Milestone 4 is signed off with zero defects, zero lint errors, zero type errors, zero audit vulnerabilities, and all test suites passing.

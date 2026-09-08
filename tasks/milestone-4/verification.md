@@ -593,17 +593,27 @@
   - Typecheck: 0 errors (`tsc --noEmit` across `@meridian/api` and `@meridian/web`)
   - Lint: 0 errors (ESLint across workspace)
   - Security audit: 0 vulnerabilities (`npm audit`)
-  - Production build: Clean compilation of all routes with Next.js Turbopack
-- [x] **Milestone 4 is formally CLOSED and ready for Milestone 5.**
+## 23. Plan-Reviewer Audit Remediation Verification Record (M4-R01 through M4-R08)
 
+### 23.1 Remediation Summary & Artifact Changes
 
+| Finding ID | Priority | Description | Implementation Artifacts & Changes | Test Verification |
+|---|---|---|---|---|
+| **M4-R01** | **P1** | Logout failure handling: UI was prematurely terminating session before server confirmed logout. | `frontend/components/session-provider.tsx`: Added `logoutError` state and `logout-error-banner` alert. On network error or server failure, displays retry UI, hides sensitive client data, and aborts redirect. Broadcasts cross-tab logout and cleans local state **only** when server returns HTTP 204. | `tests/session-lifecycle.test.tsx`: "renders logout-failed state with retry button on network error, and succeeds on retry" |
+| **M4-R02** | **P1** | Session revalidation race condition: Delayed response from earlier `/auth/me` could overwrite newer active session or post-logout state. | `frontend/components/session-provider.tsx`: Added `refreshRequestIdRef` counter, `inFlightRefreshControllerRef` to abort previous in-flight requests, and captured `sessionGeneration` verification. Stale responses are discarded immediately. | `tests/session-lifecycle.test.tsx`: "discards delayed response from request A when a newer request B resolves first" and "discards delayed response if user has already logged out" |
+| **M4-R03** | **P2** | Dependency failure isolation: 503 Service Unavailable on `/auth/me` was terminating session and bouncing user to `/login`. | `frontend/components/session-provider.tsx`: Isolated HTTP 401 (genuine auth termination) from 503/network errors. On 503, retains session credentials, renders accessible `session-error-banner` with "Retry Connection" button, and avoids calling `router.push('/login')`. | `tests/session-lifecycle.test.tsx`: "handles 503 Service Unavailable on /me without terminating session, allowing retry" |
+| **M4-R04** | **P2** | BFCache `pagehide` protection: Sensitive data was visible in frozen browser snapshot. | `frontend/components/session-provider.tsx`: Added `pagehide` listener setting `isPageHidden = true` before browser snapshot freeze; `pageshow` (`event.persisted`) revalidates session before restoring view. | `tests/session-lifecycle.test.tsx`: "hides sensitive content on pagehide and revalidates on pageshow" |
+| **M4-R05** | **P2** | Family graph cache client scoping & request lifecycle cleanup. | `frontend/hooks/use-family-graph.ts`: Scoped in-memory cache to current client (`currentCachedClientId`), added request sequence tracking (`requestSequenceRef`), and in-flight abort cleanup on unmount/client navigation. | `tests/family-section.test.tsx`: Added tests for unmount abort, A ➔ B ➔ A route switch, and out-of-order retries (10 tests total) |
+| **M4-R06** | **P2** | Strict API client JSON validation & malformed response handling. | `frontend/lib/api-client.ts`: Replaced silent fallback on non-JSON 200 with `INVALID_RESPONSE` error. Restricted HTTP 204 strictly to `/api/auth/logout`; any GET endpoint returning 204 throws `INVALID_RESPONSE`. | `tests/api-client.test.ts`: Added tests for HTML 200, malformed JSON 200, GET 204, and logout 204 (19 tests total) |
+| **M4-R07** | **P2** | Explicit verification boundaries & real production path testing. | Replaced synthetic mock tests with lifecycle integration tests exercising real `api.login` 401 code paths. Explicitly scoped Milestone 4 test records as component/unit verification in jsdom/Vitest, reserving live multi-browser acceptance for Milestone 5. | `tests/session-lifecycle.test.tsx`: "does not trigger global unauthorized listener on real login 401 request" |
+| **M4-R08** | **P2** | Handover smoke test instructions & roadmap alignment. | `tasks/milestone-4/handover.md`: Corrected client URLs from fake customer codes (`c-001`) to table directory navigation (`/clients/[uuid]`), added dynamic `CADDY_PORT` (8080/8081), corrected summary terminology to rule-based portfolio summary, and aligned M5 deliverables with delivery roadmap. | Verified in `tasks/milestone-4/handover.md` |
 
+### 23.2 Quality Gate Summary After Remediations
+- **Frontend Unit Tests:** 122/122 passed across 16 test files (+9 new regression tests)
+- **Workspace Unit Tests:** 293/293 passed across 38 test files (Backend: 171, Frontend: 122)
+- **TypeScript Typecheck:** 0 errors across workspace (`tsc --noEmit`)
+- **ESLint:** 0 errors across workspace
+- **Security Audit:** 0 vulnerabilities (`npm audit`)
+- **Production Build:** Clean Next.js compilation with Turbopack
 
-
-
-
-
-
-
-
-
+**Audit Remediation Verdict:** **PASSED / COMPLETED**

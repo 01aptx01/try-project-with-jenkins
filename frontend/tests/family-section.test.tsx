@@ -234,4 +234,133 @@ describe('FamilySection (M4-013: Lazy On-Demand Loading & Independent State)', (
     expect(screen.queryByTestId('relative-link-c0000000-0000-0000-0000-000000000002')).toBeNull();
     expect(getClientFamilySpy).toHaveBeenCalledWith(otherClientId, expect.anything());
   });
+
+  it('aborts in-flight request when component is unmounted (M4-R05)', () => {
+    let capturedSignal: AbortSignal | undefined;
+    vi.spyOn(api, 'getClientFamily').mockImplementation((_id, options) => {
+      capturedSignal = options?.signal;
+      return new Promise(() => {}); // never resolves
+    });
+
+    const { unmount } = render(<FamilySection clientId={clientId} defaultExpanded={true} />);
+
+    expect(capturedSignal).toBeDefined();
+    expect(capturedSignal?.aborted).toBe(false);
+
+    unmount();
+
+    expect(capturedSignal?.aborted).toBe(true);
+  });
+
+  it('rejects delayed response from client B when route switches A -> B -> A (M4-R05)', async () => {
+    let resolveB: (value: FamilyGraphResponse) => void;
+    const pendingPromiseB = new Promise<FamilyGraphResponse>((resolve) => {
+      resolveB = resolve;
+    });
+
+    const clientAId = clientId;
+    const clientBId = 'c0000000-0000-0000-0000-000000000009';
+
+    const responseB: FamilyGraphResponse = {
+      nodes: [
+        { id: clientBId, label: 'Client B Primary', type: 'PRIMARY' },
+        { id: 'c-b-rel', label: 'Client B Relative', type: 'RELATED' },
+      ],
+      edges: [
+        { id: 'rel-b', source: clientBId, target: 'c-b-rel', relationshipType: 'SIBLING' },
+      ],
+    };
+
+    vi.spyOn(api, 'getClientFamily').mockImplementation((id) => {
+      if (id === clientAId) return Promise.resolve(mockFamilyResponse);
+      if (id === clientBId) return pendingPromiseB;
+      throw new Error('Unknown ID');
+    });
+
+    const { rerender } = render(<FamilySection clientId={clientAId} defaultExpanded={true} />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('relative-link-c0000000-0000-0000-0000-000000000002')).toHaveTextContent(
+        'Suda Prasert'
+      );
+    });
+
+    // Switch to B
+    rerender(<FamilySection clientId={clientBId} defaultExpanded={true} />);
+    expect(screen.getByTestId('family-loading')).toBeInTheDocument();
+
+    // Switch back to A before B resolves
+    rerender(<FamilySection clientId={clientAId} defaultExpanded={true} />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('relative-link-c0000000-0000-0000-0000-000000000002')).toHaveTextContent(
+        'Suda Prasert'
+      );
+    });
+
+    // Now B finally resolves late
+    resolveB!(responseB);
+
+    // Verify A is still rendered, not overwritten by B
+    expect(screen.getByTestId('relative-link-c0000000-0000-0000-0000-000000000002')).toHaveTextContent(
+      'Suda Prasert'
+    );
+    expect(screen.queryByText('Client B Relative')).toBeNull();
+  });
+
+  it('guards against out-of-order retries so only latest retry data is displayed (M4-R05)', async () => {
+    let resolveFirstRetry: (value: FamilyGraphResponse) => void;
+    let resolveSecondRetry: (value: FamilyGraphResponse) => void;
+
+    const firstPromise = new Promise<FamilyGraphResponse>((resolve) => {
+      resolveFirstRetry = resolve;
+    });
+    const secondPromise = new Promise<FamilyGraphResponse>((resolve) => {
+      resolveSecondRetry = resolve;
+    });
+
+    const response1: FamilyGraphResponse = {
+      nodes: [
+        { id: clientId, label: 'Somchai Prasert', type: 'PRIMARY' },
+        { id: 'rel-stale', label: 'Stale Relative', type: 'RELATED' },
+      ],
+      edges: [{ id: 'e1', source: clientId, target: 'rel-stale', relationshipType: 'CHILD' }],
+    };
+
+    const response2: FamilyGraphResponse = {
+      nodes: [
+        { id: clientId, label: 'Somchai Prasert', type: 'PRIMARY' },
+        { id: 'rel-fresh', label: 'Fresh Relative', type: 'RELATED' },
+      ],
+      edges: [{ id: 'e2', source: clientId, target: 'rel-fresh', relationshipType: 'SPOUSE' }],
+    };
+
+    let callCount = 0;
+    vi.spyOn(api, 'getClientFamily').mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) return firstPromise;
+      if (callCount === 2) return secondPromise;
+      return Promise.resolve(mockFamilyResponse);
+    });
+
+    render(<FamilySection clientId={clientId} defaultExpanded={true} />);
+
+    // Trigger second call (e.g. user clicks retry)
+    fireEvent.click(screen.getByTestId('toggle-family-btn')); // collapse
+    fireEvent.click(screen.getByTestId('toggle-family-btn')); // expand again
+
+    // Second retry resolves first
+    resolveSecondRetry!(response2);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('relative-link-rel-fresh')).toHaveTextContent('Fresh Relative');
+    });
+
+    // First retry resolves late
+    resolveFirstRetry!(response1);
+
+    // Ensure stale first retry did not overwrite fresh second retry
+    expect(screen.getByTestId('relative-link-rel-fresh')).toHaveTextContent('Fresh Relative');
+    expect(screen.queryByTestId('relative-link-rel-stale')).toBeNull();
+  });
 });

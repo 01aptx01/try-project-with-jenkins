@@ -117,20 +117,28 @@ async function executeRequest<T>(
     });
 
     if (response.status === 204) {
-      return undefined as unknown as T;
+      if (path.endsWith('/api/auth/logout')) {
+        return undefined as unknown as T;
+      }
+      throw new ApiClientError({
+        status: response.status,
+        code: 'INVALID_RESPONSE',
+        message: 'Endpoint returned unexpected 204 No Content for an endpoint requiring JSON data',
+      });
     }
 
     let responseData: unknown = null;
     const contentType = response.headers.get('content-type') ?? '';
-    if (contentType.includes('application/json')) {
-      try {
-        responseData = await response.json();
-      } catch {
-        responseData = null;
-      }
-    }
 
     if (!response.ok) {
+      if (contentType.includes('application/json')) {
+        try {
+          responseData = await response.json();
+        } catch {
+          responseData = null;
+        }
+      }
+
       let code = `HTTP_${response.status}`;
       let message = response.statusText || 'An error occurred';
       let requestId: string | undefined;
@@ -174,6 +182,25 @@ async function executeRequest<T>(
         requestId,
         retryAfter,
         details,
+      });
+    }
+
+    // response.ok is true (200..299):
+    if (!contentType.includes('application/json')) {
+      throw new ApiClientError({
+        status: response.status,
+        code: 'INVALID_RESPONSE',
+        message: `Expected application/json response but received "${contentType}"`,
+      });
+    }
+
+    try {
+      responseData = await response.json();
+    } catch {
+      throw new ApiClientError({
+        status: response.status,
+        code: 'INVALID_RESPONSE',
+        message: 'Failed to parse JSON response from server',
       });
     }
 

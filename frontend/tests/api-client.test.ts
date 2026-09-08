@@ -321,5 +321,66 @@ describe('ApiClient', () => {
         isTimeout: true,
       });
     });
+
+    it('rejects 200 response returning text/html with INVALID_RESPONSE (M4-R06)', async () => {
+      globalThis.fetch = vi.fn().mockResolvedValueOnce(
+        new Response('<html><body>Welcome</body></html>', {
+          status: 200,
+          statusText: 'OK',
+          headers: { 'Content-Type': 'text/html' },
+        })
+      );
+
+      await expect(client.getClients()).rejects.toMatchObject({
+        name: 'ApiClientError',
+        status: 200,
+        code: 'INVALID_RESPONSE',
+        message: expect.stringContaining('Expected application/json response'),
+      });
+    });
+
+    it('rejects 200 response returning malformed JSON with INVALID_RESPONSE (M4-R06)', async () => {
+      globalThis.fetch = vi.fn().mockResolvedValueOnce(
+        new Response('{ broken json', {
+          status: 200,
+          statusText: 'OK',
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+
+      await expect(client.getClients()).rejects.toMatchObject({
+        name: 'ApiClientError',
+        status: 200,
+        code: 'INVALID_RESPONSE',
+        message: 'Failed to parse JSON response from server',
+      });
+    });
+
+    it('rejects 204 No Content for GET endpoints requiring JSON with INVALID_RESPONSE (M4-R06)', async () => {
+      globalThis.fetch = vi.fn().mockResolvedValueOnce(
+        new Response(null, {
+          status: 204,
+          statusText: 'No Content',
+        })
+      );
+
+      await expect(client.getClients()).rejects.toMatchObject({
+        name: 'ApiClientError',
+        status: 204,
+        code: 'INVALID_RESPONSE',
+        message: expect.stringContaining('Endpoint returned unexpected 204 No Content'),
+      });
+    });
+
+    it('accepts 204 No Content for POST /api/auth/logout (M4-R06)', async () => {
+      globalThis.fetch = vi.fn().mockResolvedValueOnce(
+        new Response(null, {
+          status: 204,
+          statusText: 'No Content',
+        })
+      );
+
+      await expect(client.logout()).resolves.toBeUndefined();
+    });
   });
 });
