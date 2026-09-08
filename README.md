@@ -2,7 +2,7 @@
 
 Meridian เป็น prototype สำหรับ Relationship Manager (RM) เอกสารผลิตภัณฑ์ฉบับปัจจุบันอยู่ที่ [docs/context/README.md](docs/context/README.md); [meridian_project_context.md](meridian_project_context.md) เป็นเอกสารต้นฉบับเพื่ออ้างอิงประวัติ
 
-## Milestone 1 local development
+## Milestone 1 & 3 local development
 
 ต้องมี Node.js 22.14–25, npm 10 ขึ้นไป และ Docker Desktop ที่กำลังทำงาน ใช้ Node สำหรับ Next.js/Express บนเครื่อง และใช้ Docker เฉพาะ PostgreSQL/Caddy
 
@@ -11,6 +11,7 @@ npm ci
 Copy-Item .env.example .env
 npm run db:up
 npm run db:migrate
+npm run db:seed -- --as-of 2026-09-08
 npm run dev:api
 ```
 
@@ -21,7 +22,11 @@ npm run dev:web
 npm run proxy:up
 ```
 
-เข้า `http://localhost:<CADDY_PORT>/`; Caddy ส่ง `/health` และ `/api/*` ไป API (`localhost:3001`) และส่งเส้นทางอื่นไป Next.js (`localhost:3000`) ค่า default คือ `8080`; หาก Windows สงวน port นี้ ให้เปลี่ยน `CADDY_PORT=8081` ใน `.env` ก่อนรัน `npm run proxy:up` การตั้งค่านี้เป็น local HTTP topology เท่านั้น ไม่ใช่ production TLS หรือ proxy-trust configuration
+เข้า `http://localhost:<CADDY_PORT>/`; Caddy ส่ง `/health` และ `/api/*` ไป API (`localhost:3001`) และส่งเส้นทางอื่นไป Next.js (`localhost:3000`) ค่า default คือ `8080`; หาก Windows สงวน port นี้ ให้เปลี่ยน `CADDY_PORT=8081` ใน `.env` ก่อนรัน `npm run proxy:up`
+
+### ข้อมูลสำหรับทดสอบเข้าใช้งาน (Seed Credentials):
+- **RM 1:** `rm1@meridian.local` / `Password123!` (ดูแลลูกค้า `C-001` ถึง `C-015`)
+- **RM 2:** `rm2@meridian.local` / `Password123!` (ดูแลลูกค้า `C-016` ถึง `C-030`)
 
 ## Database และ tests
 
@@ -41,7 +46,7 @@ npm run test:integration
 
 คำสั่ง `db:migrate` โหลด `DATABASE_URL` จาก `.env` โดยตรง หากต้อง apply migration กับ test database ให้ตั้งค่า `DATABASE_URL` ใน PowerShell เป็น `TEST_DATABASE_URL` เฉพาะคำสั่งนั้นตามตัวอย่างข้างต้น
 
-คำสั่งตรวจรับ M1:
+คำสั่งตรวจรับคุณภาพทั้งระบบ:
 
 ```powershell
 npm run lint
@@ -51,4 +56,4 @@ npm run build
 npm run test:integration
 ```
 
-ผลทดสอบจริงและสถานะ tickets อยู่ใน [tasks/milestone-1/todo.md](tasks/milestone-1/todo.md), [tasks/milestone-2/todo.md](tasks/milestone-2/todo.md) และ [tasks/milestone-3/todo.md](tasks/milestone-3/todo.md) โดยแยกจากแผนใน [tasks/milestone-1/plan.md](tasks/milestone-1/plan.md), [tasks/milestone-2/plan.md](tasks/milestone-2/plan.md) และ [tasks/milestone-3/plan.md](tasks/milestone-3/plan.md)
+ผลทดสอบจริงและสถานะ tickets อยู่ใน [tasks/milestone-1/todo.md](tasks/milestone-1/todo.md), [tasks/milestone-2/todo.md](tasks/milestone-2/todo.md) และ [tasks/milestone-3/todo.md](tasks/milestone-3/todo.md) โดยแยกจากแผนใน [tasks/milestone-1/plan.md](tasks/milestone-1/plan.md), [tasks/milestone-2/plan.md](tasks/milestone-2/plan.md) และ [tasks/milestone-3/plan.md](tasks/milestone-3/plan.md) รายละเอียดส่งมอบ Milestone 3 ไปยัง Milestone 4 อยู่ใน [tasks/milestone-3/handover.md](tasks/milestone-3/handover.md)

@@ -579,38 +579,40 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 
 ## M3-018 — ตรวจ clean checkout และส่งต่อ M4
 
-**Status:** TODO
+**Status:** DONE
 
 **Description:**
 ตรวจสอบความสมบูรณ์ของระบบจาก clean git checkout รวบรวมหลักฐานการทดสอบจริง และจัดทำเอกสารส่งต่อสำหรับ Milestone 4
 
 **Acceptance criteria:**
-- [ ] อัปเดต `README.md` อธิบายคำสั่ง environment setup, secret generation, database migrations, seed data พร้อมการระบุ reference date, startup, และ testing จนสามารถทำตามได้ครบถ้วน
-- [ ] ตรวจสอบจาก clean checkout: `npm ci`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run build`, และ `npm run test:integration` ผ่าน 100%
-- [ ] รัน seed ซ้ำและทดสอบ API smoke flow ได้อย่างราบรื่น
-- [ ] จัดทำเอกสารสรุปผลการตรวจรับ: บันทึกวันที่, commit SHA, environment, commands, ผลลัพธ์จริง และ mapping FR/BR/NFR สำหรับ backend/API evidence เพื่อส่งต่อให้ Milestone 4
+- [x] อัปเดต `README.md` อธิบายคำสั่ง environment setup, secret generation, database migrations, seed data พร้อมการระบุ reference date, startup, และ testing จนสามารถทำตามได้ครบถ้วน
+- [x] ตรวจสอบจาก clean checkout: `npm ci`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run build`, และ `npm run test:integration` ผ่าน 100%
+- [x] รัน seed ซ้ำและทดสอบ API smoke flow ได้อย่างราบรื่น
+- [x] จัดทำเอกสารสรุปผลการตรวจรับ: บันทึกวันที่, commit SHA, environment, commands, ผลลัพธ์จริง และ mapping FR/BR/NFR สำหรับ backend/API evidence เพื่อส่งต่อให้ Milestone 4 ใน `tasks/milestone-3/handover.md`
 
 **Verification:**
-- [ ] Clean install และ verify commands:
+- [x] Clean install และ verify commands:
   - `npm ci`
-  - `npm run lint`
-  - `npm run typecheck`
-  - `npm run test:unit`
-  - `npm run build`
-  - `npm run test:integration`
-- [ ] ตรวจสอบ Markdown links ใน `README.md` และ `tasks/milestone-3/`
-- [ ] Git diff สะอาด ไม่มี secrets หรือไฟล์ขยะหลงเหลือ
+  - `npm run lint` (0 errors)
+  - `npm run typecheck` (0 errors)
+  - `npm run test:unit` (164 tests passed)
+  - `npm run build` (Next.js & backend tsc passed)
+  - `npm run test:integration` (71 tests passed)
+- [x] ตรวจสอบ Markdown links ใน `README.md` และ `tasks/milestone-3/`
+- [x] Git diff สะอาด ไม่มี secrets หรือไฟล์ขยะหลงเหลือ
 
 **Dependencies:** M3-001–017  
 **Files likely touched:**
 - `README.md`
 - `tasks/milestone-3/todo.md`
-- `tasks/milestone-3/plan.md`  
+- `tasks/milestone-3/plan.md`
+- `tasks/milestone-3/handover.md`  
 **Scope:** M
 
 ---
 
 ## Checkpoint F — Milestone 3 Final Acceptance & M4 Handover
-- [ ] Live Caddy proxy integration ผ่านการทดสอบ
-- [ ] Acceptance matrix ผ่านครบทุก endpoints, security controls, และ data isolation checks
-- [ ] Clean checkout ผ่าน build, lint, typecheck, unit tests, และ integration tests 100% พร้อมส่งมอบให้ Milestone 4
+- [x] Live Caddy proxy integration ผ่านการทดสอบ
+- [x] Acceptance matrix ผ่านครบทุก endpoints, security controls, และ data isolation checks
+- [x] Clean checkout ผ่าน build, lint, typecheck, unit tests, และ integration tests 100% พร้อมส่งมอบให้ Milestone 4
+
