@@ -215,32 +215,35 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 
 ## M3-007 — ออกแบบ normal seed dataset
 
-**Status:** TODO
+**Status:** DONE
 
 **Description:**
 สร้าง deterministic seed catalogue และ validation schema สำหรับชุดข้อมูลปกติ 2 RMs / 30 Clients ก่อนบันทึกลงฐานข้อมูลจริง
 
 **Acceptance criteria:**
-- [ ] มีข้อมูล RM 2 คน แต่ละคนดูแล Client 15 คน (รวม 30 คน); ทุก record ใช้ fixed UUID และ customer code (`C-001` ถึง `C-030`) มี Financial Profile ครบถ้วน และมี Goal ที่ valid อย่างน้อย 1 รายการต่อคน
-- [ ] กำหนดค่า `--as-of YYYY-MM-DD` เป็น mandatory parameter; วันที่และจำนวนเงินเป็น relative date เทียบกับ `asOfDate` เพื่อให้ข้อมูล deterministic โดยไม่ใช้ randomness สำหรับข้อมูลธุรกิจ
-- [ ] ข้อมูลครอบคลุมกรณีทดสอบ NBA ครบทั้ง 5 แบบ และ Priority ครบทั้ง 3 ระดับ:
+- [x] มีข้อมูล RM 2 คน แต่ละคนดูแล Client 15 คน (รวม 30 คน); ทุก record ใช้ fixed UUID และ customer code (`C-001` ถึง `C-030`) มี Financial Profile ครบถ้วน และมี Goal ที่ valid อย่างน้อย 1 รายการต่อคน
+- [x] กำหนดค่า `--as-of YYYY-MM-DD` เป็น mandatory parameter; วันที่และจำนวนเงินเป็น relative date เทียบกับ `asOfDate` เพื่อให้ข้อมูล deterministic โดยไม่ใช้ randomness สำหรับข้อมูลธุรกิจ
+- [x] ข้อมูลครอบคลุมกรณีทดสอบ NBA ครบทั้ง 5 แบบ และ Priority ครบทั้ง 3 ระดับ:
   - `Review Emergency Fund` (HIGH)
   - `Review Debt Position` (HIGH)
   - `Review Goal Funding` (MEDIUM)
   - `Schedule Financial Health Review` (MEDIUM)
   - `Routine Financial Review` (LOW)
-- [ ] ข้อมูลความสัมพันธ์ Family อยู่ภายใน RM เดียวกัน ครอบคลุมทั้ง 4 ประเภท (`PARENT`, `CHILD`, `SPOUSE`, `SIBLING`); มี canonical ordering และตัวตรวจความถูกต้องป้องกัน self-relation, duplicate pair หรือ conflicting relation
+- [x] ข้อมูลความสัมพันธ์ Family อยู่ภายใน RM เดียวกัน ครอบคลุมทั้ง 4 ประเภท (`PARENT`, `CHILD`, `SPOUSE`, `SIBLING`); มี canonical ordering และตัวตรวจความถูกต้องป้องกัน self-relation, duplicate pair หรือ conflicting relation
 
 **Verification:**
-- [ ] Catalogue unit tests: ตรวจสอบจำนวน record (2 RMs, 30 Clients, 30 Profiles, >=30 Goals, Family relations)
-- [ ] Deterministic NBA check: รัน pure evaluation กับ catalogue ข้อมูลด้วยวันคงที่ ยืนยันว่าได้ผลลัพธ์ NBA ครบ 5 แบบและ Priority ครบ 3 ระดับตามที่คาดหมายล่วงหน้า
+- [x] Catalogue unit tests: ตรวจสอบจำนวน record (2 RMs, 30 Clients, 30 Profiles, >=30 Goals, Family relations 12 records) ใน `backend/tests/unit/seed/catalogue.test.ts`
+- [x] Deterministic NBA check: รัน pure evaluation กับ catalogue ข้อมูลด้วยวันคงที่ ยืนยันว่าได้ผลลัพธ์ NBA ครบ 5 แบบและ Priority ครบ 3 ระดับตามที่คาดหมายล่วงหน้า และให้ผลลัพธ์สอดคล้องกันทุก asOfDate
+- [x] Intra-RM verification: ทุก family relation เชื่อมต่อ client ภายใน RM เดียวกัน และทดสอบว่า validation ปฏิเสธ cross-RM relation อย่างถูกต้อง
+- [x] รวม 164 unit tests ผ่าน 100%, lint 0 errors, typecheck 0 errors, build clean.
 
 **Dependencies:** M3-001  
 **Files likely touched:**
 - `backend/src/seed/catalogue.ts`
 - `backend/src/seed/types.ts`
 - `backend/src/seed/validator.ts`
-- `backend/tests/unit/seed/catalogue.test.ts`  
+- `backend/tests/unit/seed/catalogue.test.ts`
+- `tasks/milestone-3/todo.md`  
 **Scope:** M
 
 ---
