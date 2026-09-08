@@ -483,40 +483,43 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 
 ## M3-015 — เปิด Family Graph API
 
-**Status:** TODO
+**Status:** DONE
 
 **Description:**
 พัฒนา endpoint `GET /api/clients/:id/family` ส่งข้อมูล Graph ความสัมพันธ์แบบ 1-hop โดยแสดงเฉพาะสมาชิกที่ RM มีสิทธิ์เข้าถึง
 
 **Acceptance criteria:**
-- [ ] ตรวจสอบว่า Client หลักเป็นของ RM ที่ล็อกอิน; หากไม่ใช่หรือไม่มีอยู่จริง คืน `404 Not Found`
-- [ ] ดึงข้อมูลความสัมพันธ์ทั้งสองทิศทาง (primary เป็น source หรือ target ในแถวความสัมพันธ์) และกรองให้เหลือเฉพาะปลายทางที่ RM นั้นเป็นเจ้าของ
-- [ ] จำกัดการค้นหาที่ 1 hop เท่านั้น ไม่ traverse ต่อไปยังญาติของญาติ; หากไม่มีความสัมพันธ์ คืน primary node 1 node และ `edges: []`
-- [ ] โครงสร้าง Node: `{id, label, type}` (`type` เป็น `PRIMARY` หรือ `RELATED`); โครงสร้าง Edge: `{id, source, target, relationshipType}` โดยไม่มี node หรือ edge ซ้ำซ้อน
-- [ ] ความสัมพันธ์ที่เชื่อมโยงกับ Client ของ RM อื่น ต้องถูกซ่อนโดยสิ้นเชิง และไม่ส่งผลต่อ node counts หรือเปิดเผยข้อมูลสมาชิกที่ถูกกรองออก
+- [x] ตรวจสอบว่า Client หลักเป็นของ RM ที่ล็อกอิน; หากไม่ใช่หรือไม่มีอยู่จริง คืน `404 Not Found`
+- [x] ดึงข้อมูลความสัมพันธ์ทั้งสองทิศทาง (primary เป็น source หรือ target ในแถวความสัมพันธ์) และกรองให้เหลือเฉพาะปลายทางที่ RM นั้นเป็นเจ้าของ
+- [x] จำกัดการค้นหาที่ 1 hop เท่านั้น ไม่ traverse ต่อไปยังญาติของญาติ; หากไม่มีความสัมพันธ์ คืน primary node 1 node และ `edges: []`
+- [x] โครงสร้าง Node: `{id, label, type}` (`type` เป็น `PRIMARY` หรือ `RELATED`); โครงสร้าง Edge: `{id, source, target, relationshipType}` โดยไม่มี node หรือ edge ซ้ำซ้อน
+- [x] ความสัมพันธ์ที่เชื่อมโยงกับ Client ของ RM อื่น ต้องถูกซ่อนโดยสิ้นเชิง และไม่ส่งผลต่อ node counts หรือเปิดเผยข้อมูลสมาชิกที่ถูกกรองออก
 
 **Verification:**
-- [ ] Graph integration tests:
+- [x] Graph integration tests in `backend/tests/integration/api/family-graph.test.ts`:
   - ความสัมพันธ์ทุกประเภท (`PARENT`, `CHILD`, `SPOUSE`, `SIBLING`)
   - Primary client ปรากฏเป็น source หรือ target ในฐานข้อมูล
   - Isolated client (ไม่มีความสัมพันธ์) คืน 1 node และ empty edges
   - Cross-RM isolation: edge ที่เชื่อมไปยัง Client ต่าง RM ต้องไม่ปรากฏใน graph
   - 2-hop traversal rejection: ตรวจสอบว่าไม่ดึงความสัมพันธ์ระดับที่ 2
+- [x] รวม 62 integration tests และ 164 unit tests ผ่าน 100%, lint 0 errors, typecheck 0 errors, build clean.
 
 **Dependencies:** M3-009, M3-010  
 **Files likely touched:**
 - `backend/src/routes/family.routes.ts`
 - `backend/src/controllers/family.controller.ts`
 - `backend/src/repositories/family.repository.ts`
+- `backend/src/server.ts`
+- `backend/tests/fixtures/client.fixtures.ts`
 - `backend/tests/integration/api/family-graph.test.ts`  
 **Scope:** M
 
 ---
 
 ## Checkpoint E — Dashboard, Sub-endpoints & Family Graph
-- [ ] Morning Action Plan (`GET /api/dashboard/morning-action-plan`) ให้ผลลัพธ์สอดคล้องกับ Client List 100%
-- [ ] Sub-endpoints (`/health`, `/recommendations`, `/summary`) ส่งคืนข้อมูลที่ตรงกับ Profile snapshot
-- [ ] Family Graph API คืนโครงสร้าง 1-hop ถูกต้อง และกรองข้อมูลข้าม RM อย่างสมบูรณ์ ไม่มีการรั่วไหลของข้อมูล
+- [x] Morning Action Plan (`GET /api/dashboard/morning-action-plan`) ให้ผลลัพธ์สอดคล้องกับ Client List 100%
+- [x] Sub-endpoints (`/health`, `/recommendations`, `/summary`) ส่งคืนข้อมูลที่ตรงกับ Profile snapshot
+- [x] Family Graph API คืนโครงสร้าง 1-hop ถูกต้อง และกรองข้อมูลข้าม RM อย่างสมบูรณ์ ไม่มีการรั่วไหลของข้อมูล
 
 ---
 

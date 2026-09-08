@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { Prisma, PrismaClient } from "@prisma/client";
+import { canonicalizeRelationship } from "../../src/family/relationships.js";
 
 export class FixtureRegistry {
   private clientIds = new Set<string>();
@@ -157,19 +158,22 @@ export async function createTestRelationship(
   },
   registry: FixtureRegistry = globalFixtureRegistry
 ) {
-  const sorted = [data.clientId, data.relatedClientId].sort();
-  const clientId = sorted[0]!;
-  const relatedClientId = sorted[1]!;
+  const canonical = canonicalizeRelationship(
+    data.clientId,
+    data.relatedClientId,
+    data.relationshipType
+  );
 
   const rel = await prisma.familyRelationship.create({
     data: {
       id: data.id ?? randomUUID(),
-      clientId,
-      relatedClientId,
-      relationshipType: data.relationshipType,
+      clientId: canonical.clientId,
+      relatedClientId: canonical.relatedClientId,
+      relationshipType: canonical.relationshipType,
     },
   });
 
   registry.registerRelationship(rel.id);
   return rel;
 }
+

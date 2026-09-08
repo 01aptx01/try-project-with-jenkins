@@ -3,20 +3,24 @@ import { loadConfig } from "./config/env.js";
 import { AuthController } from "./controllers/auth.controller.js";
 import { ClientController } from "./controllers/client.controller.js";
 import { DashboardController } from "./controllers/dashboard.controller.js";
+import { FamilyController } from "./controllers/family.controller.js";
 import { prisma } from "./db/prisma.js";
 import { createPrismaReadiness } from "./health/prisma-readiness.js";
 import { createAuthGuard } from "./middleware/auth-guard.js";
 import { PrismaClientRepository } from "./repositories/client.repository.js";
+import { PrismaFamilyRepository } from "./repositories/family.repository.js";
 import { PrismaUserRepository } from "./repositories/user.repository.js";
 import { createAuthRouter } from "./routes/auth.routes.js";
 import { createClientRouter } from "./routes/client.routes.js";
 import { createDashboardRouter } from "./routes/dashboard.routes.js";
+import { createFamilyRouter } from "./routes/family.routes.js";
 import { AuthService } from "./services/auth.service.js";
 
 const config = loadConfig();
 
 const userRepository = new PrismaUserRepository(prisma);
 const clientRepository = new PrismaClientRepository(prisma);
+const familyRepository = new PrismaFamilyRepository(prisma);
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -34,6 +38,10 @@ const clientController = new ClientController({
 });
 const dashboardController = new DashboardController({
   clientRepository,
+});
+const familyController = new FamilyController({
+  clientRepository,
+  familyRepository,
 });
 
 const app = createApp({
@@ -54,9 +62,14 @@ const app = createApp({
       dashboardController,
       authGuard,
     });
+    const familyRouter = createFamilyRouter({
+      familyController,
+      authGuard,
+    });
 
     expressApp.use("/api/auth", authRouter);
     expressApp.use("/api/clients", clientRouter);
+    expressApp.use("/api/clients", familyRouter);
     expressApp.use("/api/dashboard", dashboardRouter);
   },
 });
