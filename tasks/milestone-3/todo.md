@@ -74,19 +74,20 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 
 ## M3-003 — สร้าง password และ session services
 
-**Status:** TODO
+**Status:** DONE
 
 **Description:**
 สร้างบริการสำหรับการ hash/verify password และการ sign/verify JWT session token โดยแยกเป็น domain/service layer ที่ทดสอบได้โดยไม่ต้องเปิด HTTP server
 
 **Acceptance criteria:**
-- [ ] ใช้ asynchronous `bcrypt` cost factor 12; ไม่ trim password และตรวจสอบความยาว UTF-8 ไม่เกิน 72 bytes (`Buffer.byteLength(password, 'utf8') <= 72`) เพื่อป้องกัน silent truncation ตาม bcrypt documentation
-- [ ] JWT verification จำกัด algorithm `HS256` เท่านั้น และตรวจ standard claims (`sub` User UUID, `iss: "meridian-api"`, `aud: "meridian-web"`, `exp: 3600s`); กรณี expired, malformed, wrong-signature, wrong-algorithm หรือ missing required claims คืน invalid session
-- [ ] Cookie options (`meridian_session`) อยู่จุดเดียว (single source of truth) ใช้ร่วมกันตอน issue และ clear cookie (`HttpOnly: true`, `SameSite: "Lax"`, `Path: "/"`, `maxAge: 3600 * 1000`; `Secure` เฉพาะ production); ไม่มี refresh token หรือ server-side revocation mechanism ใน milestone นี้
+- [x] ใช้ asynchronous `bcrypt` cost factor 12; ไม่ trim password และตรวจสอบความยาว UTF-8 ไม่เกิน 72 bytes (`Buffer.byteLength(password, 'utf8') <= 72`) เพื่อป้องกัน silent truncation ตาม bcrypt documentation
+- [x] JWT verification จำกัด algorithm `HS256` เท่านั้น และตรวจ standard claims (`sub` User UUID, `iss: "meridian-api"`, `aud: "meridian-web"`, `exp: 3600s`); กรณี expired, malformed, wrong-signature, wrong-algorithm หรือ missing required claims คืน invalid session
+- [x] Cookie options (`meridian_session`) อยู่จุดเดียว (single source of truth) ใช้ร่วมกันตอน issue และ clear cookie (`HttpOnly: true`, `SameSite: "Lax"`, `Path: "/"`, `maxAge: 3600 * 1000`; `Secure` เฉพาะ production); ไม่มี refresh token หรือ server-side revocation mechanism ใน milestone นี้
 
 **Verification:**
-- [ ] Password service unit tests: hash format, bcrypt cost 12, successful verification, wrong password rejection, Unicode character support, และ error เมื่อ password เกิน 72 UTF-8 bytes
-- [ ] Session service unit tests: token generation, token verification, algorithm whitelist enforcement, clock injection สำหรับ expiry boundary, และ claim tampering rejection
+- [x] Password service unit tests: ผ่านครบ 6 tests ใน `backend/tests/unit/services/password.service.test.ts` ครอบคลุม hash format `$2b$12$`, successful verification, wrong password rejection, non-trimming, Unicode support (รหัสผ่านภาษาไทย), byte length rejection (> 72 bytes), และ dummyVerifyPassword
+- [x] Session service unit tests: ผ่านครบ 9 tests ใน `backend/tests/unit/services/token.service.test.ts` ครอบคลุม token generation, standard claims, algorithm whitelist enforcement (`HS256` only), clock injection สำหรับ expiry boundary ที่ 3,600 วินาที, wrong secret, signature tampering rejection, และ cookie options matching (set/clear)
+- [x] รวม 148 unit tests ผ่าน 100%, lint 0 errors, typecheck 0 errors, build clean.
 
 **Dependencies:** M3-002  
 **Files likely touched:**
@@ -94,15 +95,18 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 - `backend/src/services/token.service.ts`
 - `backend/src/config/cookie.ts`
 - `backend/tests/unit/services/password.service.test.ts`
-- `backend/tests/unit/services/token.service.test.ts`  
+- `backend/tests/unit/services/token.service.test.ts`
+- `backend/package.json`
+- `package-lock.json`
+- `tasks/milestone-3/todo.md`  
 **Scope:** M
 
 ---
 
 ## Checkpoint A — Baseline & Auth Primitives
-- [ ] Prerequisite baseline ผ่านทุกการทดสอบ (lint, typecheck, unit, build)
-- [ ] Shared contracts และ schemas พร้อมใช้งาน
-- [ ] Password hashing (bcrypt cost 12, max 72 bytes) และ JWT session verification ผ่าน unit tests 100% โดยไม่ต้องพึ่ง HTTP server
+- [x] Prerequisite baseline ผ่านทุกการทดสอบ (lint, typecheck, unit, build)
+- [x] Shared contracts และ schemas พร้อมใช้งาน
+- [x] Password hashing (bcrypt cost 12, max 72 bytes) และ JWT session verification ผ่าน unit tests 100% โดยไม่ต้องพึ่ง HTTP server
 
 ---
 
