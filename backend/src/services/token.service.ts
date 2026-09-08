@@ -13,12 +13,12 @@ export interface SessionPayload {
 
 export interface SignTokenOptions {
   secret: string;
-  clock?: () => number; // Returns current time in seconds
+  clock?: (() => number) | undefined;
 }
 
 export interface VerifyTokenOptions {
   secret: string;
-  clock?: () => number; // Returns current time in seconds
+  clock?: (() => number) | undefined;
 }
 
 export function signSessionToken(userId: string, options: SignTokenOptions): string {

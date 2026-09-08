@@ -142,28 +142,32 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 
 ## M3-005 — เปิด Login และ Logout API
 
-**Status:** TODO
+**Status:** DONE
 
 **Description:**
 สร้างเส้นทาง HTTP สำหรับเข้าสู่ระบบ (`POST /api/auth/login`) และออกจากระบบ (`POST /api/auth/logout`) เชื่อมต่อ User repository และ session service
 
 **Acceptance criteria:**
-- [ ] Login รับ payload strict `{email, password}`; normalize email ด้วย trim และ lowercase; กรณี email ไม่พบ หรือ password ไม่ถูกต้อง คืน `401 Unauthorized` ด้วยข้อความเดียวกัน พร้อมรัน dummy bcrypt comparison เสมอเพื่อป้องกัน timing attack
-- [ ] Login สำเร็จคืน `200 OK` พร้อม `{user: {id, name, role}}` และตั้ง cookie `meridian_session`; ห้ามส่ง JWT token, password hash หรือ Prisma internal fields ใน body หรือ logs
-- [ ] Logout รับคำขอ POST ตรวจสอบ Origin แล้วคืน `204 No Content` พร้อมล้าง cookie `meridian_session` ด้วย attributes เดียวกัน แม้ไม่มี session หรือ token หมดอายุแล้ว; token เดิมที่คัดลอกไว้ยังใช้ได้จนหมดอายุตามข้อตกลง stateless JWT
+- [x] Login รับ payload strict `{email, password}`; normalize email ด้วย trim และ lowercase; กรณี email ไม่พบ หรือ password ไม่ถูกต้อง คืน `401 Unauthorized` ด้วยข้อความเดียวกัน พร้อมรัน dummy bcrypt comparison เสมอเพื่อป้องกัน timing attack
+- [x] Login สำเร็จคืน `200 OK` พร้อม `{user: {id, name, role}}` และตั้ง cookie `meridian_session`; ห้ามส่ง JWT token, password hash หรือ Prisma internal fields ใน body หรือ logs
+- [x] Logout รับคำขอ POST ตรวจสอบ Origin แล้วคืน `204 No Content` พร้อมล้าง cookie `meridian_session` ด้วย attributes เดียวกัน แม้ไม่มี session หรือ token หมดอายุแล้ว; token เดิมที่คัดลอกไว้ยังใช้ได้จนหมดอายุตามข้อตกลง stateless JWT
 
 **Verification:**
-- [ ] Supertest flow สำหรับ login สำเร็จ: ตรวจ `Set-Cookie` headers, status 200 และ payload format
-- [ ] Supertest สำหรับ invalid login: wrong email, wrong password, timing dummy comparison, malformed json body
-- [ ] Supertest สำหรับ logout: cookie removal attributes (`maxAge=0` หรือ expired date, matching path)
-- [ ] Database unavailable error handling: คืน `503` เมื่อ database ขัดข้อง
+- [x] Supertest flow สำหรับ login สำเร็จ: ตรวจ `Set-Cookie` headers (`meridian_session`, `HttpOnly`, `Path=/`, `SameSite=Lax`), status 200, และ payload format `{user:{id,name,role}}` โดยไม่มี token/hash ใน body ใน `backend/tests/integration/api/auth-login-logout.test.ts`
+- [x] Supertest สำหรับ invalid login: ทดสอบ wrong email, wrong password, timing dummy comparison, non-RM role rejection, malformed JSON, และ extra schema fields (คืน 400 จาก Zod validation)
+- [x] Supertest สำหรับ logout: cookie removal attributes (`Max-Age=0` / expired 1970 date, `Path=/`, `SameSite=Lax`, `HttpOnly`), คืน 204 No Content, และทดสอบการ logout ซ้ำแบบ idempotent
+- [x] Database unavailable error handling: คืน 503 `DEPENDENCY_UNAVAILABLE` เมื่อ user repository ขัดข้อง
+- [x] รวม 165 tests (unit + integration) ผ่าน 100%, lint 0 errors, typecheck 0 errors, build clean.
 
 **Dependencies:** M3-003, M3-004  
 **Files likely touched:**
 - `backend/src/routes/auth.routes.ts`
 - `backend/src/controllers/auth.controller.ts`
 - `backend/src/repositories/user.repository.ts`
-- `backend/tests/integration/api/auth-login-logout.test.ts`  
+- `backend/src/services/auth.service.ts`
+- `backend/src/middleware/error-handler.ts`
+- `backend/tests/integration/api/auth-login-logout.test.ts`
+- `tasks/milestone-3/todo.md`  
 **Scope:** M
 
 ---
