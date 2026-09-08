@@ -133,3 +133,27 @@
 - **Production Build:** `npm run build` cleanly compiled `/dashboard` and `(authenticated)` route group with zero errors.
 
 **M4-004 Verdict:** **DONE / PASS**
+
+---
+
+## 6. M4-005 Verification Record: Client List View from API
+
+### 6.1 Artifacts Delivered
+- Badges design components: `frontend/components/ui/badges.tsx` (PriorityBadge with high/med/low styling, HealthBadge with score/classification and safe null fallback, RiskBadge)
+- Client list view component: `frontend/components/client-list-view.tsx`
+  - Fetches `/api/clients` with `{ page: 1, pageSize: 20 }`
+  - Loading skeleton state while fetching
+  - Empty state when `items` is empty
+  - Error state with Retry button (clears previous table data immediately)
+  - Accessible table with columns: Code, Client Name, Risk Level, Health Status, Priority, Next Best Action, Actions
+  - Links to Client Profile `/clients/:id`
+- Clients page: `frontend/app/(authenticated)/clients/page.tsx`
+- Component tests: `frontend/tests/client-list.test.tsx` (5 test cases)
+
+### 6.2 Test Results
+- **Command:** `npm run test:unit -w @meridian/web`
+- **Output:** 31 tests passed across 5 test files (`tests/api-client.test.ts` 15, `tests/home.test.tsx` 1, `tests/login.test.tsx` 6, `tests/session-shell.test.tsx` 4, `tests/client-list.test.tsx` 5)
+- **Lint & Typecheck:** 0 errors across workspace
+- **Production Build:** `npm run build` cleanly compiled `/clients` with static pre-rendering.
+
+**M4-005 Verdict:** **DONE / PASS**

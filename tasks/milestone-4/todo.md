@@ -134,7 +134,7 @@
 
 ## M4-005 — แสดง Client List จาก API
 
-**Status:** TODO  
+**Status:** DONE  
 **Scope:** M  
 **Requirements:** FR-02, FR-06 navigation, NFR-06
 
@@ -142,14 +142,14 @@
 
 **Acceptance criteria:**
 
-- [ ] /clients fetch GET /api/clients และแสดง customerCode/displayName/riskLevel/health/recommendation.priority กับ link Profile โดยคงลำดับที่ API ส่ง; ไม่ดึง Profile เพิ่มราย Client
-- [ ] Loading, empty, error+Retry และ incomplete health แยกกัน; null score ไม่แสดง 0 และไม่คงแถวของผลเก่าเมื่อ request ใหม่ล้มเหลว
-- [ ] Table/list มีชื่อคอลัมน์และข้อความ priority ที่อ่านได้โดยไม่พึ่งสี; จำนวนรวมใช้ total จาก API
+- [x] /clients fetch GET /api/clients และแสดง customerCode/displayName/riskLevel/health/recommendation.priority กับ link Profile โดยคงลำดับที่ API ส่ง; ไม่ดึง Profile เพิ่มราย Client
+- [x] Loading, empty, error+Retry และ incomplete health แยกกัน; null score ไม่แสดง 0 และไม่คงแถวของผลเก่าเมื่อ request ใหม่ล้มเหลว
+- [x] Table/list มีชื่อคอลัมน์และข้อความ priority ที่อ่านได้โดยไม่พึ่งสี; จำนวนรวมใช้ total จาก API
 
 **Verification:**
 
-- [ ] focused tests tests/client-list.test.tsx ใช้ complete/incomplete/empty/503 fixtures และตรวจจำนวน requests
-- [ ] บันทึก evidence ใน verification record และอัปเดตสถานะตามผลจริง
+- [x] focused tests `tests/client-list.test.tsx` (5 passed) ใช้ complete/incomplete/empty/503 fixtures และตรวจจำนวน requests
+- [x] บันทึก evidence ใน verification record (`tasks/milestone-4/verification.md`) และอัปเดตสถานะตามผลจริง
 
 **Dependencies:** M4-004
 
