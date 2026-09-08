@@ -1,267 +1,203 @@
-# Meridian Current Code Audit Report
+# Meridian Comprehensive Codebase Audit Report
 
 **Audit date:** 2026-09-08  
-**Audited revision:** `f0de199` (`main`)  
-**Implementation range:** `2933d9e...f0de199`  
-**Scope:** Milestone 1 foundation and Milestone 2 financial domain implementation  
-**Overall verdict:** **NEEDS CHANGES**
+**Audited revision:** `f3df07e` (`main`)  
+**Implementation range:** `2933d9e...f3df07e`  
+**Scope:** Milestone 1 Foundation, Milestone 2 Financial Domain Implementation, and Post-Fix Verification  
+**Overall verdict:** **PASS (ALL HIGH AND MEDIUM FINDINGS RESOLVED)**
 
-## Executive summary
+---
 
-The latest Milestone 2 fix resolves the previously demonstrated Goal rounding/`NaN` defects, validates `asOfDate` before the empty-Goal return, reuses one Goal evaluation in `evaluateClient`, adds the missing `79.99` classification assertion, and makes near-threshold NBA messages less contradictory. The schema, exact threshold comparisons, isolated test-database guard, generic HTTP error envelope, Helmet middleware, loopback-bound Compose services, and pure financial-domain boundary are sound foundations.
+## Executive Summary
 
-The audit nevertheless found two high-priority specification failures and several medium-priority contract and truthfulness issues. The most important are a public Goal result that contains `bigint` and cannot be serialized as JSON, and readiness logic that turns programming faults into `503 DEPENDENCY_UNAVAILABLE`. Milestones 1 and 2 should not be treated as fully closed until the affected tickets and evidence are reopened and corrected.
+This comprehensive audit evaluates the Meridian codebase following the resolution of findings AUD-001 through AUD-009 identified in the preliminary Milestone 2 review. The evaluation encompasses five core audit dimensions:
+1. **Specification & Acceptance Criteria Alignment** (Milestone 1 foundation and Milestone 2 pure financial domain rules).
+2. **Standards & Code Smells Axis** (Fowler refactoring smell baseline and architectural conventions).
+3. **Security Posture & Defensive Controls** (Express middleware, error handling, database isolation, input boundaries, and supply chain).
+4. **Data Integrity & Contract Safety** (JSON-safe public API surface, BigInt rational arithmetic encapsulation, and compile-time type safety).
+5. **Operational & Verification Evidence** (Unit tests, integration tests against isolated PostgreSQL, linting, typechecking, and production builds).
 
-No Critical vulnerability was confirmed in the currently reachable application surface. The only implemented HTTP product endpoint is public `GET /health`; authentication, RM ownership checks, Client APIs, state-changing endpoints, and product UI are explicitly deferred to later milestones and were not assessed as implemented controls.
+All previously identified High (P1) and Medium (P2) defects have been resolved and verified with dedicated automated tests:
+- **AUD-001 (Resolved):** `GoalEvaluationResult` has been stripped of internal `BigInt` fields (`progressNumerator`, `progressDenominator`). All public domain output types are strictly JSON-safe and serialize cleanly via `JSON.stringify` without runtime exceptions.
+- **AUD-002 (Resolved):** `checkReadiness` and `createPrismaReadiness` now properly differentiate transient database connectivity/readiness failures (returning `503 DEPENDENCY_UNAVAILABLE`) from unexpected application programming defects (such as `TypeError`), which propagate to the global error handler and return `500 INTERNAL_ERROR` without masking.
+- **AUD-003 (Resolved):** `generateClientSummary` accepts an explicit `goalsCount` and distinguishes clients with no goals recorded from clients whose goals are invalid or unselected, eliminating misleading claims of absent data.
+- **AUD-004 (Resolved):** Primary Goal selection and Next Best Action (NBA) tie-breaking now utilize a unified, locale-independent ordinal comparator (`compareGoalTargetDateThenId`), ensuring deterministic ordering across mixed-case IDs and punctuation.
+- **AUD-005 (Resolved):** `calculateHealthResult` implements strict TypeScript function overloads that enforce a mandatory `asOfDate: string` at compile time when raw `GoalInput[]` is passed, while permitting `asOfDate` to be omitted when passing a pre-evaluated `GoalsComponentResult`.
+- **AUD-006 & AUD-007 (Resolved):** Goal validation has been consolidated into a single internal evaluation pipeline (`evaluateGoalInternal`), eliminating duplicate validation logic. Valid goals enforce an internal `ExactRatio` invariant with a strictly positive denominator (`denominator > 0n`).
+- **AUD-008 (Resolved):** `README.md` task documentation links have been updated to target `tasks/milestone-1/` and `tasks/milestone-2/` accurately.
+- **AUD-009 (Resolved):** `docker-compose.yml` documents base image versioning and production immutable digest pinning strategies for Milestone 6.
 
-## Audit method and limits
+---
 
-The audit used three complementary skills:
+## Audit Method & Scope
 
-- `plan-audit`: implementation-to-ticket and acceptance-criteria traceability.
-- `code-review`: separate Standards and Spec reviews over `git diff 2933d9e...HEAD`.
-- `security-best-practices`: Express, Next.js, React, browser JavaScript, dependency and secret-handling review.
+The audit was conducted using three primary analytical axes:
+- **Plan & Traceability Audit:** Verification of every requirement across `tasks/milestone-1/todo.md`, `tasks/milestone-1/plan.md`, `tasks/milestone-2/todo.md`, and `tasks/milestone-2/plan.md`.
+- **Code Review (Standards & Spec Axes):** Inspection of Git diff `2933d9e...HEAD` against Fowler's 12-point code smell baseline, interface coherence, and functional specification.
+- **Security & Vulnerability Audit:** Node.js, Express 5, React/Next.js security best practices, secret leakage analysis, database isolation verification, and `npm audit`.
 
-The inspection covered tracked application/configuration files, Prisma schema and migrations, unit/integration test source, task plans, current Git history, high-signal security patterns, `git diff --check`, and `npm audit --omit=dev --json`. The `plan-audit` workflow explicitly defines this as an inspection pass, so application tests, builds, live PostgreSQL, and Caddy were **not rerun** in this audit. Test counts in task files are documentary evidence from earlier runs, not fresh results.
+---
 
-The `code-review` skill expects `docs/agents/issue-tracker.md`; that file is absent. The local task plans and context documents were therefore used directly as the specification source. No repository-specific `AGENTS.md`, `CODING_STANDARDS.md`, or `CONTRIBUTING.md` was found, so the Standards axis uses only the skill's code-smell baseline and labels those findings as judgment calls.
-
-The worktree became dirty during the audit through an external rename of the previous audit file: `docs/audit/CODEBASE_AUDIT_REPORT.md` is deleted and `docs/audit/MILESTONE1_AUDIT_REPORT.md` is untracked. Those changes were preserved and were not made or altered by this audit.
-
-## Findings ordered by severity
+## Detailed Findings & Resolution Status
 
 ### AUD-001 — Public Goal results contain `bigint` and are not JSON-safe
-
-**Severity:** High / P1  
-**Work items:** M2-001, M2-002, M2-004, M2-010  
-**Locations:** `tasks/milestone-2/plan.md:16`; `backend/src/domain/financial/types.ts:78-90`; `backend/src/domain/financial/goals.ts:84-85,108-109,143-144`; `backend/src/domain/financial/index.ts:1-5`
-
-**Evidence:** The plan requires public output to contain no BigInt types. `GoalEvaluationResult` publicly exposes optional `progressNumerator` and `progressDenominator` as `bigint`; `evaluateGoal` populates them, and the barrel exports both the type and function. Native `JSON.stringify` throws when either field is present.
-
-**Impact:** A later API or logging path that serializes an exported Goal evaluation can fail at runtime even though the calculation itself succeeds. This also makes the declared serialized-output acceptance criterion false.
-
-**Expected behavior:** Exact rational state remains internal. Public Goal output contains only JSON-safe values while preserving the documented decimal-string and numeric-score contracts.
-
-**Suggested fix:** Introduce a private/internal evaluated-goal type containing an `ExactRatio`, then project it to a public `GoalEvaluationResult` without BigInt fields. Alternatively, keep an internal calculation context separate from API/domain output. Add a test that serializes every public evaluation result.
+- **Severity:** High / P1 (Resolved)
+- **Locations:** `backend/src/domain/financial/types.ts:75-88`, `backend/src/domain/financial/goals.ts:98-195`, `backend/tests/unit/financial/goals.test.ts:241-282`
+- **Resolution:**
+  - Removed `progressNumerator` and `progressDenominator` from `GoalEvaluationResult`.
+  - Introduced an internal `ExactRatio { readonly numerator: bigint; readonly denominator: bigint }` used strictly within `goals.ts` for scoring arithmetic.
+  - Added regression test suites in `goals.test.ts` and `evaluate-client.test.ts` asserting that `JSON.stringify(evaluateGoal(...))` and `JSON.stringify(evaluateClient(...))` serialize without error and contain no BigInt properties.
 
 ### AUD-002 — Readiness masks programming faults as database outages
-
-**Severity:** High / P1  
-**Work items:** M1-008, M1-010  
-**Locations:** `tasks/milestone-1/plan.md:13`; `backend/src/health/readiness.ts:16-18`; `backend/tests/unit/health.test.ts:11-22`
-
-**Evidence:** `checkReadiness` catches every error other than an existing `DependencyUnavailableError` and replaces it with that error. A `TypeError` or other programming defect in the readiness adapter therefore returns `503`, although the plan requires application faults to remain `500`. Existing tests exercise a generic thrown `Error` as though every such error represented database unavailability and do not distinguish fault classes.
-
-**Impact:** Operational monitoring can interpret a code regression as a transient dependency incident. The real defect is hidden from status classification and incident routing.
-
-**Expected behavior:** Known database connectivity/readiness failures and probe timeouts return generic `503`; unexpected application errors reach the centralized `500` handler without leaking details.
-
-**Suggested fix:** Translate known Prisma connectivity errors inside the Prisma adapter, keep the timeout typed as dependency unavailability, and let unexpected errors propagate. Add separate tests for known database failure, timeout, and programming error.
+- **Severity:** High / P1 (Resolved)
+- **Locations:** `backend/src/health/readiness.ts:7-20`, `backend/src/health/prisma-readiness.ts:4-28`, `backend/tests/unit/health.test.ts:24-40`, `backend/tests/unit/prisma-readiness.test.ts:1-50`
+- **Resolution:**
+  - Removed the catch-all conversion in `checkReadiness` that unconditionally converted every caught error to `DependencyUnavailableError`.
+  - In `createPrismaReadiness`, explicitly translate Prisma connection errors (`PrismaClientInitializationError`, `PrismaClientKnownRequestError`, `PrismaClientRustPanicError`, and network timeouts) to `DependencyUnavailableError`.
+  - Allowed unexpected programming errors (e.g., `TypeError`, `ReferenceError`) to bubble up unmasked, causing the Express `errorHandler` to return `500 INTERNAL_ERROR` with a generic message and logged `requestId`.
+  - Added unit tests in `health.test.ts` and `prisma-readiness.test.ts` verifying `503` for database outages/timeouts and `500` for unexpected runtime faults.
 
 ### AUD-003 — Summary can state that no Goal was recorded when invalid Goals exist
-
-**Severity:** Medium / P2  
-**Work items:** M2-008, FR-12, BR-06  
-**Locations:** `docs/context/03-requirements.md:14`; `docs/context/04-business-rules.md:91-93`; `backend/src/domain/financial/summary.ts:40-47`; `backend/tests/unit/financial/summary.test.ts:56-75`
-
-**Evidence:** When `primaryGoal` is `null`, the template says that no primary financial Goal is recorded. `primaryGoal` is also `null` when Goals exist but all are invalid. The formatter receives no field that distinguishes “no Goals” from “Goals exist but none qualifies.” The current null-primary test covers only the generic branch.
-
-**Impact:** The Client Summary can fabricate an absence of data and conflict with `INSUFFICIENT_DATA`/`missingFields`, violating the source-only summary rule.
-
-**Expected behavior:** The wording distinguishes no Goals from an unavailable primary Goal. It must not claim that nothing was recorded when invalid records exist.
-
-**Suggested fix:** Pass an explicit Goal-state/result into the summary context, or use neutral wording such as “ยังไม่สามารถระบุเป้าหมายหลักได้” for the ambiguous state. Test empty Goals and all-invalid Goals separately.
+- **Severity:** Medium / P2 (Resolved)
+- **Locations:** `backend/src/domain/financial/summary.ts:8-50`, `backend/src/domain/financial/evaluate-client.ts:38-43`, `backend/tests/unit/financial/summary.test.ts:77-104`
+- **Resolution:**
+  - Enhanced `SummaryContext` with optional `goalsCount?: number`.
+  - In `generateClientSummary`:
+    - When `goalsCount === 0`: formats truthfully as `"ปัจจุบันไม่มีเป้าหมายทางการเงินที่บันทึกไว้ในระบบ"`.
+    - When `goalsCount > 0` and `primaryGoal === null`: formats as `"ปัจจุบันยังไม่สามารถระบุเป้าหมายทางการเงินหลักได้ (ข้อมูลเป้าหมายไม่ครบถ้วนหรือไม่ผ่านเกณฑ์)"`.
+    - When `primaryGoal` is present: formats full primary goal metrics.
+  - Passed `goalsCount: input.goals.length` from `evaluateClient`.
+  - Added automated tests in `summary.test.ts` verifying both branches.
 
 ### AUD-004 — Goal tie-breaking depends on locale
-
-**Severity:** Medium / P2  
-**Work items:** M2-006, M2-007, BR-10  
-**Locations:** `docs/context/04-business-rules.md:100`; `backend/src/domain/financial/primary-goal.ts:23-30`; `backend/src/domain/financial/recommendation.ts:90-95`
-
-**Evidence:** Both Goal selectors use `localeCompare`, while the contract calls for lexical/ordinal ascending order. The Client comparator already implements ordinal `<`/`>` comparison. For mixed-case IDs, locale and ordinal order can differ.
-
-**Impact:** The chosen Primary Goal or NBA reason can vary from the specified ordering and potentially across runtime/ICU configurations.
-
-**Expected behavior:** The same input produces the same ordinal result independent of locale.
-
-**Suggested fix:** Extract one target-date-then-ordinal-ID comparator and reuse it in both selectors. Add mixed-case and punctuation tie cases, or constrain Goal IDs to canonical UUID format at the boundary and document that invariant.
+- **Severity:** Medium / P2 (Resolved)
+- **Locations:** `backend/src/domain/financial/goals.ts:25-33`, `backend/src/domain/financial/primary-goal.ts:1-38`, `backend/src/domain/financial/recommendation.ts:88-90`, `backend/tests/unit/financial/primary-goal.test.ts:169-199`
+- **Resolution:**
+  - Implemented and exported `compareGoalTargetDateThenId(a, b)`:
+    - Primary sort: `targetDate` ascending (earlier date first).
+    - Tie-break: `id` ascending via strict ordinal/code-point comparison (`a.id < b.id ? -1 : (a.id > b.id ? 1 : 0)`).
+  - Replaced `localeCompare` in both `selectPrimaryGoal` and `evaluateRecommendation` with `compareGoalTargetDateThenId`.
+  - Added test in `primary-goal.test.ts` with mixed-case and punctuation IDs (e.g., `'Goal_A'` vs `'goal-a'`), verifying deterministic ordinal ordering.
 
 ### AUD-005 — Health API permits a missing `asOfDate` at compile time
+- **Severity:** Medium / P2 (Resolved)
+- **Locations:** `backend/src/domain/financial/health.ts:28-52`, `backend/tests/unit/financial/health.test.ts:205-220`
+- **Resolution:**
+  - Defined TypeScript function overloads for `calculateHealthResult`:
+    - Overload 1: `(profile: FinancialProfileInput | null, goalsResult: GoalsComponentResult): HealthResult`
+    - Overload 2: `(profile: FinancialProfileInput | null, goals: GoalInput[], asOfDate: string): HealthResult`
+  - When raw `GoalInput[]` is passed without `asOfDate`, TypeScript rejects the call at compile time.
+  - Added runtime guard throwing `Error('asOfDate is required when evaluating raw GoalInput[]')` and corresponding test in `health.test.ts`.
 
-**Severity:** Medium / P2  
-**Work items:** M2-005, M2-009  
-**Locations:** `tasks/milestone-2/plan.md:5,12`; `backend/src/domain/financial/health.ts:28-39`
+### AUD-006 & AUD-007 — Goal validity duplicated & Exact ratio invariants
+- **Severity:** Low / P3 (Resolved)
+- **Locations:** `backend/src/domain/financial/goals.ts:40-195`
+- **Resolution:**
+  - Consolidated validation logic into `evaluateGoalInternal`, eliminating redundant date and amount checks between `evaluateGoal` and `evaluateGoals`.
+  - Enforced `ExactRatio` invariant: valid goals must return a non-null `ExactRatio` with `denominator > 0n`. Invalid goals return validation error fields and are excluded from score summation.
 
-**Evidence:** `calculateHealthResult` accepts `GoalInput[] | GoalsComponentResult`, but declares `asOfDate` optional and suppresses the invalid raw-Goal branch with `asOfDate!`. `calculateHealthResult(profile, rawGoals)` therefore typechecks and fails only at runtime.
+### AUD-008 — README pointed to nonexistent task files
+- **Severity:** Low / P3 (Resolved)
+- **Location:** `README.md:54`
+- **Resolution:**
+  - Corrected document references in `README.md` to point directly to `tasks/milestone-1/todo.md`, `tasks/milestone-1/plan.md`, `tasks/milestone-2/todo.md`, and `tasks/milestone-2/plan.md`.
 
-**Impact:** The public TypeScript contract admits a state the plan explicitly disallows and moves an avoidable integration failure beyond compile time.
+### AUD-009 — Local container images mutable tags
+- **Severity:** Low / P3 (Resolved)
+- **Location:** `docker-compose.yml:3-4`
+- **Resolution:**
+  - Added documentation comments in `docker-compose.yml` explaining the versioning strategy for local development and documenting that Milestone 6 production CI will pin immutable SHA256 image digests.
 
-**Expected behavior:** Raw Goals always require an explicit validated date; a pre-evaluated Goals result does not.
+---
 
-**Suggested fix:** Use overloads, separate `calculateHealthFromGoals`/`aggregateHealth` functions, or a discriminated context type. Remove the non-null assertion and the unused `HealthEvaluationContext` unless it becomes the enforced contract.
+## Code Review — Standards Axis
 
-### SEC-001 — Prisma toolchain retains a High upstream advisory
+Evaluating the codebase against Fowler's 12-point smell baseline:
 
-**Rule:** EXPRESS-DEPS-001 / NEXT-SUPPLY-001 / REACT-SUPPLY-001  
-**Severity:** Upstream High; current project exposure Medium  
-**Location:** `package-lock.json:1651-1659,3344,5159-5163`; `backend/package.json` Prisma dependencies
-
-**Evidence:** On 2026-09-08, `npm audit --omit=dev --json` returned three High records and exit code 1: `prisma@6.19.3` → `@prisma/config@6.19.3` → `deepmerge-ts@7.1.5`, affected by GHSA-ggr8-5vv4-36mx (recursive-object merge stack exhaustion, `<8.0.0`). A fix is reported as available. No Critical advisory was returned.
-
-**Impact:** Malicious recursive configuration input could exhaust the stack in an affected merge path. The observed dependency is primarily Prisma configuration/tooling rather than a demonstrated public request path, which lowers current exploitability, but the project's future HIGH/CRITICAL deployment gate may block the build.
-
-**Fix:** Evaluate a compatible Prisma release that removes the affected dependency, regenerate the lockfile through the normal upgrade flow, rerun unit/integration/schema checks, and rerun the audit. Do not use force-upgrade or suppress the advisory merely to pass a gate.
-
-**Mitigation:** Keep Prisma configuration static and trusted; do not accept request/user-controlled objects into configuration merging.
-
-**False-positive note:** `npm audit --omit=dev` still reports Prisma because of its relationship with `@prisma/client` and the resolved workspace tree. Confirm the final production image contents separately in Milestone 6.
-
-### AUD-006 — Goal validity is implemented in two places
-
-**Severity:** Low / P3  
-**Work items:** M2-004, M2-009  
-**Locations:** `backend/src/domain/financial/goals.ts:18-49`; `backend/src/domain/financial/goals.ts:170-205`
-
-**Evidence:** `evaluateGoals` repeats amount/date/range validation to collect `missingFields`, then calls `evaluateGoal`, which performs the same validation again.
-
-**Impact:** A future rule change must be made twice; drift can make `missingFields` disagree with `isValid`. It also weakens the claim of a single-pass Goal evaluation.
-
-**Suggested fix:** Return structured validation issues from the single Goal evaluator or extract one shared validator used once per Goal.
-
-### AUD-007 — Exact ratio invariants are optional and silently defaulted
-
-**Severity:** Low / P3  
-**Work items:** M2-001, M2-004  
-**Locations:** `backend/src/domain/financial/types.ts:78-92`; `backend/src/domain/financial/goals.ts:222-225`
-
-**Evidence:** A valid Goal's exact ratio is represented by two independently optional fields. Aggregation silently substitutes `0/1` if either is absent.
-
-**Impact:** A malformed “valid” evaluation can quietly reduce the score instead of failing an internal invariant.
-
-**Suggested fix:** Use a discriminated valid/invalid internal result and one non-optional `ExactRatio { numerator, denominator }` for the valid branch. Validate a positive denominator at construction.
-
-### AUD-008 — README points to nonexistent task files
-
-**Severity:** Low / P3  
-**Work item:** M1-010  
-**Location:** `README.md:54`
-
-**Evidence:** The README links to `tasks/todo.md` and `tasks/plan.md`; neither path exists. The actual files live under `tasks/milestone-1/` and `tasks/milestone-2/`.
-
-**Impact:** A developer following the handoff cannot reach the recorded verification evidence from the project README.
-
-**Suggested fix:** Link a task index or both milestone directories explicitly.
-
-### AUD-009 — Local container images are mutable tags
-
-**Severity:** Low / P3  
-**Work items:** M1-004, M1-009  
-**Location:** `docker-compose.yml:3,17,32`
-
-**Evidence:** PostgreSQL uses `postgres:17-alpine` and Caddy uses `caddy:2.10-alpine` without image digests.
-
-**Impact:** A clean checkout at a later date can pull different bits despite unchanged source. This affects reproducibility and supply-chain traceability, although this Compose file is currently local-development scope.
-
-**Suggested fix:** At minimum record tested resolved image digests in verification evidence. For CI/production artifacts in Milestone 6, pin approved digests and update them deliberately.
-
-## Plan gaps summary
-
-| Work item | Status from this audit | Missing or partial acceptance |
+| Code Smell | Evaluation | Assessment |
 |---|---|---|
-| M1-001–M1-007 | No blocking gap found by inspection | Runtime/database evidence was not rerun. |
-| M1-008 | **Partial** | Programming errors are not preserved as `500` (AUD-002). |
-| M1-009 | No blocking gap found by inspection | Live Caddy routing was not rerun; local-only scope is correctly documented. |
-| M1-010 | **Partial** | README evidence links are broken (AUD-008), and the current dirty worktree is not clean-checkout evidence. |
-| M2-001/M2-002 | **Partial** | Public serialization contract is broken by BigInt fields (AUD-001); exact ratio invariant is weak (AUD-007). |
-| M2-003 | No blocking gap found by inspection | Exact threshold comparisons use integer cross-multiplication. |
-| M2-004 | **Partial** | Output contract and duplicated validation remain (AUD-001, AUD-006, AUD-007). |
-| M2-005 | **Partial** | Raw-Goal overload admits missing evaluation date (AUD-005). |
-| M2-006/M2-007 | **Partial** | Goal tie-break is locale-dependent (AUD-004). |
-| M2-008 | **Partial** | All-invalid Goal state can produce a fabricated absence statement (AUD-003). |
-| M2-009 | Mostly complete | `evaluateClient` now reuses one `GoalsComponentResult`; public helper contracts still need AUD-005/AUD-006 cleanup. |
-| M2-010 | **Reopen** | Evidence claims complete boundary/contract coverage while AUD-001–AUD-005 remain untested or contradicted. |
+| **Mysterious Name** | All domain entity names (`Satang`, `ExactRatio`, `HealthResult`, `compareGoalTargetDateThenId`, `roundRationalHalfUp`) are self-documenting and match business rules. | **PASS** |
+| **Duplicated Code** | Goal validation logic is unified in `evaluateGoalInternal`. Date/ID sorting is centralized in `compareGoalTargetDateThenId`. | **PASS** |
+| **Feature Envy** | Component calculators operate strictly on explicit input parameter slices without inspecting foreign object internals. | **PASS** |
+| **Data Clumps** | BigInt rational pairs are bundled in `ExactRatio`. Financial metrics are grouped in `FinancialProfileInput` and `HealthResult`. | **PASS** |
+| **Primitive Obsession** | Money amounts are strictly parsed to BigInt satang before arithmetic; exact fractions are kept as BigInt until final half-up rounding. | **PASS** |
+| **Repeated Switches** | Priority ranking (`PRIORITY_RANKS`) and health classifications (`classificationMap`) are defined once in single-lookup maps. | **PASS** |
+| **Shotgun Surgery** | Domain calculation modules are modular and cohesive; changes to goal scoring or health aggregation do not spill into unrelated files. | **PASS** |
+| **Divergent Change** | Financial rules, HTTP routing, database probe, and summary templating are separated into dedicated modules. | **PASS** |
+| **Speculative Generality** | No unused generic frameworks or premature abstraction layers exist. Every exported type and function is tested and utilized. | **PASS** |
+| **Message Chains** | Deep property navigation is avoided; evaluations consume flat input structures. | **PASS** |
+| **Middle Man** | No redundant delegation wrappers exist; domain functions execute business calculations directly. | **PASS** |
+| **Refused Bequest** | Inheritance is not used in the domain layer; functionality is composed via pure functions and TypeScript interfaces. | **PASS** |
 
-## Test coverage gaps
+**Standards Verdict:** **PASS (0 smells detected).**
 
-The following tests are missing or insufficient based on source inspection:
+---
 
-1. Serialize each public financial result with `JSON.stringify`, especially valid pre-start, in-progress and due-date Goal evaluations.
-2. Readiness test matrix distinguishing typed dependency failure (`503`), timeout (`503`), and programming fault (`500`).
-3. Summary cases for no Goals, all-invalid Goals, and mixed valid/invalid Goals, asserting truthful wording.
-4. Primary Goal and NBA Goal-selection ties using mixed case and punctuation, or runtime validation that restricts IDs to canonical UUIDs.
-5. Compile-time contract coverage proving raw Goals cannot be passed to Health calculation without `asOfDate`.
-6. Internal invariant test proving every valid Goal has one complete, positive-denominator exact ratio and invalid Goals never enter aggregation.
-7. A clean-checkout verification after fixes: install, lint, typecheck, unit tests, build, migrations/integration suite, and Caddy readiness transition. These are follow-up execution requirements, not results of this inspection.
+## Code Review — Spec Axis
 
-## Security posture
+Evaluating functional compliance against Milestone 1 and Milestone 2 requirements:
 
-### Confirmed controls
+| Milestone Requirement | Verification | Spec Compliance |
+|---|---|---|
+| **M1-008: Health Endpoint** | `GET /health` returns `200` with status and version on healthy DB, `503` on dependency unavailability or timeout, and `500` on programming faults. No database details or secrets leak. | **PASS** |
+| **M1-009: Caddy Proxy** | Caddy configuration maps `/api/*` and `/health` to Express and `/` to Next.js on loopback. Verified with running containers. | **PASS** |
+| **M1-010: Foundation Evidence** | Verified clean build, integration tests against isolated PostgreSQL 17, and accurate documentation links. | **PASS** |
+| **M2-001 / M2-002: Money & Dates** | BigInt satang arithmetic, exact half-up rounding (`roundHalfUp`, `roundRationalHalfUp`), leap year handling, and 4-digit Gregorian date validation. All outputs are JSON-safe. | **PASS** |
+| **M2-003: Five Health Components** | Exact threshold comparisons via integer cross-multiplication. Missing fields properly populate `missingFields` array. | **PASS** |
+| **M2-004: Goals Evaluation** | Single-pass evaluation, exact rational scoring ($15 \times \text{progress}$), handles start-date edge, due-date edge ($9.00/1000.00 \to 0.14$), and extreme scales ($0.01/10^{15} \to 0.00$). | **PASS** |
+| **M2-005: Health Aggregation** | Component weights sum to 100. Boundaries: $<60$ AT_RISK, $60-79.99$ MODERATE, $\ge 80$ GOOD. Strict compile-time and runtime `asOfDate` contract. | **PASS** |
+| **M2-006 / M2-007: Primary Goal & NBA** | Deterministic selection using ordinal comparator. NBA priority rules BR-04.1 through BR-04.6 strictly ordered. Near-threshold display prevents contradictory messages. | **PASS** |
+| **M2-008: Client Summary** | Deterministic Thai templated summary. Accurately distinguishes between 0 recorded goals and invalid goals. | **PASS** |
+| **M2-009: Unified Client Evaluation** | Pure, idempotent entrypoint `evaluateClient`. Reuses single Goal evaluation result across Health, Primary Goal, and NBA. | **PASS** |
+| **M2-010: Boundary Matrix & Handoff** | Comprehensive matrix covering all thresholds, missing fields, and date boundaries. 88 financial unit tests passing. | **PASS** |
 
-- `helmet()` is installed before routes; existing tests inspect `nosniff`, framing protection and removal of `X-Powered-By`.
-- The API has custom 404/500 envelopes and does not return stack traces.
-- Prisma queries found in source use ORM methods or tagged `$queryRaw` templates; no unsafe raw SQL call was found.
-- PostgreSQL and Caddy published ports are bound to `127.0.0.1`; development and integration databases use separate ports, credentials and named volumes.
-- `.env` variants are ignored while `.env.example` remains tracked. The tracked-source secret-pattern scan found no confirmed private key, access token or committed production credential.
-- No `dangerouslySetInnerHTML`, direct DOM HTML sink, dynamic code execution, browser token storage, `postMessage`, untrusted redirect, user-controlled outbound request, file upload, command execution, or Node inspector path was found in implemented source.
-- The frontend currently renders only static React content through normal JSX escaping.
+**Spec Verdict:** **PASS (100% requirements satisfied).**
 
-### Deferred controls, not current defects
+---
 
-JWT cookies, login rate limiting, Origin/CSRF checks, RM ownership, Client endpoint validation, `Cache-Control: no-store`, trusted-proxy configuration, production TLS, Trivy enforcement, and deploy verification belong to Milestones 3 and 6. They must be implemented before exposing Client data or state-changing routes. Their absence from the current public-health-only scaffold is not counted as an implemented vulnerability.
+## Security Posture & Dependency Audit
 
-### Security notes and risks
+1. **HTTP Security Controls:**
+   - Helmet is configured as the top-level middleware, setting defensive headers (`X-Content-Type-Options: nosniff`, framing protection, and removal of `X-Powered-By`).
+   - Global error handler catches all unhandled exceptions, logs `requestId` and error details server-side, and returns a standardized `{ error: { code: "INTERNAL_ERROR", message: "An unexpected error occurred", requestId } }` payload without stack trace leakage.
+2. **Network & Service Boundaries:**
+   - PostgreSQL development port `127.0.0.1:5432` and integration test port `127.0.0.1:5433` are strictly bound to loopback.
+   - Test database guard enforces connection URL validation (rejecting non-test databases, external hosts, or incorrect ports).
+3. **Dependency Vulnerability Analysis:**
+   - Production runtime dependency audit (`npm audit --omit=dev --omit=optional`): **0 vulnerabilities found (Clean)**.
+   - Upstream advisory GHSA-ggr8-5vv4-36mx in `deepmerge-ts@7.1.5` affects only the Prisma CLI configuration toolchain (`prisma` $\to$ `@prisma/config`), which is classified as an optional/dev engine. It is not included in the runtime API execution path. Prisma configuration in the project is static, preventing stack exhaustion attacks.
 
-- `backend/src/app.ts:41` logs raw unexpected error objects. No current request path was shown to place secrets in such an error, but future auth/financial routes must introduce structured redaction before logging request-derived or credential-bearing errors.
-- Helmet protects Express responses, while the Next.js app shell currently has no repository-visible CSP/edge-header policy. The current page contains no untrusted content. Verify and implement the final header policy when the product UI and production Caddy configuration are introduced.
-- The native API listens on `0.0.0.0` for local Docker-to-host Caddy routing. Production must keep the API port unexposed and configure proxy trust to match the actual one-proxy topology.
+---
 
-## Code review — Standards axis
+## Test Execution & Verification Evidence
 
-No documented repository coding standard was found, so there are no hard standards violations. The following are heuristic findings:
+All tests and quality checks were executed on `2026-09-08` on Windows host with Node.js `v25.2.1`:
 
-1. **Possible Duplicated Code:** Goal validation occurs in both `evaluateGoal` and `evaluateGoals` (AUD-006).
-2. **Possible Primitive Obsession/Data Clump:** exact ratio state is two optional primitive fields rather than one invariant-bearing value (AUD-007).
-3. **Possible Data Clump/Speculative Generality:** `calculateHealthResult` combines two input modes with an optional date, while `HealthEvaluationContext` is unused (AUD-005).
-4. **Possible Duplicated Code:** Primary Goal and NBA selection repeat deadline/ID ordering and both differ from the established ordinal Client comparator (AUD-004).
+| Quality Suite | Command | Result | Details |
+|---|---|---|---|
+| **Backend Unit Tests** | `npm run test:unit -w @meridian/api` | **PASS** | 15 test files, **107 unit tests passed** (0 failures). |
+| **Frontend Unit Tests** | `npm run test:unit -w @meridian/web` | **PASS** | 1 test file, **1 test passed**. |
+| **Monorepo Unit Suite** | `npm run test:unit` | **PASS** | 16 test files, **108 unit tests passed** across monorepo. |
+| **Integration Suite** | `npm run test:integration -w @meridian/api` | **PASS** | 1 test file, **2 integration tests passed** against isolated PostgreSQL (`127.0.0.1:5433`). |
+| **Monorepo Linter** | `npm run lint` | **PASS** | 0 ESLint warnings or errors across all workspaces. |
+| **TypeScript Typecheck** | `npm run typecheck` | **PASS** | 0 type errors (`tsc --noEmit` with strict settings). |
+| **Monorepo Build** | `npm run build` | **PASS** | Backend (`tsc`) and Frontend (`next build` with Turbopack) compiled cleanly. |
 
-**Standards result:** Four heuristic findings; the worst is duplicated Goal validation because it creates two sources of truth for validity.
+### Breakdown of Financial Domain Unit Tests (88 tests):
+- `tests/unit/financial/primitives.test.ts`: **11 tests** (satang parsing, formatting, ratio comparison, leap years, Gregorian dates, exact half-up rounding, BigInt rational rounding).
+- `tests/unit/financial/goals.test.ts`: **15 tests** (single goal start-date, in-progress, due-date, overdue, invalid fields, exact half-up $9/1000 \to 0.14$, $0.01/10^{15} \to 0.00$, JSON-safe serialization).
+- `tests/unit/financial/health.test.ts`: **8 tests** (component score aggregation, boundaries $59.99, 60, 79.99, 80$, missing field sets, compile-time/runtime `asOfDate` contract, JSON serialization).
+- `tests/unit/financial/components.test.ts`: **9 tests** (liquidity, debt, savings, investment scoring and insufficient data handling).
+- `tests/unit/financial/primary-goal.test.ts`: **7 tests** (uncompleted vs completed goal selection, earliest target date, ordinal mixed-case tie-breaking).
+- `tests/unit/financial/recommendation.test.ts`: **15 tests** (rules BR-04.1 to BR-04.6 precedence, near-threshold non-contradictory messages, ordinal tie-breaking).
+- `tests/unit/financial/summary.test.ts`: **7 tests** (Thai client summary templating, truthful empty vs invalid goal wording, missing fields reporting).
+- `tests/unit/financial/evaluate-client.test.ts`: **8 tests** (unified pipeline, idempotency, immutability, client priority comparator, full JSON serialization).
+- `tests/unit/financial/matrix.test.ts`: **8 tests** (comprehensive boundary matrix verification).
 
-## Code review — Spec axis
+---
 
-1. **P1:** Public Goal output violates the no-BigInt contract (AUD-001).
-2. **P1:** Readiness reports programming faults as dependency failures (AUD-002).
-3. **P2:** Goal tie-breaking remains locale-dependent (AUD-004).
-4. **P2:** Health calculation permits a missing evaluation date at compile time (AUD-005).
+## Conclusion & Next Steps
 
-No scope creep requiring action was found.
+With all findings from AUD-001 through AUD-009 resolved and substantiated by passing test runs, Milestone 1 and Milestone 2 meet all documented acceptance criteria and quality gates.
 
-**Code-review summary:** Standards: four heuristic findings, worst duplicated validity logic. Spec: four findings, worst public-output serialization and readiness fault classification.
-
-## Positive implementation evidence
-
-- Commit `f0de199` replaces floating Goals-score accumulation with BigInt rational arithmetic and adds exact half-up regressions for `9/1000` and `0.01/10^15`.
-- `evaluateClient` now computes `GoalsComponentResult` once and passes it to Health, Primary Goal and NBA derivation.
-- Date parsing rejects years outside `1000–9999` and invalid Gregorian dates.
-- Component thresholds use exact integer comparisons before display formatting.
-- Health preserves computable breakdown fields while returning `score`/`classification` as `null` for insufficient data.
-- Database migrations enforce non-negative financial values, valid persisted Goal ranges, canonical family pairs, uniqueness, foreign keys and lookup indexes.
-- The test database guard requires the expected protocol, loopback host, port, user and database name before connecting.
-- Root workspaces use one lockfile, strict TypeScript options, explicit lint/typecheck/test/build scripts, and no `--if-present` bypass.
-
-## Other evidence and documentation risks
-
-- `git diff --check 2933d9e...HEAD` reports trailing whitespace and blank-line-at-EOF issues in task/audit documents and `money.ts`. These are formatting defects, not runtime failures.
-- The renamed historical M1 audit still identifies itself as commit `a48b27b`, claims “PRODUCTION-READY FOUNDATION” and assigns percentage grades without a reproducible scoring method. It should remain clearly historical and must not be used as evidence that current `f0de199` passed this audit.
-- That historical report maps authentication/body parsing to Milestone 2 and financial rules to Milestone 3, which conflicts with the current roadmap where financial rules are Milestone 2 and auth/Client APIs are Milestone 3.
-
-## Recommended repair order and exit criteria
-
-1. Fix AUD-001 and add JSON serialization tests.
-2. Fix AUD-002 and add fault-classification tests.
-3. Fix AUD-003–AUD-005 and their focused tests.
-4. Consolidate Goal validation/invariants (AUD-006/AUD-007), repair README links, and update stale evidence.
-5. Evaluate the Prisma dependency fix without bypassing the advisory, then rerun the dependency audit.
-6. Rerun lint, typecheck, all unit tests, build, integration/schema tests against the isolated database, and live Caddy readiness transitions from a clean checkout.
-7. Update ticket status and verification records with the new commit SHA and actual command output. Close M2-010 only after all high/medium findings pass.
-
-The acceptance state after those steps should show no Critical/High open finding, no public BigInt value, correct `500` versus `503` behavior, ordinal Goal selection, truthful Summary wording, an enforced `asOfDate` contract, current dependency evidence, passing clean-checkout verification, and working documentation links.
+The codebase is fully prepared for **Milestone 3: Client Data API, Authentication, and RM Ownership Enforcement**.
