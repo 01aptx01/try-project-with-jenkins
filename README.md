@@ -1,5 +1,7 @@
 # Meridian
 
+แผน Milestone 4: [Dashboard, Profile and Family views](tasks/milestone-4/plan.md) และ [tickets M4-001–017](tasks/milestone-4/todo.md) — สถานะเริ่มต้น TODO; ยังเป็นแผนสำหรับพัฒนา
+
 Meridian เป็น prototype สำหรับ Relationship Manager (RM) เอกสารผลิตภัณฑ์ฉบับปัจจุบันอยู่ที่ [docs/context/README.md](docs/context/README.md); [meridian_project_context.md](meridian_project_context.md) เป็นเอกสารต้นฉบับเพื่ออ้างอิงประวัติ
 
 ## Milestone 1 & 3 local development
