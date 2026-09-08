@@ -1,4 +1,5 @@
-import "@testing-library/jest-dom/vitest";
+import '@testing-library/jest-dom/vitest';
+import { vi } from 'vitest';
 
 const createStorageMock = () => {
   let store: Record<string, string> = {};
@@ -28,4 +29,18 @@ Object.defineProperty(globalThis, 'localStorage', {
 Object.defineProperty(globalThis, 'sessionStorage', {
   value: createStorageMock(),
   writable: true,
+});
+
+vi.mock('next/navigation', () => {
+  return {
+    useRouter: () => ({
+      push: vi.fn(),
+      replace: vi.fn(),
+      prefetch: vi.fn(),
+      back: vi.fn(),
+      forward: vi.fn(),
+    }),
+    usePathname: () => '/clients',
+    useSearchParams: () => new URLSearchParams(),
+  };
 });

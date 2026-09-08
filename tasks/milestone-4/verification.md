@@ -157,3 +157,53 @@
 - **Production Build:** `npm run build` cleanly compiled `/clients` with static pre-rendering.
 
 **M4-005 Verdict:** **DONE / PASS**
+
+---
+
+## 7. M4-006 Verification Record: Client Search & Filters
+
+### 7.1 Artifacts Delivered
+- Query utilities: `frontend/lib/client-query.ts`
+  - `normalizeClientQuery`: validates and normalizes search strings (trimmed, undefined if empty), priority (`HIGH`, `MEDIUM`, `LOW`), health (`GOOD`, `MODERATE`, `AT_RISK`, `INSUFFICIENT_DATA`), page (positive integer), pageSize (`20`, `50`, `100`). Drops invalid enums and values gracefully.
+  - `buildClientSearchParams` & `buildClientQueryString`: converts query object to clean URL search params, omitting default/undefined values.
+- Search and filters component: `frontend/components/client-filters.tsx`
+  - Text input for client name or customer code (`customerCode` or `displayName`) with accessible label and placeholder.
+  - Submit triggered via Enter key or Search button click (avoids firing on every keystroke).
+  - Priority dropdown (`All Priorities`, `High Priority`, `Medium Priority`, `Low Priority`).
+  - Health dropdown (`All Health Statuses`, `Good`, `Moderate`, `At Risk`, `Insufficient Data`).
+  - Reset button when filters are active, resetting all fields and page to 1.
+  - Accessible `<form role="search">` structure.
+- Client list view integration: `frontend/components/client-list-view.tsx`
+  - URL synchronization with `searchParams` and `router.push`.
+  - Filter and search changes automatically reset `page=1`.
+  - In-flight request cancellation via `AbortController` and `requestIdRef` sequencing so late responses from outdated queries never overwrite current results.
+  - Contextual empty state ("No client records match the selected filter criteria." with "Clear Filters" button vs "No client records assigned to your RM portfolio.").
+- Suspense boundary: `frontend/app/(authenticated)/clients/page.tsx` wrapped in `<Suspense>` for client-side search parameter support.
+- Component & utility unit tests: `frontend/tests/client-filters.test.tsx` (10 test cases)
+  - Parameter normalization, whitespace trimming, invalid enum sanitation, Thai and English input handling.
+  - Enter key and Search button submissions.
+  - Combined priority + health filter updates and page reset.
+  - Reset button action and URL clearing.
+  - Filtered empty state and clear filters button.
+  - Race condition cancellation and late response suppression.
+
+### 7.2 Test Results
+- **Command:** `npm run test:unit -w @meridian/web`
+- **Output:** 41 tests passed across 6 test files (`api-client.test.ts` 15, `client-filters.test.tsx` 10, `login.test.tsx` 6, `client-list.test.tsx` 5, `session-shell.test.tsx` 4, `home.test.tsx` 1)
+- **All Workspace Unit Tests:** 212 tests passed across 28 test files (Backend 171 tests, Frontend 41 tests)
+- **Lint & Typecheck:** 0 errors across `@meridian/api` and `@meridian/web`
+- **Security Audit:** `npm audit` returned 0 vulnerabilities
+- **Production Build:** `npm run build` cleanly compiled all static routes including `/clients` with Turbopack
+
+**M4-006 Verdict:** **DONE / PASS**
+
+---
+
+## 8. Checkpoint B Verification Sign-off
+
+- [x] Protected routes do not render data prior to `/api/auth/me` verification; 401 unauthenticated users are redirected to `/login`.
+- [x] Client list view and combined search/filter bar functional with server-side query parameters.
+- [x] Race condition protection in place with `AbortController` and request ordering.
+- [x] Full test suite (212 unit tests), lint (0 errors), typecheck (0 errors), build (clean), and audit (0 vulnerabilities) verified.
+- [x] Ready to proceed to M4-007 (Pagination & Browser History) and Checkpoint C (`M4-007` through `M4-009`).
+

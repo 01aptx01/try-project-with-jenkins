@@ -1,30 +1,83 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { api, ApiClientError } from '../lib/api-client.js';
-import type { ClientCard, ClientListResponse } from '../lib/api-contracts.js';
+import type {
+  ClientCard,
+  ClientListQuery,
+  ClientListResponse,
+  PriorityLevel,
+  HealthFilter,
+} from '../lib/api-contracts.js';
 import { PriorityBadge, HealthBadge, RiskBadge } from './ui/badges.js';
+import { ClientFilters } from './client-filters.js';
+import {
+  normalizeClientQuery,
+  buildClientQueryString,
+  type ParsedClientQuery,
+} from '../lib/client-query.js';
 
 export interface ClientListViewProps {
   initialData?: ClientListResponse | undefined;
 }
 
 export function ClientListView({ initialData }: ClientListViewProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Normalize current query from URL
+  const currentQuery: ParsedClientQuery = normalizeClientQuery(searchParams);
+
   const [data, setData] = useState<ClientListResponse | null>(initialData ?? null);
   const [isLoading, setIsLoading] = useState(!initialData);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const fetchClients = useCallback(async () => {
+  // Keep track of the active request to cancel in-flight or ignore outdated responses
+  const activeControllerRef = useRef<AbortController | null>(null);
+  const requestIdRef = useRef(0);
+
+  const fetchClients = async (query: ParsedClientQuery) => {
+    // Abort previous in-flight request if any
+    if (activeControllerRef.current) {
+      activeControllerRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    activeControllerRef.current = controller;
+    const currentRequestId = ++requestIdRef.current;
+
     setIsLoading(true);
     setErrorMessage(null);
-    setData(null); // Clear old results to prevent stale data display
 
     try {
-      const response = await api.getClients({ page: 1, pageSize: 20 });
-      setData(response);
+      const queryPayload: ClientListQuery = {
+        page: query.page,
+        pageSize: query.pageSize,
+      };
+      if (query.search) queryPayload.search = query.search;
+      if (query.priority) queryPayload.priority = query.priority;
+      if (query.health) queryPayload.health = query.health;
+
+      const response = await api.getClients(queryPayload, { signal: controller.signal });
+
+      // Only update state if this is still the latest request
+      if (currentRequestId === requestIdRef.current) {
+        setData(response);
+      }
     } catch (error: unknown) {
+      if (currentRequestId !== requestIdRef.current) {
+        // Obsolete request, ignore
+        return;
+      }
+
       if (error instanceof ApiClientError) {
+        if (error.isAbort) {
+          // Request was cancelled due to rapid query change, do nothing
+          return;
+        }
         if (error.status === 503) {
           setErrorMessage('Database service is temporarily unavailable. Please try again.');
         } else if (error.isNetworkError) {
@@ -36,15 +89,53 @@ export function ClientListView({ initialData }: ClientListViewProps) {
         setErrorMessage('An unexpected error occurred while loading clients.');
       }
     } finally {
-      setIsLoading(false);
+      if (currentRequestId === requestIdRef.current) {
+        setIsLoading(false);
+      }
     }
-  }, []);
+  };
 
+  // Trigger fetch whenever searchParams change (or on initial mount if no initialData)
   useEffect(() => {
-    if (!initialData) {
-      fetchClients();
-    }
-  }, [fetchClients, initialData]);
+    fetchClients(currentQuery);
+
+    return () => {
+      if (activeControllerRef.current) {
+        activeControllerRef.current.abort();
+      }
+    };
+  }, [
+    currentQuery.search,
+    currentQuery.priority,
+    currentQuery.health,
+    currentQuery.page,
+    currentQuery.pageSize,
+  ]);
+
+  const handleApplyFilters = (newFilters: {
+    search?: string | undefined;
+    priority?: PriorityLevel | undefined;
+    health?: HealthFilter | undefined;
+  }) => {
+    const updatedQuery: ParsedClientQuery = {
+      ...currentQuery,
+      search: newFilters.search,
+      priority: newFilters.priority,
+      health: newFilters.health,
+      page: 1, // Reset page to 1 whenever filters change
+    };
+
+    const qs = buildClientQueryString(updatedQuery);
+    router.push(qs ? `${pathname}?${qs}` : pathname);
+  };
+
+  const handleResetFilters = () => {
+    router.push(pathname);
+  };
+
+  const hasFiltersApplied = Boolean(
+    currentQuery.search || currentQuery.priority || currentQuery.health
+  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -77,6 +168,16 @@ export function ClientListView({ initialData }: ClientListViewProps) {
         )}
       </div>
 
+      {/* Filter and Search Bar */}
+      <ClientFilters
+        search={currentQuery.search ?? ''}
+        priority={currentQuery.priority}
+        health={currentQuery.health}
+        onApplyFilters={handleApplyFilters}
+        onReset={handleResetFilters}
+        isLoading={isLoading}
+      />
+
       {/* Error state */}
       {errorMessage && (
         <div
@@ -94,7 +195,7 @@ export function ClientListView({ initialData }: ClientListViewProps) {
         >
           <span>{errorMessage}</span>
           <button
-            onClick={fetchClients}
+            onClick={() => fetchClients(currentQuery)}
             type="button"
             style={{
               padding: '0.375rem 0.75rem',
@@ -137,6 +238,7 @@ export function ClientListView({ initialData }: ClientListViewProps) {
       {/* Empty State */}
       {!isLoading && !errorMessage && data && data.items.length === 0 && (
         <div
+          data-testid="client-empty-state"
           style={{
             textAlign: 'center',
             padding: '3rem 1.5rem',
@@ -148,8 +250,29 @@ export function ClientListView({ initialData }: ClientListViewProps) {
         >
           <p style={{ fontSize: '1rem', fontWeight: 500 }}>No clients found.</p>
           <p style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>
-            No client records assigned to your RM portfolio.
+            {hasFiltersApplied
+              ? 'No client records match the selected filter criteria.'
+              : 'No client records assigned to your RM portfolio.'}
           </p>
+          {hasFiltersApplied && (
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              style={{
+                marginTop: '1rem',
+                padding: '0.5rem 1rem',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                backgroundColor: 'var(--bg-card)',
+                color: 'var(--primary)',
+                border: '1px solid var(--primary)',
+                borderRadius: 'var(--radius-sm)',
+                cursor: 'pointer',
+              }}
+            >
+              Clear Filters
+            </button>
+          )}
         </div>
       )}
 

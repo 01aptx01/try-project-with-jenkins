@@ -162,24 +162,24 @@
 
 <a id="m4-006"></a>
 
-## M4-006 — เพิ่ม Search และ Priority/Health filters
+## M4-006 — เพิ่ม Client search และ filters
 
-**Status:** TODO  
+**Status:** DONE  
 **Scope:** M  
-**Requirements:** FR-03, FR-04, US-03, US-04
+**Requirements:** FR-03, FR-04, US-03, US-04, NFR-06
 
 **งาน:** ค้นชื่อหรือรหัสและใช้ filters ร่วมกันจาก server โดยไม่กรองเฉพาะข้อมูลหน้าที่เปิดอยู่
 
 **Acceptance criteria:**
 
-- [ ] Search submit ด้วย button/Enter และ filters ส่ง query ร่วมกัน; ใช้ HIGH/MEDIUM/LOW และ GOOD/MODERATE/AT_RISK/INSUFFICIENT_DATA ตาม contract พร้อม All
-- [ ] Query ที่ apply อยู่แสดงใน URL; filter/search change reset page=1; Reset ล้าง search/filters/page/pageSize กลับ default; invalid enums/query ถูก normalize ก่อน fetch
-- [ ] Tests ตรวจ combined query, whitespace/Thai/English input, empty result/reset และ late response ของ query เก่าที่ต้องไม่ทับผลใหม่
+- [x] Search submit ด้วย button/Enter และ filters ส่ง query ร่วมกัน; ใช้ HIGH/MEDIUM/LOW และ GOOD/MODERATE/AT_RISK/INSUFFICIENT_DATA ตาม contract พร้อม All
+- [x] Query ที่ apply อยู่แสดงใน URL; filter/search change reset page=1; Reset ล้าง search/filters/page/pageSize กลับ default; invalid enums/query ถูก normalize ก่อน fetch
+- [x] Tests ตรวจ combined query, whitespace/Thai/English input, empty result/reset และ late response ของ query เก่าที่ต้องไม่ทับผลใหม่
 
 **Verification:**
 
-- [ ] focused tests tests/client-filters.test.tsx; ตรวจ browser URL และ Network ว่าส่ง search/filter ให้ API
-- [ ] บันทึก evidence ใน verification record และอัปเดตสถานะตามผลจริง
+- [x] focused tests tests/client-filters.test.tsx (10 tests passed); ตรวจ browser URL และ Network ว่าส่ง search/filter ให้ API
+- [x] บันทึก evidence ใน verification record (`tasks/milestone-4/verification.md`) และอัปเดตสถานะตามผลจริง
 
 **Dependencies:** M4-005
 
@@ -192,8 +192,8 @@
 
 ### Checkpoint B — Session และ Client search
 
-- [ ] Protected routes ไม่แสดงข้อมูลก่อน /me; List และ combined filters ใช้งานได้; frontend suite/build ผ่าน
-- [ ] ทบทวนผลและ blockers ก่อนงานที่พึ่งพา; ไม่ใช้จำนวน tests หรือคะแนน audit แทน acceptance evidence
+- [x] Protected routes ไม่แสดงข้อมูลก่อน /me; List และ combined filters ใช้งานได้; frontend suite/build ผ่าน
+- [x] ทบทวนผลและ blockers ก่อนงานที่พึ่งพา; ไม่ใช้จำนวน tests หรือคะแนน audit แทน acceptance evidence
 
 <a id="m4-007"></a>
 

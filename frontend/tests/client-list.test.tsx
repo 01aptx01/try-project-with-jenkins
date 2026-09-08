@@ -34,7 +34,10 @@ describe('ClientListView Component', () => {
       );
     });
 
-    expect(getClientsSpy).toHaveBeenCalledWith({ page: 1, pageSize: 20 });
+    expect(getClientsSpy).toHaveBeenCalledWith(
+      { page: 1, pageSize: 20 },
+      expect.objectContaining({ signal: expect.any(AbortSignal) })
+    );
   });
 
   it('displays accurate badges and handles incomplete health without showing 0', async () => {

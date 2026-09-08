@@ -1,3 +1,4 @@
+import React, { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { ClientListView } from '../../../components/client-list-view.js';
 
@@ -7,5 +8,15 @@ export const metadata: Metadata = {
 };
 
 export default function ClientsPage() {
-  return <ClientListView />;
+  return (
+    <Suspense
+      fallback={
+        <div role="status" aria-label="Loading client directory">
+          Loading client directory...
+        </div>
+      }
+    >
+      <ClientListView />
+    </Suspense>
+  );
 }
