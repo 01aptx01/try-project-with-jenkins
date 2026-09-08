@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  RM
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum GoalType {
+  RETIREMENT
+  EDUCATION
+  EMERGENCY_FUND
+  PROPERTY
+  OTHER
+}
+
+enum RelationshipType {
+  PARENT
+  CHILD
+  SPOUSE
+  SIBLING
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String
+  role         UserRole @default(RM)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  clients      Client[]
+  @@map("users")
+}
+
+model Client {
+  id                String               @id @default(uuid()) @db.Uuid
+  customerCode      String               @unique @map("customer_code")
+  firstName         String               @map("first_name")
+  lastName          String               @map("last_name")
+  age               Int?
+  occupation        String?
+  riskLevel         RiskLevel            @map("risk_level")
+  rmId              String               @map("rm_id") @db.Uuid
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt         DateTime             @updatedAt @map("updated_at")
+  rm                User                 @relation(fields: [rmId], references: [id], onDelete: Restrict)
+  financialProfile  FinancialProfile?
+  goals             Goal[]
+  relationshipsFrom FamilyRelationship[] @relation("relationship_from")
+  relationshipsTo   FamilyRelationship[] @relation("relationship_to")
+  @@index([rmId])
+  @@map("clients")
+}
+
+model FinancialProfile {
+  id             String   @id @default(uuid()) @db.Uuid
+  clientId       String   @unique @map("client_id") @db.Uuid
+  monthlyIncome  Decimal? @map("monthly_income") @db.Decimal(18, 2)
+  monthlyExpense Decimal? @map("monthly_expense") @db.Decimal(18, 2)
+  liquidAssets   Decimal? @map("liquid_assets") @db.Decimal(18, 2)
+  totalAssets    Decimal? @map("total_assets") @db.Decimal(18, 2)
+  totalDebt      Decimal? @map("total_debt") @db.Decimal(18, 2)
+  savings        Decimal? @db.Decimal(18, 2)
+  investments    Decimal? @db.Decimal(18, 2)
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  client         Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  @@map("financial_profiles")
+}
+
+model Goal {
+  id            String   @id @default(uuid()) @db.Uuid
+  clientId      String   @map("client_id") @db.Uuid
+  goalType      GoalType @map("goal_type")
+  targetAmount  Decimal  @map("target_amount") @db.Decimal(18, 2)
+  currentAmount Decimal  @default(0) @map("current_amount") @db.Decimal(18, 2)
+  startDate     DateTime @map("start_date") @db.Date
+  targetDate    DateTime @map("target_date") @db.Date
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  client        Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  @@index([clientId, targetDate])
+  @@map("goals")
+}
+
+model FamilyRelationship {
+  id               String           @id @default(uuid()) @db.Uuid
+  clientId         String           @map("client_id") @db.Uuid
+  relatedClientId  String           @map("related_client_id") @db.Uuid
+  relationshipType RelationshipType @map("relationship_type")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  client           Client           @relation("relationship_from", fields: [clientId], references: [id], onDelete: Cascade)
+  relatedClient    Client           @relation("relationship_to", fields: [relatedClientId], references: [id], onDelete: Cascade)
+  @@unique([clientId, relatedClientId])
+  @@index([relatedClientId])
+  @@map("family_relationships")
+}

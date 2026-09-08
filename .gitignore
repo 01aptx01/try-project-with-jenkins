@@ -1,9 +1,16 @@
 # Dependencies
 node_modules/
+dist/
+.next/
+coverage/
+.turbo/
+*.tsbuildinfo
 
 # Environment
 .env
 .env.local
+.env.*
+!.env.example
 
 # Large design assets (exceeds GitHub 100MB limit)
 *.pdf

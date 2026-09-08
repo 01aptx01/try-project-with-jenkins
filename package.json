@@ -1,0 +1,22 @@
+{
+  "name": "meridian",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Meridian prototype workspace",
+  "workspaces": ["frontend", "backend"],
+  "engines": {"node": ">=22.14.0 <26", "npm": ">=10"},
+  "scripts": {
+    "lint": "npm run lint -w @meridian/api && npm run lint -w @meridian/web",
+    "typecheck": "npm run typecheck -w @meridian/api && npm run typecheck -w @meridian/web",
+    "test:unit": "npm run test:unit -w @meridian/api && npm run test:unit -w @meridian/web",
+    "test:integration": "npm run test:integration -w @meridian/api",
+    "build": "npm run build -w @meridian/api && npm run build -w @meridian/web",
+    "dev:api": "npm run dev -w @meridian/api",
+    "dev:web": "npm run dev -w @meridian/web",
+    "db:up": "docker compose up -d postgres",
+    "db:test:up": "docker compose --profile test up -d postgres-test",
+    "proxy:up": "docker compose --profile proxy up -d caddy",
+    "db:migrate": "npm run prisma:migrate -w @meridian/api"
+  },
+  "devDependencies": {"@eslint/js": "^9.0.0", "eslint": "^9.0.0", "globals": "^16.0.0", "typescript-eslint": "^8.0.0"}
+}

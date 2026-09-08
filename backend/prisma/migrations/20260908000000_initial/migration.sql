@@ -1,0 +1,17 @@
+CREATE TYPE "UserRole" AS ENUM ('RM');
+CREATE TYPE "RiskLevel" AS ENUM ('LOW', 'MEDIUM', 'HIGH');
+CREATE TYPE "GoalType" AS ENUM ('RETIREMENT', 'EDUCATION', 'EMERGENCY_FUND', 'PROPERTY', 'OTHER');
+CREATE TABLE "users" ("id" UUID NOT NULL DEFAULT gen_random_uuid(), "email" TEXT NOT NULL, "password_hash" TEXT NOT NULL, "name" TEXT NOT NULL, "role" "UserRole" NOT NULL DEFAULT 'RM', "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updated_at" TIMESTAMP(3) NOT NULL, CONSTRAINT "users_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "clients" ("id" UUID NOT NULL DEFAULT gen_random_uuid(), "customer_code" TEXT NOT NULL, "first_name" TEXT NOT NULL, "last_name" TEXT NOT NULL, "age" INTEGER, "occupation" TEXT, "risk_level" "RiskLevel" NOT NULL, "rm_id" UUID NOT NULL, "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updated_at" TIMESTAMP(3) NOT NULL, CONSTRAINT "clients_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "financial_profiles" ("id" UUID NOT NULL DEFAULT gen_random_uuid(), "client_id" UUID NOT NULL, "monthly_income" DECIMAL(18,2), "monthly_expense" DECIMAL(18,2), "liquid_assets" DECIMAL(18,2), "total_assets" DECIMAL(18,2), "total_debt" DECIMAL(18,2), "savings" DECIMAL(18,2), "investments" DECIMAL(18,2), "updated_at" TIMESTAMP(3) NOT NULL, CONSTRAINT "financial_profiles_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "goals" ("id" UUID NOT NULL DEFAULT gen_random_uuid(), "client_id" UUID NOT NULL, "goal_type" "GoalType" NOT NULL, "target_amount" DECIMAL(18,2) NOT NULL, "current_amount" DECIMAL(18,2) NOT NULL DEFAULT 0, "start_date" DATE NOT NULL, "target_date" DATE NOT NULL, "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updated_at" TIMESTAMP(3) NOT NULL, CONSTRAINT "goals_pkey" PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
+CREATE UNIQUE INDEX "clients_customer_code_key" ON "clients"("customer_code");
+CREATE INDEX "clients_rm_id_idx" ON "clients"("rm_id");
+CREATE UNIQUE INDEX "financial_profiles_client_id_key" ON "financial_profiles"("client_id");
+CREATE INDEX "goals_client_id_target_date_idx" ON "goals"("client_id", "target_date");
+ALTER TABLE "clients" ADD CONSTRAINT "clients_rm_id_fkey" FOREIGN KEY ("rm_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "financial_profiles" ADD CONSTRAINT "financial_profiles_client_id_fkey" FOREIGN KEY ("client_id") REFERENCES "clients"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "goals" ADD CONSTRAINT "goals_client_id_fkey" FOREIGN KEY ("client_id") REFERENCES "clients"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "financial_profiles" ADD CONSTRAINT "financial_profiles_nonnegative" CHECK (("monthly_income" IS NULL OR "monthly_income" >= 0) AND ("monthly_expense" IS NULL OR "monthly_expense" >= 0) AND ("liquid_assets" IS NULL OR "liquid_assets" >= 0) AND ("total_assets" IS NULL OR "total_assets" >= 0) AND ("total_debt" IS NULL OR "total_debt" >= 0) AND ("savings" IS NULL OR "savings" >= 0) AND ("investments" IS NULL OR "investments" >= 0));
+ALTER TABLE "goals" ADD CONSTRAINT "goals_valid_amounts_and_dates" CHECK ("target_amount" > 0 AND "current_amount" >= 0 AND "target_date" > "start_date");

@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-meridian_dev}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-meridian_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-meridian}
+    ports: ["127.0.0.1:5432:5432"]
+    volumes: ["meridian-postgres-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+  postgres-test:
+    image: postgres:17-alpine
+    profiles: ["test"]
+    environment:
+      POSTGRES_USER: meridian_test
+      POSTGRES_PASSWORD: meridian_test_password
+      POSTGRES_DB: meridian_test
+    ports: ["127.0.0.1:5433:5432"]
+    volumes: ["meridian-postgres-test-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+  caddy:
+    image: caddy:2.10-alpine
+    profiles: ["proxy"]
+    ports: ["127.0.0.1:${CADDY_PORT:-8080}:8080"]
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    volumes: ["./Caddyfile:/etc/caddy/Caddyfile:ro"]
+volumes:
+  meridian-postgres-data:
+  meridian-postgres-test-data:
