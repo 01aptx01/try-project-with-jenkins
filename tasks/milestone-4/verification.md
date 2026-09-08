@@ -322,6 +322,37 @@
 - [x] Full test suite (227 unit tests), lint (0 errors), typecheck (0 errors), build (clean), and audit (0 vulnerabilities) verified.
 - [x] Ready to proceed to Checkpoint D (`M4-010` through `M4-012`).
 
+---
+
+## 13. M4-010 Verification Record: Financial Profile & Goals Panels
+
+### 13.1 Artifacts Delivered
+- Display formatting utilities: `frontend/lib/display-format.ts`
+  - `formatCurrency`: preserves exact string decimal precision without floating point conversion; handles huge numbers (e.g. ฿1,234,567,890.75); strictly differentiates between zero ("0.00" -> "฿0.00") and null/undefined ("—").
+  - `formatDateOnly`: formats YYYY-MM-DD into "D MMM YYYY" using direct string regex extraction to prevent timezone drift.
+  - `formatProgressPercent`: formats ratio cleanly into percentage string (e.g. 0.59 -> "59%").
+- Financial & Goals panels: `frontend/components/financial-details.tsx`
+  - `FinancialProfilePanel`: renders 7 core metrics (Monthly Income, Monthly Expense, Liquid Assets, Total Assets, Total Debt, Savings, Investments); displays onboarding empty state when profile is null.
+  - `GoalsPanel`: highlights primary goal with target, current, expected amounts, timeline, "On-track progress" ratio label, and status badge ("Completed", "Behind Schedule", "On Track"); renders active goals table; displays clean empty state when no goals exist.
+- Integration: `frontend/components/client-profile.tsx` renders `FinancialProfilePanel` and `GoalsPanel`.
+- Unit tests: `frontend/tests/financial-details.test.tsx` (11 test cases)
+  - Currency formatting, zero vs null distinction, date-only without timezone shift, progress formatting.
+  - Complete vs partial profile rendering with 7 metrics.
+  - Primary goal with behind schedule status and on-track progress.
+  - Completed and on-track status badges.
+  - Empty states for missing profile and goals.
+
+### 13.2 Test Results
+- **Command:** `npm run test:unit -w @meridian/web`
+- **Output:** 67 tests passed across 10 test files (`api-client.test.ts` 15, `financial-details.test.tsx` 11, `client-filters.test.tsx` 10, `client-pagination.test.tsx` 6, `login.test.tsx` 6, `morning-action-plan.test.tsx` 5, `client-list.test.tsx` 5, `session-shell.test.tsx` 4, `client-profile.test.tsx` 4, `home.test.tsx` 1)
+- **All Workspace Unit Tests:** 238 tests passed across 32 test files (Backend 171 tests, Frontend 67 tests)
+- **Lint & Typecheck:** 0 errors across `@meridian/api` and `@meridian/web`
+- **Security Audit:** `npm audit` returned 0 vulnerabilities
+- **Production Build:** `npm run build` cleanly compiled with Turbopack
+
+**M4-010 Verdict:** **DONE / PASS**
+
+
 
 
 

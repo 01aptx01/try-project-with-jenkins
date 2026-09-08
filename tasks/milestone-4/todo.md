@@ -293,7 +293,7 @@
 
 ## M4-010 — แสดง Financial Profile และ Goals
 
-**Status:** TODO  
+**Status:** DONE  
 **Scope:** M  
 **Requirements:** FR-06, US-05, NFR-07, BR-10
 
@@ -301,14 +301,14 @@
 
 **Acceptance criteria:**
 
-- [ ] แสดง monthlyIncome/monthlyExpense/liquidAssets/totalAssets/totalDebt/savings/investments; zero ต่างจาก null และ financialProfile=null; format decimal string อย่างไม่สูญเสียความแม่นยำและไม่เดาหน่วยเงิน
-- [ ] แสดง goals ที่ API ส่งพร้อม startDate/targetDate/currentAmount/targetAmount และเลือก primaryGoal จาก snapshot เท่านั้น; ไม่มี goals/primaryGoal=null มีข้อความที่เหมาะสม
-- [ ] Primary goal แสดง expectedAmount, progress, isBehind/isCompleted ตาม payload; progress ใช้ชื่อ On-track progress ไม่ใช่ Goal completion และไม่คำนวณวัน/สูตร Health ใหม่ใน browser
+- [x] แสดง monthlyIncome/monthlyExpense/liquidAssets/totalAssets/totalDebt/savings/investments; zero ต่างจาก null และ financialProfile=null; format decimal string อย่างไม่สูญเสียความแม่นยำและไม่เดาหน่วยเงิน
+- [x] แสดง goals ที่ API ส่งพร้อม startDate/targetDate/currentAmount/targetAmount และเลือก primaryGoal จาก snapshot เท่านั้น; ไม่มี goals/primaryGoal=null มีข้อความที่เหมาะสม
+- [x] Primary goal แสดง expectedAmount, progress, isBehind/isCompleted ตาม payload; progress ใช้ชื่อ On-track progress ไม่ใช่ Goal completion และไม่คำนวณวัน/สูตร Health ใหม่ใน browser
 
 **Verification:**
 
-- [ ] focused tests tests/financial-details.test.tsx ครอบคลุมเงินขนาดใหญ่ ศูนย์ null วันที่ข้าม timezone และ Goal ก่อนเริ่ม/ครบกำหนด/เสร็จตาม fixtures
-- [ ] บันทึก evidence ใน verification record และอัปเดตสถานะตามผลจริง
+- [x] focused tests tests/financial-details.test.tsx (11 passed) ครอบคลุมเงินขนาดใหญ่ ศูนย์ null วันที่ข้าม timezone และ Goal ก่อนเริ่ม/ครบกำหนด/เสร็จตาม fixtures
+- [x] บันทึก evidence ใน verification record (`tasks/milestone-4/verification.md`) และอัปเดตสถานะตามผลจริง
 
 **Dependencies:** M4-009
 

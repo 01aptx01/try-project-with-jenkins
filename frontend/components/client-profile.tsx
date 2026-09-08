@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useClientProfile } from '../hooks/use-client-profile.js';
 import { PriorityBadge, HealthBadge, RiskBadge } from './ui/badges.js';
+import { FinancialProfilePanel, GoalsPanel } from './financial-details.js';
 import type { ClientProfileSnapshotResponse } from '../lib/api-contracts.js';
 
 export interface ClientProfileProps {
@@ -332,76 +333,11 @@ export function ClientProfile({ clientId }: ClientProfileProps) {
             </div>
           </section>
 
-          {/* Financial Profile & Goals Section (Foundation for M4-010) */}
-          <section
-            aria-labelledby="financial-heading"
-            style={{
-              padding: '1.25rem 1.5rem',
-              backgroundColor: 'var(--bg-surface)',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border-color)',
-            }}
-          >
-            <h2
-              id="financial-heading"
-              style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text-primary)' }}
-            >
-              Financial Profile & Health
-            </h2>
+          {/* Financial Profile Panel */}
+          <FinancialProfilePanel financialProfile={data.financialProfile} />
 
-            {data.financialProfile ? (
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                  gap: '1rem',
-                  marginTop: '1rem',
-                }}
-              >
-                <div style={{ padding: '0.75rem', backgroundColor: 'var(--bg-muted)', borderRadius: 'var(--radius-sm)' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Monthly Income</div>
-                  <div style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginTop: '0.25rem' }}>
-                    {data.financialProfile.monthlyIncome ? `฿${data.financialProfile.monthlyIncome}` : '—'}
-                  </div>
-                </div>
-
-                <div style={{ padding: '0.75rem', backgroundColor: 'var(--bg-muted)', borderRadius: 'var(--radius-sm)' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Monthly Expense</div>
-                  <div style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginTop: '0.25rem' }}>
-                    {data.financialProfile.monthlyExpense ? `฿${data.financialProfile.monthlyExpense}` : '—'}
-                  </div>
-                </div>
-
-                <div style={{ padding: '0.75rem', backgroundColor: 'var(--bg-muted)', borderRadius: 'var(--radius-sm)' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Liquid Assets</div>
-                  <div style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginTop: '0.25rem' }}>
-                    {data.financialProfile.liquidAssets ? `฿${data.financialProfile.liquidAssets}` : '—'}
-                  </div>
-                </div>
-
-                <div style={{ padding: '0.75rem', backgroundColor: 'var(--bg-muted)', borderRadius: 'var(--radius-sm)' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Total Debt</div>
-                  <div style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginTop: '0.25rem' }}>
-                    {data.financialProfile.totalDebt ? `฿${data.financialProfile.totalDebt}` : '—'}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div
-                data-testid="profile-incomplete-financial"
-                style={{
-                  marginTop: '1rem',
-                  padding: '1rem',
-                  backgroundColor: 'var(--bg-muted)',
-                  borderRadius: 'var(--radius-sm)',
-                  color: 'var(--text-muted)',
-                  fontSize: '0.875rem',
-                }}
-              >
-                No financial profile recorded for this client. Financial health status is incomplete.
-              </div>
-            )}
-          </section>
+          {/* Goals Panel */}
+          <GoalsPanel primaryGoal={data.primaryGoal} goals={data.goals} />
         </div>
       )}
     </div>
