@@ -360,21 +360,22 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 
 ## M3-011 — เปิด Client List พร้อม Search
 
-**Status:** TODO
+**Status:** DONE
 
 **Description:**
 พัฒนา endpoint `GET /api/clients` สำหรับแสดงรายการ Client Cards ของ RM ที่ล็อกอิน พร้อมระบบ Text Search
 
 **Acceptance criteria:**
-- [ ] โหลดเฉพาะ Clients ที่เป็นของ RM ที่ล็อกอิน พร้อม Profile และ Goals แบบ batch query เดียว; ห้าม query ใน loop และห้ามเกิด N+1 queries
-- [ ] Text search ทำงานแบบ partial match, case-insensitive บน `customerCode` และ `displayName` (`firstName + " " + lastName`); trim search input และหากเป็นค่าว่างให้ถือว่าไม่ค้นหา
-- [ ] ค้นหาในหน่วยความจำ (in-memory search) ด้วย Unicode NFC normalization เพื่อความสอดคล้องของภาษาไทยและภาษาอังกฤษ
-- [ ] ประเมินผล Clients ด้วยวัน UTC เดียวกัน จัดเรียงตาม Priority (HIGH → MEDIUM → LOW) แล้วตามด้วย `customerCode` แบบ ordinal และแปลงเป็น `ClientCard` (`{id, customerCode, displayName, riskLevel, health, recommendation}`)
+- [x] โหลดเฉพาะ Clients ที่เป็นของ RM ที่ล็อกอิน พร้อม Profile และ Goals แบบ batch query เดียว; ห้าม query ใน loop และห้ามเกิด N+1 queries
+- [x] Text search ทำงานแบบ partial match, case-insensitive บน `customerCode` และ `displayName` (`firstName + " " + lastName`); trim search input และหากเป็นค่าว่างให้ถือว่าไม่ค้นหา
+- [x] ค้นหาในหน่วยความจำ (in-memory search) ด้วย Unicode NFC normalization เพื่อความสอดคล้องของภาษาไทยและภาษาอังกฤษ
+- [x] ประเมินผล Clients ด้วยวัน UTC เดียวกัน จัดเรียงตาม Priority (HIGH → MEDIUM → LOW) แล้วตามด้วย `customerCode` แบบ ordinal และแปลงเป็น `ClientCard` (`{id, customerCode, displayName, riskLevel, health, recommendation}`)
 
 **Verification:**
-- [ ] Search tests: ค้นหาด้วยชื่อเต็ม, ชื่อบางส่วน, customer code, case ตัวพิมพ์เล็ก-ใหญ่, ข้อความภาษาไทย, และอักขระพิเศษ (`%`, `_`)
-- [ ] Isolation tests: RM แต่ละคนมองเห็นเฉพาะ Clients ของตนเองเท่านั้น
-- [ ] Batch query verification: ตรวจสอบจำนวน database queries ว่าคงที่ ไม่เพิ่มตามจำนวน Client
+- [x] Search tests: ค้นหาด้วยชื่อเต็ม, ชื่อบางส่วน, customer code, case ตัวพิมพ์เล็ก-ใหญ่, ข้อความภาษาไทย, และอักขระพิเศษ (`%`, `_`) ใน `backend/tests/integration/api/client-list-search.test.ts`
+- [x] Isolation tests: RM แต่ละคนมองเห็นเฉพาะ Clients ของตนเองเท่านั้น (RM1 เห็น 15, RM2 เห็น 15)
+- [x] Batch query verification: ตรวจสอบจำนวน database queries ว่าเป็น 1 batch query คงที่ ไม่เกิด N+1 queries
+- [x] รวม 44 integration tests และ 164 unit tests ผ่าน 100%, lint 0 errors, typecheck 0 errors, build clean.
 
 **Dependencies:** M3-010  
 **Files likely touched:**
@@ -388,36 +389,37 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 
 ## M3-012 — เพิ่ม derived filters และ pagination boundaries
 
-**Status:** TODO
+**Status:** DONE
 
 **Description:**
 เพิ่มการกรองตามสถานะทางการเงิน (Priority และ Health) ควบคู่กับ Text Search และการแบ่งหน้า (Pagination)
 
 **Acceptance criteria:**
-- [ ] รองรับ query parameters สำหรับ filtering: `priority` (`HIGH`, `MEDIUM`, `LOW`) และ `health` (`GOOD`, `MODERATE`, `AT_RISK`, `INSUFFICIENT_DATA`); เมื่อระบุคู่กันให้ใช้เงื่อนไขแบบ AND
-- [ ] Pipeline ลำดับการประมวลผล: ownership query → batch load → in-memory search → evaluate → filter → sort → calculate total → paginate (slice `items`)
-- [ ] Parameter `page` default 1, `pageSize` default 20 (max 100); ปฏิเสธค่า 0, จำนวนติดลบ, ทศนิยม, unsafe integers, duplicate query keys, หรือ invalid enums ด้วย `400 Bad Request`
-- [ ] คืนโครงสร้าง `{items, page, pageSize, total}`; กรณี `page` เกินจำนวนหน้า คืน `items: []` โดยค่า `total` ยังคงถูกต้อง
+- [x] รองรับ query parameters สำหรับ filtering: `priority` (`HIGH`, `MEDIUM`, `LOW`) และ `health` (`GOOD`, `MODERATE`, `AT_RISK`, `INSUFFICIENT_DATA`); เมื่อระบุคู่กันให้ใช้เงื่อนไขแบบ AND
+- [x] Pipeline ลำดับการประมวลผล: ownership query → batch load → in-memory search → evaluate → filter → sort → calculate total → paginate (slice `items`)
+- [x] Parameter `page` default 1, `pageSize` default 20 (max 100); ปฏิเสธค่า 0, จำนวนติดลบ, ทศนิยม, unsafe integers, duplicate query keys, หรือ invalid enums ด้วย `400 Bad Request`
+- [x] คืนโครงสร้าง `{items, page, pageSize, total}`; กรณี `page` เกินจำนวนหน้า คืน `items: []` โดยค่า `total` ยังคงถูกต้อง
 
 **Verification:**
-- [ ] Filter tests: ทดสอบ filter priority เดี่ยว, health เดี่ยว, และ combination ของทั้งสอง
-- [ ] Ordering preservation test: Client ที่มี Priority HIGH อยู่ท้าย dataset ต้องถูกจัดขึ้นมาหน้าแรกเสมอ
-- [ ] Boundary pagination tests: page 1, last page, page เกินขอบเขต, pageSize 1, 20, 100, และ pageSize เกิน 100 ถูกปฏิเสธด้วย 400
-- [ ] Total count check: ค่า `total` ต้องสะท้อนจำนวน record หลัง search และ filter แล้วเสมอ
+- [x] Filter tests: ทดสอบ filter priority เดี่ยว, health เดี่ยว, และ combination ของทั้งสองด้วย AND semantics
+- [x] Ordering preservation test: Client ที่มี Priority HIGH อยู่ท้าย dataset ต้องถูกจัดขึ้นมาหน้าแรกเสมอ
+- [x] Boundary pagination tests: page 1, last page, page เกินขอบเขต, pageSize 1, 20, 100, และ pageSize เกิน 100 ถูกปฏิเสธด้วย 400
+- [x] Total count check: ค่า `total` ต้องสะท้อนจำนวน record หลัง search และ filter แล้วเสมอ
+- [x] รวม 44 integration tests และ 164 unit tests ผ่าน 100%, lint 0 errors, typecheck 0 errors, build clean.
 
 **Dependencies:** M3-011  
 **Files likely touched:**
 - `backend/src/schemas/client-query.schema.ts`
 - `backend/src/services/client-list.service.ts`
-- `backend/tests/integration/api/client-list-pagination.test.ts`  
+- `backend/tests/integration/api/client-list-search.test.ts`  
 **Scope:** M
 
 ---
 
 ## Checkpoint D — Client Profile & List Pipeline
-- [ ] Profile snapshot (`GET /api/clients/:id`) ส่งมอบข้อมูลครบถ้วนพร้อม ownership check และ single evaluation
-- [ ] Client List (`GET /api/clients`) โหลดแบบ batch, ค้นหาภาษาไทย/อังกฤษได้, กรอง priority/health ได้, และแบ่งหน้าถูกต้อง
-- [ ] ไม่มี N+1 queries ในการดึงข้อมูลรายการ Client ทั้งหมดของ RM
+- [x] Profile snapshot (`GET /api/clients/:id`) ส่งมอบข้อมูลครบถ้วนพร้อม ownership check และ single evaluation
+- [x] Client List (`GET /api/clients`) โหลดแบบ batch, ค้นหาภาษาไทย/อังกฤษได้, กรอง priority/health ได้, และแบ่งหน้าถูกต้อง
+- [x] ไม่มี N+1 queries ในการดึงข้อมูลรายการ Client ทั้งหมดของ RM
 
 ---
 

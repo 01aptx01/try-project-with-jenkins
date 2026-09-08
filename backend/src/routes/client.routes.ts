@@ -12,6 +12,7 @@ export function createClientRouter(options: ClientRouterOptions): Router {
   // All client routes require authenticated RM session
   router.use(options.authGuard);
 
+  router.get("/", options.clientController.getClientList);
   router.get("/:id", options.clientController.getProfileSnapshot);
 
   return router;

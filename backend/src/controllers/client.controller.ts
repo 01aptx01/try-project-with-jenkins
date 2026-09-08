@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
+import { clientListQuerySchema } from "../contracts/api.js";
 import { evaluateClient } from "../domain/financial/evaluate-client.js";
 import { BadRequestError, NotFoundError, UnauthorizedError } from "../errors.js";
 import {
@@ -6,17 +7,20 @@ import {
   toDomainEvaluationInput,
 } from "../mappers/client.mapper.js";
 import type { ClientRepository } from "../repositories/client.repository.js";
+import { ClientListService } from "../services/client-list.service.js";
 
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export interface ClientControllerOptions {
   clientRepository: ClientRepository;
+  clientListService?: ClientListService | undefined;
   clock?: (() => string) | undefined;
 }
 
 export class ClientController {
   private readonly clientRepository: ClientRepository;
+  private readonly clientListService: ClientListService;
   private readonly clock: () => string;
 
   constructor(options: ClientControllerOptions) {
@@ -26,7 +30,41 @@ export class ClientController {
       (() => {
         return new Date().toISOString().slice(0, 10);
       });
+    this.clientListService =
+      options.clientListService ??
+      new ClientListService({
+        clientRepository: this.clientRepository,
+        clock: this.clock,
+      });
   }
+
+  getClientList = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const user = req.user;
+      if (!user) {
+        throw new UnauthorizedError("Authentication required");
+      }
+
+      const query = clientListQuerySchema.parse(req.query);
+
+      const result = await this.clientListService.getClientList({
+        rmId: user.id,
+        search: query.search,
+        priority: query.priority,
+        health: query.health,
+        page: query.page,
+        pageSize: query.pageSize,
+      });
+
+      res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  };
 
   getProfileSnapshot = async (
     req: Request,
