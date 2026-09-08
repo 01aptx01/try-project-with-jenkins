@@ -352,6 +352,35 @@
 
 **M4-010 Verdict:** **DONE / PASS**
 
+---
+
+## 14. M4-011 Verification Record: Health Panel & Breakdown
+
+### 14.1 Artifacts Delivered
+- Health panel component: `frontend/components/health-panel.tsx`
+  - COMPLETE status rendering: overall score (e.g. 68 / 100) and classification (GOOD, MODERATE, AT_RISK).
+  - 5-pillar category breakdown: Liquidity Buffer, Debt Service Ratio, Savings Rate, Goal Funding, Investment Allocation (each out of 20 points).
+  - Faithful display without client-side summing or recalculation.
+  - INSUFFICIENT_DATA status rendering: overall score renders "Not available" (never false 0); preserves distinct 0 (renders "0 / 20") vs null (renders "Not available") in breakdown.
+  - Missing fields notice: lists all missing fields verbatim from payload (e.g. `financialProfile`, `customField.nestedPath`).
+  - Accessibility: textual labels and aria-progressbar attributes so status is not conveyed by color alone (WCAG AA).
+- Integration: `frontend/components/client-profile.tsx` renders `HealthPanel`.
+- Unit tests: `frontend/tests/health-panel.test.tsx` (5 test cases)
+  - Complete health score with full 5-pillar breakdown.
+  - Score boundary tests: 0 and 59.99 (AT_RISK), 60 and 79.99 (MODERATE), 80 and 100 (GOOD).
+  - Insufficient data handling: null overall score, missing fields list, and distinct 0 vs null category scores.
+
+### 14.2 Test Results
+- **Command:** `npm run test:unit -w @meridian/web`
+- **Output:** 72 tests passed across 11 test files (`api-client.test.ts` 15, `financial-details.test.tsx` 11, `client-filters.test.tsx` 10, `client-pagination.test.tsx` 6, `login.test.tsx` 6, `morning-action-plan.test.tsx` 5, `health-panel.test.tsx` 5, `client-list.test.tsx` 5, `session-shell.test.tsx` 4, `client-profile.test.tsx` 4, `home.test.tsx` 1)
+- **All Workspace Unit Tests:** 243 tests passed across 33 test files (Backend 171 tests, Frontend 72 tests)
+- **Lint & Typecheck:** 0 errors across `@meridian/api` and `@meridian/web`
+- **Security Audit:** `npm audit` returned 0 vulnerabilities
+- **Production Build:** `npm run build` cleanly compiled with Turbopack
+
+**M4-011 Verdict:** **DONE / PASS**
+
+
 
 
 

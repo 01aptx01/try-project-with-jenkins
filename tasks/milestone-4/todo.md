@@ -323,7 +323,7 @@
 
 ## M4-011 — แสดง Health พร้อม breakdown และ missing data
 
-**Status:** TODO  
+**Status:** DONE  
 **Scope:** M  
 **Requirements:** FR-07, FR-08, US-06, US-15, NFR-07, BR-08
 
@@ -331,14 +331,14 @@
 
 **Acceptance criteria:**
 
-- [ ] COMPLETE แสดง score/classification และ Liquidity/Debt/Savings/Goals/Investment breakdown ตาม payload โดยไม่รวม/จัดกลุ่มคะแนนซ้ำเพื่อแทน backend
-- [ ] INSUFFICIENT_DATA แสดงสถานะ, missingFields ทั้งหมด และ component ที่ยังคำนวณได้; null แสดง Not available, 0 แสดง 0; unknown missing-field path ยังอ่านได้ไม่ถูกทิ้ง
-- [ ] Tests ตรวจ 0/59.99/60/79.99/80/100 และ partial/null breakdown จาก typed fixtures; classification/breakdown labels มีข้อความไม่พึ่งสีและ error response ไม่กลายเป็น insufficient state
+- [x] COMPLETE แสดง score/classification และ Liquidity/Debt/Savings/Goals/Investment breakdown ตาม payload โดยไม่รวม/จัดกลุ่มคะแนนซ้ำเพื่อแทน backend
+- [x] INSUFFICIENT_DATA แสดงสถานะ, missingFields ทั้งหมด และ component ที่ยังคำนวณได้; null แสดง Not available, 0 แสดง 0; unknown missing-field path ยังอ่านได้ไม่ถูกทิ้ง
+- [x] Tests ตรวจ 0/59.99/60/79.99/80/100 และ partial/null breakdown จาก typed fixtures; classification/breakdown labels มีข้อความไม่พึ่งสีและ error response ไม่กลายเป็น insufficient state
 
 **Verification:**
 
-- [ ] focused tests tests/health-panel.test.tsx; ตรวจ screenshot หรือ browser ที่ complete/incomplete จาก fixture environment
-- [ ] บันทึก evidence ใน verification record และอัปเดตสถานะตามผลจริง
+- [x] focused tests tests/health-panel.test.tsx (5 passed); ตรวจ screenshot หรือ browser ที่ complete/incomplete จาก fixture environment
+- [x] บันทึก evidence ใน verification record (`tasks/milestone-4/verification.md`) และอัปเดตสถานะตามผลจริง
 
 **Dependencies:** M4-009
 

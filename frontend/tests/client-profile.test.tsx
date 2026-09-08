@@ -72,7 +72,7 @@ describe('M4-009: Client Profile Snapshot View', () => {
         screen.getByTestId('profile-incomplete-financial')
       ).toBeInTheDocument();
       // Health is safe null
-      expect(screen.getByText(/Health: Not available/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/Health: Not available/i).length).toBeGreaterThan(0);
       expect(screen.queryByText(/Health: 0/i)).not.toBeInTheDocument();
     });
   });

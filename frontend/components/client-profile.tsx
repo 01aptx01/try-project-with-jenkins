@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useClientProfile } from '../hooks/use-client-profile.js';
 import { PriorityBadge, HealthBadge, RiskBadge } from './ui/badges.js';
 import { FinancialProfilePanel, GoalsPanel } from './financial-details.js';
+import { HealthPanel } from './health-panel.js';
 import type { ClientProfileSnapshotResponse } from '../lib/api-contracts.js';
 
 export interface ClientProfileProps {
@@ -332,6 +333,9 @@ export function ClientProfile({ clientId }: ClientProfileProps) {
               </p>
             </div>
           </section>
+
+          {/* Financial Health Analysis Panel */}
+          <HealthPanel health={data.health} />
 
           {/* Financial Profile Panel */}
           <FinancialProfilePanel financialProfile={data.financialProfile} />
