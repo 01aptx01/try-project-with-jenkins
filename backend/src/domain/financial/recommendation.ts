@@ -48,11 +48,15 @@ export function evaluateRecommendation(
     // liquidSatang / expenseSatang < 3  <=>  liquidSatang < 3n * expenseSatang
     if (liquidSatang < 3n * expenseSatang) {
       const months = Number(liquidSatang) / Number(expenseSatang);
+      const monthsText =
+        Number(months.toFixed(1)) >= 3
+          ? `< 3 เดือน (${months.toFixed(2)} เดือน)`
+          : `${months.toFixed(1)} เดือน`;
       return {
         rule: 'BR-04.2',
         action: 'Review Emergency Fund',
         priority: 'HIGH',
-        reason: `สภาพคล่องปัจจุบันครอบคลุมค่าใช้จ่าย ${months.toFixed(1)} เดือน ซึ่งต่ำกว่าเกณฑ์ขั้นต่ำ 3 เดือน`,
+        reason: `สภาพคล่องปัจจุบันครอบคลุมค่าใช้จ่าย ${monthsText} ซึ่งต่ำกว่าเกณฑ์ขั้นต่ำ 3 เดือน`,
       };
     }
   }
@@ -62,11 +66,15 @@ export function evaluateRecommendation(
     // debtSatang / assetsSatang > 60%  <=>  debtSatang * 100n > assetsSatang * 60n
     if (debtSatang * 100n > assetsSatang * 60n) {
       const debtPercent = (Number(debtSatang) / Number(assetsSatang)) * 100;
+      const debtText =
+        Number(debtPercent.toFixed(2)) <= 60
+          ? `> 60% (${debtPercent.toFixed(3)}%)`
+          : `${debtPercent.toFixed(2)}%`;
       return {
         rule: 'BR-04.3',
         action: 'Review Debt Position',
         priority: 'HIGH',
-        reason: `สัดส่วนหนี้สินต่อสินทรัพย์อยู่ที่ ${debtPercent.toFixed(2)}% ซึ่งสูงกว่าเกณฑ์ 60%`,
+        reason: `สัดส่วนหนี้สินต่อสินทรัพย์อยู่ที่ ${debtText} ซึ่งสูงกว่าเกณฑ์ 60%`,
       };
     }
   }

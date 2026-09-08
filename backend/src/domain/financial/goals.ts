@@ -1,7 +1,6 @@
 import { daysBetween, isDateOnOrBefore, parseUtcDate } from './dates.js';
-import { formatSatang, roundHalfUp, tryParseSatang } from './money.js';
+import { formatSatang, gcd, roundRationalHalfUp, tryParseSatang } from './money.js';
 import type { GoalEvaluationResult, GoalInput } from './types.js';
-
 
 export interface GoalsComponentResult {
   score: number | null;
@@ -82,6 +81,8 @@ export function evaluateGoal(goal: GoalInput, asOfDate: string): GoalEvaluationR
       isValid: true,
       expectedAmount: '0.00',
       cappedProgress: 1,
+      progressNumerator: 1n,
+      progressDenominator: 1n,
       isBehind: false,
       isCompleted,
       daysRemaining,
@@ -90,7 +91,8 @@ export function evaluateGoal(goal: GoalInput, asOfDate: string): GoalEvaluationR
 
   // Case 2: asOfDate >= targetDate (target date reached or passed)
   if (isDateOnOrBefore(goal.targetDate, asOfDate)) {
-    const progress = Math.min(1, Math.max(0, Number(currentSatang) / Number(targetSatang)));
+    const cappedSatang = currentSatang < targetSatang ? currentSatang : targetSatang;
+    const progress = Number(cappedSatang) / Number(targetSatang);
     const isBehind = currentSatang < targetSatang;
 
     return {
@@ -103,6 +105,8 @@ export function evaluateGoal(goal: GoalInput, asOfDate: string): GoalEvaluationR
       isValid: true,
       expectedAmount: formatSatang(targetSatang),
       cappedProgress: progress,
+      progressNumerator: cappedSatang,
+      progressDenominator: targetSatang,
       isBehind,
       isCompleted,
       daysRemaining,
@@ -117,10 +121,10 @@ export function evaluateGoal(goal: GoalInput, asOfDate: string): GoalEvaluationR
   const isBehind = currentSatang * BigInt(totalDays) < targetSatang * BigInt(elapsedDays);
 
   // Progress = current / expected = (current * total) / (target * elapsed)
-  const num = Number(currentSatang * BigInt(totalDays));
-  const den = Number(targetSatang * BigInt(elapsedDays));
-  const rawProgress = den > 0 ? num / den : 1;
-  const progress = Math.min(1, Math.max(0, rawProgress));
+  const currentScaled = currentSatang * BigInt(totalDays);
+  const targetScaled = targetSatang * BigInt(elapsedDays);
+  const cappedScaled = currentScaled < targetScaled ? currentScaled : targetScaled;
+  const progress = targetScaled > 0n ? Number(cappedScaled) / Number(targetScaled) : 1;
 
   // Expected amount formatted as decimal string using exact half-up satang
   const expectedSatang =
@@ -136,6 +140,8 @@ export function evaluateGoal(goal: GoalInput, asOfDate: string): GoalEvaluationR
     isValid: true,
     expectedAmount: formatSatang(expectedSatang),
     cappedProgress: progress,
+    progressNumerator: cappedScaled,
+    progressDenominator: targetScaled,
     isBehind,
     isCompleted,
     daysRemaining,
@@ -143,10 +149,13 @@ export function evaluateGoal(goal: GoalInput, asOfDate: string): GoalEvaluationR
 }
 
 /**
- * Validates all goals and computes the aggregated Goals component score (Max 15).
- * If goals is empty, or any goal is invalid, returns score null with missingFields.
+ * Validates all goals and evaluates them, computing the aggregated Goals component score (Max 15).
+ * Guarantees single-pass evaluation for reuse across Health, Primary Goal, and NBA.
  */
-export function calculateGoalsScore(goals: GoalInput[], asOfDate: string): GoalsComponentResult {
+export function evaluateGoals(goals: GoalInput[], asOfDate: string): GoalsComponentResult {
+  // Always validate caller asOfDate first regardless of whether goals list is empty
+  parseUtcDate(asOfDate);
+
   if (!goals || goals.length === 0) {
     return {
       score: null,
@@ -206,15 +215,43 @@ export function calculateGoalsScore(goals: GoalInput[], asOfDate: string): Goals
     };
   }
 
-  // Calculate average capped progress
-  const totalProgress = evaluatedGoals.reduce((sum, g) => sum + g.cappedProgress, 0);
-  const avgProgress = totalProgress / evaluatedGoals.length;
-  const rawScore = 15 * avgProgress;
-  const score = roundHalfUp(rawScore, 2);
+  // Calculate sum of capped progress using exact BigInt rationals
+  let sumNum = 0n;
+  let sumDen = 1n;
+
+  for (const g of evaluatedGoals) {
+    const num = g.progressNumerator ?? 0n;
+    const den = g.progressDenominator ?? 1n;
+
+    const gGcd = gcd(sumDen, den);
+    const term1 = sumNum * (den / gGcd);
+    const term2 = num * (sumDen / gGcd);
+    sumNum = term1 + term2;
+    sumDen = (sumDen / gGcd) * den;
+
+    const redGcd = gcd(sumNum, sumDen);
+    if (redGcd > 1n) {
+      sumNum /= redGcd;
+      sumDen /= redGcd;
+    }
+  }
+
+  // Score = 15 * (sumNum / sumDen) / evaluatedGoals.length
+  const scoreNumerator = 15n * sumNum;
+  const scoreDenominator = BigInt(evaluatedGoals.length) * sumDen;
+  const score = roundRationalHalfUp(scoreNumerator, scoreDenominator, 2);
 
   return {
     score,
     missingFields: [],
     evaluatedGoals,
   };
+}
+
+/**
+ * Validates all goals and computes the aggregated Goals component score (Max 15).
+ * Backward-compatible alias for evaluateGoals.
+ */
+export function calculateGoalsScore(goals: GoalInput[], asOfDate: string): GoalsComponentResult {
+  return evaluateGoals(goals, asOfDate);
 }

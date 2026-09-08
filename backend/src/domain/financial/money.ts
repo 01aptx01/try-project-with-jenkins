@@ -85,15 +85,69 @@ export function compareRatios(
 }
 
 /**
+ * Greatest common divisor for BigInt.
+ */
+export function gcd(a: bigint, b: bigint): bigint {
+  let x = a < 0n ? -a : a;
+  let y = b < 0n ? -b : b;
+  while (y !== 0n) {
+    const t = y;
+    y = x % y;
+    x = t;
+  }
+  return x;
+}
+
+/**
+ * Performs exact half-up rounding on a positive rational fraction (numerator / denominator)
+ * to the specified number of decimal places using pure BigInt arithmetic.
+ * Completely immune to floating-point drift and scientific notation formatting.
+ */
+export function roundRationalHalfUp(
+  numerator: bigint,
+  denominator: bigint,
+  decimals: number = 2
+): number {
+  if (denominator <= 0n) {
+    throw new Error('Denominator must be strictly positive');
+  }
+  if (numerator < 0n) {
+    throw new Error('Negative rational rounding not supported');
+  }
+
+  const scale = 10n ** BigInt(decimals);
+  const scaledNum = numerator * scale;
+  // Half-up rounding of scaledNum / denominator: (2 * scaledNum + denominator) / (2 * denominator)
+  const roundedInt = (scaledNum * 2n + denominator) / (denominator * 2n);
+
+  const whole = roundedInt / scale;
+  const frac = roundedInt % scale;
+  return Number(`${whole.toString()}.${frac.toString().padStart(decimals, '0')}`);
+}
+
+/**
  * Performs exact half-up rounding on a number to the specified number of decimal places.
  * e.g. roundHalfUp(10.005, 2) => 10.01, roundHalfUp(10.004, 2) => 10.00
+ * Handles scientific notation gracefully.
  */
 export function roundHalfUp(value: number, decimals: number = 2): number {
   if (!Number.isFinite(value)) {
     throw new Error(`Cannot round non-finite value: ${value}`);
   }
-  // Using scientific notation shift avoids floating-point binary representation artifacts
-  const shifted = Number(`${value}e${decimals}`);
+  const str = value.toString();
+  const eIndex = str.indexOf('e');
+  let baseStr = str;
+  let exponent = 0;
+  if (eIndex !== -1) {
+    baseStr = str.slice(0, eIndex);
+    exponent = Number(str.slice(eIndex + 1));
+  }
+  const totalExp = exponent + decimals;
+  if (totalExp < -20) {
+    return 0;
+  }
+  const shifted = Number(`${baseStr}e${totalExp}`);
   const rounded = Math.round(shifted);
   return Number(`${rounded}e-${decimals}`);
 }
+

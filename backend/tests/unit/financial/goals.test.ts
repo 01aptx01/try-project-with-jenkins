@@ -202,5 +202,41 @@ describe('Goal Progress and Goals Component Scoring', () => {
       const result = calculateGoalsScore(goals, asOfDate);
       expect(result.score).toBe(11.25);
     });
+
+    it('regression: exact half-up rounding for 9.00 / 1000.00 produces 0.14 (not 0.13)', () => {
+      // 15 * (9 / 1000) = 0.135 -> exact half-up is 0.14
+      const goals = [
+        {
+          id: 'goal-p1-regression',
+          targetAmount: '1000.00',
+          currentAmount: '9.00',
+          startDate: '2026-01-01',
+          targetDate: '2026-09-08',
+        },
+      ];
+      const result = calculateGoalsScore(goals, asOfDate);
+      expect(result.score).toBe(0.14);
+      expect(result.missingFields).toEqual([]);
+    });
+
+    it('regression: extremely small ratio 0.01 / 10^15 does not produce NaN or throw', () => {
+      const goals = [
+        {
+          id: 'goal-tiny-ratio',
+          targetAmount: '1000000000000000.00',
+          currentAmount: '0.01',
+          startDate: '2026-01-01',
+          targetDate: '2026-09-08',
+        },
+      ];
+      const result = calculateGoalsScore(goals, asOfDate);
+      expect(result.score).toBe(0.0);
+      expect(Number.isNaN(result.score)).toBe(false);
+      expect(result.missingFields).toEqual([]);
+    });
+
+    it('regression: validates asOfDate before early return on empty goals', () => {
+      expect(() => calculateGoalsScore([], '2026-02-30')).toThrow();
+    });
   });
 });

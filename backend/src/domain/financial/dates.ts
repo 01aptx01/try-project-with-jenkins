@@ -54,13 +54,17 @@ export function parseUtcDate(dateStr: string): ParsedUtcDate {
   }
 
   const match = DATE_REGEX.exec(dateStr);
-  if (!match) {
+  if (!match || !match[1] || !match[2] || !match[3]) {
     throw new Error(`Invalid date format "${dateStr}": expected YYYY-MM-DD`);
   }
 
   const year = Number(match[1]);
   const month = Number(match[2]);
   const day = Number(match[3]);
+
+  if (year < 1000 || year > 9999) {
+    throw new Error(`Invalid year "${match[1]}" in date "${dateStr}": expected 1000-9999`);
+  }
 
   if (month < 1 || month > 12) {
     throw new Error(`Invalid month "${match[2]}" in date "${dateStr}"`);
@@ -71,8 +75,11 @@ export function parseUtcDate(dateStr: string): ParsedUtcDate {
     throw new Error(`Invalid day "${match[3]}" for month ${month} in date "${dateStr}"`);
   }
 
-  const utcMs = Date.UTC(year, month - 1, day);
+  const d = new Date(Date.UTC(year, month - 1, day));
+  d.setUTCFullYear(year); // Avoid JavaScript 0-99 -> 1900-1999 Date.UTC mapping
+  const utcMs = d.getTime();
   return { year, month, day, utcMs };
+
 }
 
 /**

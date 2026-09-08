@@ -1,5 +1,5 @@
 import { parseUtcDate } from './dates.js';
-import { evaluateGoal } from './goals.js';
+import { evaluateGoals } from './goals.js';
 import { calculateHealthResult } from './health.js';
 import { selectPrimaryGoal } from './primary-goal.js';
 import { evaluateRecommendation } from './recommendation.js';
@@ -27,13 +27,13 @@ export function evaluateClient(
   // Validate asOfDate format. If invalid, throws Error directly (not converted to INSUFFICIENT_DATA).
   parseUtcDate(asOfDate);
 
-  const evaluatedGoals = input.goals.map((g) => evaluateGoal(g, asOfDate));
-  const health = calculateHealthResult(input.financialProfile, input.goals, asOfDate);
-  const primaryGoal = selectPrimaryGoal(evaluatedGoals);
+  const goalsResult = evaluateGoals(input.goals, asOfDate);
+  const health = calculateHealthResult(input.financialProfile, goalsResult);
+  const primaryGoal = selectPrimaryGoal(goalsResult.evaluatedGoals);
   const recommendation = evaluateRecommendation({
     health,
     profile: input.financialProfile,
-    evaluatedGoals,
+    evaluatedGoals: goalsResult.evaluatedGoals,
   });
   const summary = generateClientSummary({ health, primaryGoal, recommendation });
 

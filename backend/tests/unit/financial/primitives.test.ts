@@ -11,6 +11,7 @@ import {
   formatSatang,
   parseSatang,
   roundHalfUp,
+  roundRationalHalfUp,
   tryParseSatang,
 } from '../../../src/domain/financial/money.js';
 
@@ -71,6 +72,20 @@ describe('Financial Money Primitives', () => {
     expect(roundHalfUp(59.994, 2)).toBe(59.99);
     expect(roundHalfUp(79.995, 2)).toBe(80.0);
     expect(roundHalfUp(0.0, 2)).toBe(0.0);
+    // Numbers formatted with scientific notation
+    expect(roundHalfUp(1e-15, 2)).toBe(0.0);
+    expect(roundHalfUp(1.5e-10, 2)).toBe(0.0);
+  });
+
+  it('performs exact rational half-up rounding using BigInt', () => {
+    // 13.5 satang / 100 = 0.135 -> 0.14
+    expect(roundRationalHalfUp(135n, 1000n, 2)).toBe(0.14);
+    // 0.01 / 10^15
+    expect(roundRationalHalfUp(1n, 100000000000000000n, 2)).toBe(0.0);
+    // exact boundary 0.005 -> 0.01
+    expect(roundRationalHalfUp(5n, 1000n, 2)).toBe(0.01);
+    // exact boundary 0.004999 -> 0.00
+    expect(roundRationalHalfUp(4999n, 1000000n, 2)).toBe(0.0);
   });
 });
 
@@ -82,7 +97,7 @@ describe('Financial Date Primitives', () => {
     expect(isLeapYear(1900)).toBe(false);
   });
 
-  it('strictly validates Gregorian dates and rejects invalid days/months', () => {
+  it('strictly validates Gregorian dates and rejects invalid days/months/years', () => {
     expect(parseUtcDate('2026-09-08').day).toBe(8);
     expect(parseUtcDate('2024-02-29').day).toBe(29); // valid leap day
     expect(() => parseUtcDate('2025-02-29')).toThrow(); // non-leap year
@@ -92,6 +107,7 @@ describe('Financial Date Primitives', () => {
     expect(() => parseUtcDate('2026-13-01')).toThrow();
     expect(() => parseUtcDate('2026-00-01')).toThrow();
     expect(() => parseUtcDate('2026/09/08')).toThrow();
+    expect(() => parseUtcDate('0099-01-01')).toThrow(); // 2-digit century year disallowed
   });
 
   it('calculates days between UTC dates consistently across all environments', () => {

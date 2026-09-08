@@ -85,10 +85,13 @@ export interface GoalEvaluationResult {
   isValid: boolean;
   expectedAmount: string;
   cappedProgress: number; // 0 to 1
+  progressNumerator?: bigint | undefined;
+  progressDenominator?: bigint | undefined;
   isBehind: boolean;
   isCompleted: boolean;
   daysRemaining: number; // targetDate - asOfDate
 }
+
 
 export interface PrimaryGoalResult {
   id: string;

@@ -59,6 +59,24 @@ describe('Next Best Action (NBA) and Priority Rules Evaluation', () => {
   });
 
 
+  it('triggers Rule 2 (BR-04.2) with non-contradictory reason when liquidity is just below 3 months', () => {
+    const profileNear3Months: FinancialProfileInput = {
+      ...healthyProfile,
+      liquidAssets: '89000.00', // 89k / 30k = 2.966... months -> toFixed(1) would be 3.0
+    };
+    const health = calculateHealthResult(profileNear3Months, healthyGoals, asOfDate);
+    const rec = evaluateRecommendation({
+      health,
+      profile: profileNear3Months,
+      evaluatedGoals: healthyGoals.map((g) => evaluateGoal(g, asOfDate)),
+    });
+
+    expect(rec.rule).toBe('BR-04.2');
+    expect(rec.priority).toBe('HIGH');
+    expect(rec.reason).toContain('< 3 เดือน (2.97 เดือน)');
+    expect(rec.reason).not.toContain('3.0 เดือน ซึ่งต่ำกว่าเกณฑ์ขั้นต่ำ 3 เดือน');
+  });
+
   it('takes precedence of Rule 2 over Rule 3 when both liquidity < 3 and debt > 60% exist', () => {
     const badProfile: FinancialProfileInput = {
       ...healthyProfile,
@@ -95,7 +113,7 @@ describe('Next Best Action (NBA) and Priority Rules Evaluation', () => {
   it('triggers Rule 3 (BR-04.3 Review Debt Position, HIGH) when debt ratio > 60%', () => {
     const profileHighDebt: FinancialProfileInput = {
       ...healthyProfile,
-      totalDebt: '600001.00', // 60.0001%
+      totalDebt: '700000.00', // 70.00%
     };
     const health = calculateHealthResult(profileHighDebt, healthyGoals, asOfDate);
     const rec = evaluateRecommendation({
@@ -107,7 +125,25 @@ describe('Next Best Action (NBA) and Priority Rules Evaluation', () => {
     expect(rec.rule).toBe('BR-04.3');
     expect(rec.action).toBe('Review Debt Position');
     expect(rec.priority).toBe('HIGH');
-    expect(rec.reason).toContain('60.00%');
+    expect(rec.reason).toContain('70.00%');
+  });
+
+  it('triggers Rule 3 (BR-04.3) with non-contradictory reason when debt ratio is just above 60%', () => {
+    const profileNear60Debt: FinancialProfileInput = {
+      ...healthyProfile,
+      totalDebt: '600001.00', // 60.0001% -> toFixed(2) would be 60.00%
+    };
+    const health = calculateHealthResult(profileNear60Debt, healthyGoals, asOfDate);
+    const rec = evaluateRecommendation({
+      health,
+      profile: profileNear60Debt,
+      evaluatedGoals: healthyGoals.map((g) => evaluateGoal(g, asOfDate)),
+    });
+
+    expect(rec.rule).toBe('BR-04.3');
+    expect(rec.priority).toBe('HIGH');
+    expect(rec.reason).toContain('> 60% (60.000%)');
+    expect(rec.reason).not.toContain('60.00% ซึ่งสูงกว่าเกณฑ์ 60%');
   });
 
   it('does NOT trigger Rule 3 when debt ratio is exactly 60.0%', () => {

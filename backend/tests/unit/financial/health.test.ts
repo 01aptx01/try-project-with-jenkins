@@ -109,6 +109,20 @@ describe('Financial Health Aggregation and Insufficient Data', () => {
     const res5999 = calculateHealthResult(profile5999, goals1499, asOfDate);
     expect(res5999.score).toBe(59.99);
     expect(res5999.classification).toBe('AT_RISK');
+
+    // 4. 79.99 -> MODERATE (< 80)
+    // L=18, D=18, S=14, I=15, G=14.99 -> 18 + 18 + 14 + 15 + 14.99 = 79.99
+    const profile7999: FinancialProfileInput = {
+      monthlyIncome: '1000.00',
+      monthlyExpense: '850.00', // 14
+      liquidAssets: '3000.00', // 18
+      totalAssets: '10000.00',
+      totalDebt: '4000.00', // 18
+      investments: '2000.00', // 15
+    };
+    const res7999 = calculateHealthResult(profile7999, goals1499, asOfDate);
+    expect(res7999.score).toBe(79.99);
+    expect(res7999.classification).toBe('MODERATE');
   });
 
   it('handles missing financialProfile container level', () => {

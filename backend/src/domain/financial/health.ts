@@ -4,7 +4,7 @@ import {
   calculateLiquidityScore,
   calculateSavingsScore,
 } from './components.js';
-import { calculateGoalsScore } from './goals.js';
+import { calculateGoalsScore, type GoalsComponentResult } from './goals.js';
 import { roundHalfUp } from './money.js';
 import type {
   FinancialProfileInput,
@@ -14,7 +14,6 @@ import type {
   HealthScoreBreakdown,
 } from './types.js';
 
-
 export interface HealthEvaluationContext {
   profile: FinancialProfileInput | null;
   goals: GoalInput[];
@@ -23,18 +22,21 @@ export interface HealthEvaluationContext {
 
 /**
  * Aggregates the 5 financial components into a complete HealthResult.
+ * Can accept either raw GoalInput[] (with asOfDate) or a pre-evaluated GoalsComponentResult.
  * If any component is null, status is INSUFFICIENT_DATA, score is null, and missingFields are exposed.
  */
 export function calculateHealthResult(
   profile: FinancialProfileInput | null,
-  goals: GoalInput[],
-  asOfDate: string
+  goalsOrResult: GoalInput[] | GoalsComponentResult,
+  asOfDate?: string
 ): HealthResult {
   const liquidity = calculateLiquidityScore(profile);
   const debt = calculateDebtScore(profile);
   const savings = calculateSavingsScore(profile);
   const investment = calculateInvestmentScore(profile);
-  const goalsResult = calculateGoalsScore(goals, asOfDate);
+  const goalsResult = Array.isArray(goalsOrResult)
+    ? calculateGoalsScore(goalsOrResult, asOfDate!)
+    : goalsOrResult;
 
   const breakdown: HealthScoreBreakdown = {
     liquidity: liquidity.score,
