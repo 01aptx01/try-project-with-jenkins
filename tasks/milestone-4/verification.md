@@ -500,6 +500,60 @@
 
 **M4-014 Verdict:** **DONE / PASS**
 
+---
+
+## 19. M4-015 Verification Record: Session Lifecycle Protection & RM Isolation
+
+### 19.1 Artifacts Delivered
+- Lifecycle coordinator: `frontend/lib/session-lifecycle.ts`
+  - `sessionGeneration` monotonic counter tracking session transitions.
+  - `registerInFlightController` and `abortAllInFlight`: ensures all pending client/family/profile requests are aborted immediately when session terminates or switches.
+  - `broadcastLogout`: broadcasts logout event across browser tabs via storage events. Strictly verified to carry ZERO client data, PII, or token values (`{ type: 'LOGOUT', timestamp: ... }`).
+- Client & Family hooks integration:
+  - `frontend/hooks/use-client-profile.ts`: captures `sessionGeneration` at request dispatch; discards response if generation has advanced; registers in-flight AbortController.
+  - `frontend/hooks/use-family-graph.ts`: captures `sessionGeneration` at request dispatch; rejects late responses from prior sessions; registers in-flight AbortController.
+- API Client unauthorized notification:
+  - `frontend/lib/api-client.ts`: `setUnauthorizedListener` triggers session termination on 401 for protected endpoints.
+  - `/api/auth/login` 401 is cleanly excluded from global redirect to allow inline credential error display without redirect loops.
+- Session Provider hardening:
+  - `frontend/components/session-provider.tsx`:
+    - Handles identity switch: detects if RM user ID changes and increments session generation + flushes memory caches.
+    - Cross-tab synchronization: listens to `storage` events and terminates session locally when another tab logs out.
+    - BFCache protection: listens to `pageshow` with `event.persisted` to force `/api/auth/me` revalidation on browser Back/Forward navigation.
+    - Visibility change: revalidates session when tab becomes visible.
+- Unit tests: `frontend/tests/session-lifecycle.test.tsx` (8 test cases)
+  - Authenticated RM initialization.
+  - RM identity switch (RM A -> RM B) incrementing session generation.
+  - Discarding delayed response from RM A after switch to RM B.
+  - Graceful session termination even when backend logout fails with network error.
+  - Broadcast payload verification: zero client data or tokens.
+  - Cross-tab logout storage event reaction and redirect to `/login`.
+  - BFCache pageshow revalidation.
+  - Login 401 credential error isolated from global redirect.
+
+### 19.2 Test Results
+- **Command:** `npm run test:unit -w @meridian/web`
+- **Output:** 102 tests passed across 15 test files (`api-client.test.ts` 15, `financial-details.test.tsx` 11, `client-filters.test.tsx` 10, `session-lifecycle.test.tsx` 8, `recommendation-summary.test.tsx` 8, `family-section.test.tsx` 7, `family-graph.test.tsx` 7, `client-pagination.test.tsx` 6, `login.test.tsx` 6, `morning-action-plan.test.tsx` 5, `health-panel.test.tsx` 5, `client-list.test.tsx` 5, `session-shell.test.tsx` 4, `client-profile.test.tsx` 4, `home.test.tsx` 1)
+- **All Workspace Unit Tests:** 273 tests passed across 37 test files (Backend 171 tests, Frontend 102 tests)
+- **Lint & Typecheck:** 0 errors across `@meridian/api` and `@meridian/web`
+- **Security Audit:** `npm audit` returned 0 vulnerabilities
+- **Production Build:** `npm run build` cleanly compiled all routes with Turbopack
+
+**M4-015 Verdict:** **DONE / PASS**
+
+---
+
+## 20. Checkpoint E Verification Sign-off
+
+- [x] Family network loaded on-demand only when opened; zero profile prefetching (`M4-013`)
+- [x] Readable 1-hop Family Graph rendered via SVG + accessible HTML relationship list (`M4-014`)
+- [x] Directional relationship normalization (PARENT <-> CHILD inversion when primary is target, SPOUSE/SIBLING preserved) (`M4-014`)
+- [x] Session lifecycle gaps closed: session generation tracking, in-flight request abortion, cross-tab zero-payload logout sync, and BFCache pageshow revalidation (`M4-015`)
+- [x] Stale data isolation: switching RM accounts discards previous RM responses and purges in-memory family caches
+- [x] Frontend unit tests (102/102 passed), Workspace unit tests (273/273 passed), Lint (0 errors), Typecheck (0 errors), Build (clean), Audit (0 vulnerabilities)
+- [x] Ready to proceed to Checkpoint F (`M4-016` through `M4-017`)
+
+
 
 
 

@@ -66,6 +66,13 @@ export class ApiClientError extends Error {
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 
+export type UnauthorizedListener = (url: string) => void;
+let unauthorizedListener: UnauthorizedListener | null = null;
+
+export function setUnauthorizedListener(listener: UnauthorizedListener | null): void {
+  unauthorizedListener = listener;
+}
+
 async function executeRequest<T>(
   path: string,
   init: RequestInit,
@@ -149,6 +156,14 @@ async function executeRequest<T>(
         const parsedSec = parseInt(retryAfterHeader, 10);
         if (!isNaN(parsedSec)) {
           retryAfter = parsedSec;
+        }
+      }
+
+      if (response.status === 401 && !path.includes('/api/auth/login')) {
+        try {
+          unauthorizedListener?.(path);
+        } catch {
+          // Ignore handler errors
         }
       }
 

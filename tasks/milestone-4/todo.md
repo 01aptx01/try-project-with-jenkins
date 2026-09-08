@@ -448,7 +448,7 @@
 
 ## M4-015 — ป้องกันข้อมูล RM เดิมหลัง session เปลี่ยน
 
-**Status:** TODO  
+**Status:** DONE  
 **Scope:** M  
 **Requirements:** FR-01, NFR-01, US-01, US-05, US-08
 
@@ -456,14 +456,14 @@
 
 **Acceptance criteria:**
 
-- [ ] Protected 401 ล้าง state และยกเลิก pending list/profile/family requests ก่อนกลับ login; ใช้ session generation ปฏิเสธ response ของ RM ก่อนหน้า; login 401 ไม่เข้าวงจร global redirect
-- [ ] ล้างหรือซ่อน sensitive view เมื่อ pagehide ก่อน BFCache เก็บหน้า; เมื่อ pageshow/history หรือแท็บกลับ active ให้ revalidate /me ก่อนแสดงข้อมูล; logout อีกแท็บแจ้ง invalidation ด้วย event ที่ไม่มีข้อมูล Client/token และไม่มี persistent payload cache
-- [ ] Tests สลับ RM A→logout→RM B พร้อม delayed response, logout network fail และ simultaneous 401; manual browser Back/Forward/multi-tab ต้องไม่แสดงข้อมูล A หลัง identity ของ B ยืนยันแล้ว
+- [x] Protected 401 ล้าง state และยกเลิก pending list/profile/family requests ก่อนกลับ login; ใช้ session generation ปฏิเสธ response ของ RM ก่อนหน้า; login 401 ไม่เข้าวงจร global redirect
+- [x] ล้างหรือซ่อน sensitive view เมื่อ pagehide ก่อน BFCache เก็บหน้า; เมื่อ pageshow/history หรือแท็บกลับ active ให้ revalidate /me ก่อนแสดงข้อมูล; logout อีกแท็บแจ้ง invalidation ด้วย event ที่ไม่มีข้อมูล Client/token และไม่มี persistent payload cache
+- [x] Tests สลับ RM A→logout→RM B พร้อม delayed response, logout network fail และ simultaneous 401; manual browser Back/Forward/multi-tab ต้องไม่แสดงข้อมูล A หลัง identity ของ B ยืนยันแล้ว
 
 **Verification:**
 
-- [ ] focused tests tests/session-lifecycle.test.tsx ใช้ controlled promises/events; manual สองแท็บผ่าน Caddy; บันทึกข้อจำกัดเวลาตรวจ session ขณะ inactive
-- [ ] บันทึก evidence ใน verification record และอัปเดตสถานะตามผลจริง
+- [x] focused tests tests/session-lifecycle.test.tsx ใช้ controlled promises/events; manual สองแท็บผ่าน Caddy; บันทึกข้อจำกัดเวลาตรวจ session ขณะ inactive
+- [x] บันทึก evidence ใน verification record และอัปเดตสถานะตามผลจริง
 
 **Dependencies:** M4-008, M4-010, M4-012, M4-014
 
@@ -477,8 +477,8 @@
 
 ### Checkpoint E — Family และ session lifecycle
 
-- [ ] Graph แสดงทิศทางถูกต้องและโหลดแยก; session/RM switch ไม่รับผลเก่า; component suites และ manual browser privacy checks ผ่าน
-- [ ] ทบทวนผลและ blockers ก่อนงานที่พึ่งพา; ไม่ใช้จำนวน tests หรือคะแนน audit แทน acceptance evidence
+- [x] Graph แสดงทิศทางถูกต้องและโหลดแยก; session/RM switch ไม่รับผลเก่า; component suites และ manual browser privacy checks ผ่าน
+- [x] ทบทวนผลและ blockers ก่อนงานที่พึ่งพา; ไม่ใช้จำนวน tests หรือคะแนน audit แทน acceptance evidence
 
 <a id="m4-016"></a>
 

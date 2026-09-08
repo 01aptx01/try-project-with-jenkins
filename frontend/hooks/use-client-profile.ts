@@ -3,6 +3,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { api, ApiClientError } from '../lib/api-client.js';
 import type { ClientProfileSnapshotResponse } from '../lib/api-contracts.js';
+import {
+  getSessionGeneration,
+  registerInFlightController,
+} from '../lib/session-lifecycle.js';
 
 export interface UseClientProfileResult {
   data: ClientProfileSnapshotResponse | null;
@@ -41,6 +45,8 @@ export function useClientProfile(clientId: string): UseClientProfileResult {
     const controller = new AbortController();
     activeControllerRef.current = controller;
     const currentRequestId = ++requestIdRef.current;
+    const capturedGeneration = getSessionGeneration();
+    const unregister = registerInFlightController(controller);
 
     setIsLoading(true);
 
@@ -50,12 +56,18 @@ export function useClientProfile(clientId: string): UseClientProfileResult {
         signal: controller.signal,
       });
 
-      if (currentRequestId === requestIdRef.current) {
+      if (
+        currentRequestId === requestIdRef.current &&
+        capturedGeneration === getSessionGeneration()
+      ) {
         setData(result);
       }
     } catch (error: unknown) {
-      if (currentRequestId !== requestIdRef.current) {
-        return; // Ignore obsolete request response
+      if (
+        currentRequestId !== requestIdRef.current ||
+        capturedGeneration !== getSessionGeneration()
+      ) {
+        return; // Ignore obsolete request response or response from previous session
       }
 
       if (error instanceof ApiClientError) {
@@ -75,6 +87,7 @@ export function useClientProfile(clientId: string): UseClientProfileResult {
         setErrorMessage('An unexpected error occurred while loading client profile.');
       }
     } finally {
+      unregister();
       if (currentRequestId === requestIdRef.current) {
         setIsLoading(false);
       }

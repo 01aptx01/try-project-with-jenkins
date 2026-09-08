@@ -3,6 +3,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { api, ApiClientError } from '../lib/api-client.js';
 import type { FamilyGraphResponse } from '../lib/api-contracts.js';
+import {
+  getSessionGeneration,
+  registerInFlightController,
+} from '../lib/session-lifecycle.js';
 
 // In-memory session cache for family graphs: Map<clientId, FamilyGraphResponse>
 const familyMemoryCache = new Map<string, FamilyGraphResponse>();
@@ -54,17 +58,29 @@ export function useFamilyGraph(clientId: string, enabled = true): UseFamilyGraph
       setErrorMessage(null);
       setIsNotFound(false);
 
-      try {
-        const response = await api.getClientFamily(clientId);
+      const controller = new AbortController();
+      const unregister = registerInFlightController(controller);
+      const capturedGeneration = getSessionGeneration();
 
-        // Check if client ID is still current
-        if (activeClientIdRef.current === clientId) {
+      try {
+        const response = await api.getClientFamily(clientId, {
+          signal: controller.signal,
+        });
+
+        // Check if client ID is still current and session generation hasn't changed
+        if (
+          activeClientIdRef.current === clientId &&
+          capturedGeneration === getSessionGeneration()
+        ) {
           familyMemoryCache.set(clientId, response);
           setData(response);
           setIsLoading(false);
         }
       } catch (err) {
-        if (activeClientIdRef.current !== clientId) {
+        if (
+          activeClientIdRef.current !== clientId ||
+          capturedGeneration !== getSessionGeneration()
+        ) {
           return;
         }
 
@@ -87,6 +103,8 @@ export function useFamilyGraph(clientId: string, enabled = true): UseFamilyGraph
         setData(null);
         setErrorMessage(err instanceof Error ? err.message : 'Failed to load family network');
         setIsLoading(false);
+      } finally {
+        unregister();
       }
     },
     [clientId, enabled]

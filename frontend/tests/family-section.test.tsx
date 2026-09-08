@@ -81,7 +81,7 @@ describe('FamilySection (M4-013: Lazy On-Demand Loading & Independent State)', (
     fireEvent.click(screen.getByTestId('toggle-family-btn'));
 
     expect(getClientFamilySpy).toHaveBeenCalledTimes(1);
-    expect(getClientFamilySpy).toHaveBeenCalledWith(clientId);
+    expect(getClientFamilySpy).toHaveBeenCalledWith(clientId, expect.anything());
 
     // Verify loading indicator is visible
     expect(screen.getByTestId('family-loading')).toBeInTheDocument();
@@ -220,7 +220,7 @@ describe('FamilySection (M4-013: Lazy On-Demand Loading & Independent State)', (
         screen.getByTestId('relative-link-c0000000-0000-0000-0000-000000000002')
       ).toHaveTextContent('Suda Prasert');
     });
-    expect(getClientFamilySpy).toHaveBeenCalledWith(clientId);
+    expect(getClientFamilySpy).toHaveBeenCalledWith(clientId, expect.anything());
 
     // Switch client ID
     rerender(<FamilySection clientId={otherClientId} defaultExpanded={true} />);
@@ -232,6 +232,6 @@ describe('FamilySection (M4-013: Lazy On-Demand Loading & Independent State)', (
     });
 
     expect(screen.queryByTestId('relative-link-c0000000-0000-0000-0000-000000000002')).toBeNull();
-    expect(getClientFamilySpy).toHaveBeenCalledWith(otherClientId);
+    expect(getClientFamilySpy).toHaveBeenCalledWith(otherClientId, expect.anything());
   });
 });
