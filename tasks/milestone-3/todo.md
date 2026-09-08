@@ -554,20 +554,21 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 
 ## M3-017 — ตรวจ acceptance matrix ของ M3
 
-**Status:** TODO
+**Status:** DONE
 
 **Description:**
 ทดสอบ Acceptance Matrix รวมทุกเงื่อนไขของ Milestone 3 เพื่อยืนยันความปลอดภัย สิทธิการเข้าถึง และความสอดคล้องของ API ทั้งหมด
 
 **Acceptance criteria:**
-- [ ] RM Isolation Matrix: RM A และ RM B ไม่สามารถเข้าถึง, มองเห็นจำนวนนับ, หรือเห็น Family edges ของกันและกันได้ในทุก endpoint
-- [ ] Auth & Error Matrix: ทุก protected endpoint ปฏิเสธคำขอที่ไม่มี session หรือ session ไม่ถูกต้อง (`401`); ตรวจสอบ error codes ครบทุกประเภท (`400`, `401`, `403`, `404`, `413`, `415`, `429`, `500`, `503`) โดยไม่มี sensitive stack trace หรือ credentials หลุดใน payload หรือ logs
-- [ ] Performance & Query Instrumentation: ยืนยันว่า Client List และ Morning Action Plan ไม่เกิด N+1 query regression เมื่อจำนวน Client เพิ่มขึ้น
-- [ ] Data Consistency: ผลลัพธ์ Health, Primary Goal, NBA, และ Summary ตรงกันทุก endpoint เมื่อประเมินด้วยข้อมูลและวันอ้างอิงเดียวกัน
+- [x] RM Isolation Matrix: RM A และ RM B ไม่สามารถเข้าถึง, มองเห็นจำนวนนับ, หรือเห็น Family edges ของกันและกันได้ในทุก endpoint
+- [x] Auth & Error Matrix: ทุก protected endpoint ปฏิเสธคำขอที่ไม่มี session หรือ session ไม่ถูกต้อง (`401`); ตรวจสอบ error codes ครบทุกประเภท (`400`, `401`, `403`, `404`, `413`, `415`, `429`, `500`, `503`) โดยไม่มี sensitive stack trace หรือ credentials หลุดใน payload หรือ logs
+- [x] Performance & Query Instrumentation: ยืนยันว่า Client List และ Morning Action Plan ไม่เกิด N+1 query regression เมื่อจำนวน Client เพิ่มขึ้น
+- [x] Data Consistency: ผลลัพธ์ Health, Primary Goal, NBA, และ Summary ตรงกันทุก endpoint เมื่อประเมินด้วยข้อมูลและวันอ้างอิงเดียวกัน
 
 **Verification:**
-- [ ] รัน API integration test suite ทั้งหมด: `npm run test:integration`
-- [ ] Matrix automated test suite ครอบคลุม RM cross-access tests, error envelopes, and header security assertions (`Cache-Control: no-store`)
+- [x] รัน API integration test suite ทั้งหมด: `npm run test:integration` (71 tests ใน 12 test files ผ่าน 100%)
+- [x] Matrix automated test suite ครอบคลุม RM cross-access tests, error envelopes, and header security assertions (`Cache-Control: no-store`) ใน `backend/tests/integration/api/acceptance-matrix.test.ts`
+- [x] รวม 71 integration tests และ 164 unit tests ผ่าน 100%, lint 0 errors, typecheck 0 errors, build clean.
 
 **Dependencies:** M3-016  
 **Files likely touched:**
