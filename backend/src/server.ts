@@ -97,7 +97,10 @@ async function shutdown(signal: string) {
     try {
       await prisma.$disconnect();
     } catch (disconnectError) {
-      console.error("Error disconnecting Prisma:", disconnectError);
+      const errName = (disconnectError as Error)?.name || "Error";
+      const errMessage = (disconnectError as Error)?.message || "Unknown error";
+      const sanitized = errMessage.replace(/:\/\/([^:]+):([^@]+)@/g, "://$1:******@");
+      console.error(`Error disconnecting Prisma [${errName}]: ${sanitized}`);
     }
     process.exit(error ? 1 : 0);
   });

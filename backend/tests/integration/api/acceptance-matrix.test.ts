@@ -395,6 +395,22 @@ describe("Milestone 3 Acceptance Matrix (M3-017)", () => {
       expect(repoSpy).toHaveBeenCalledTimes(1);
       repoSpy.mockRestore();
     });
+
+    it("guarantees HTTP /api/dashboard/morning-action-plan invokes exactly 1 repository batch load without N+1", async () => {
+      const repoSpy = vi.spyOn(
+        PrismaClientRepository.prototype,
+        "findAllClientsByRmId"
+      );
+
+      const res = await request(app)
+        .get("/api/dashboard/morning-action-plan")
+        .set("Cookie", rm1Cookie);
+
+      expect(res.status).toBe(200);
+      expect(res.body.items).toHaveLength(15);
+      expect(repoSpy).toHaveBeenCalledTimes(1);
+      repoSpy.mockRestore();
+    });
   });
 
   describe("5. Security Headers", () => {

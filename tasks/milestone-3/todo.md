@@ -537,13 +537,13 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 - [x] บันทึกข้อจำกัดของ Docker Desktop / Windows NAT ที่อาจรวบ client IP เข้าด้วยกัน
 
 **Verification:**
-- [x] Live HTTP smoke tests ผ่าน Caddy proxy container จริง: ทดสอบ endpoint `/health`, `/api/auth/login`, `/api/auth/me`, `/api/clients` ส่งผ่าน Caddy container บน `127.0.0.1:8081` ไปยัง Express API ใน `backend/tests/integration/proxy/caddy-live-smoke.test.ts`
+- [x] Fail-Closed Live HTTP smoke tests ผ่าน Caddy proxy container จริง: ทดสอบ endpoint `/health`, `/api/auth/login`, `/api/auth/me`, `/api/clients` ส่งผ่าน Caddy container บน `127.0.0.1:8081` ไปยัง Express API ใน `backend/tests/integration/proxy/caddy-live-smoke.test.ts` (บังคับ fail หาก Caddy ไม่ทำงานตาม AUD-M3-001)
 - [x] Express proxy contract tests ใน `backend/tests/integration/proxy/caddy-flow.test.ts`:
   - Untrusted direct client (`trust proxy: false`): ส่ง header `X-Forwarded-For` ปลอมแปลงหลายชุด Express ไม่เชื่อถือและบล็อกด้วย rate limiter ตาม socket IP จริง
   - Trusted Caddy hop (`trust proxy: loopback`): คำนวณ rate limit แยกตาม IP ที่ Caddy ส่งต่อมา และป้องกันการปลอมแปลง upstream IP หลายชั้น
   - Configuration guard: ปฏิเสธ `trust proxy: true` และ string `"true"` ด้วย Error ป้องกัน misconfiguration
 - [x] Unit tests สำหรับ `resolveTrustProxySetting` ใน `backend/tests/unit/proxy.test.ts` (5 tests ผ่าน 100%)
-- [x] รวม 76 integration tests และ 169 unit tests ผ่าน 100%, lint 0 errors, typecheck 0 errors, build clean.
+- [x] รวม 78 integration tests และ 172 unit tests ผ่าน 100%, lint 0 errors, typecheck 0 errors, build clean.
 
 **Dependencies:** M3-013, M3-014, M3-015  
 **Files likely touched:**
@@ -566,14 +566,14 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 
 **Acceptance criteria:**
 - [x] RM Isolation Matrix: RM A และ RM B ไม่สามารถเข้าถึง, มองเห็นจำนวนนับ, หรือเห็น Family edges ของกันและกันได้ในทุก endpoint
-- [x] Auth & Error Matrix: ทุก protected endpoint ปฏิเสธคำขอที่ไม่มี session หรือ session ไม่ถูกต้อง (`401`); ตรวจสอบ error codes ครบทุกประเภท (`400`, `401`, `403`, `404`, `413`, `415`, `429`, `500`, `503`) โดยไม่มี sensitive stack trace หรือ credentials หลุดใน payload หรือ logs
-- [x] Performance & Zero N+1 Instrumentation: ยืนยันว่า Client List ไม่เกิด N+1 query regression โดยดักจับและนับจำนวน SQL queries จาก Prisma Client จริง (`$on('query')`) และเปรียบเทียบจำนวน query เมื่อจำนวน Client เพิ่มขึ้นจาก 15 เป็น 20 ราย พิสูจน์ว่าเป็น $O(1)$ constant query count
+- [x] Auth & Error Matrix: ทุก protected endpoint ปฏิเสธคำขอที่ไม่มี session หรือ session ไม่ถูกต้อง (`401`); ตรวจสอบ error codes ครบทุกประเภท (`400`, `401`, `403`, `404`, `413`, `415`, `429`, `500`, `503`) รวมถึงการแปลง `P2024` (connection pool timeout) เป็น `503 DEPENDENCY_UNAVAILABLE` โดยไม่มี sensitive stack trace หรือ credentials หลุดใน payload หรือ logs
+- [x] Performance & Empirical Zero N+1 Instrumentation: ยืนยันว่า Client List (`/api/clients`) และ Morning Action Plan (`/api/dashboard/morning-action-plan`) ไม่เกิด N+1 query regression โดยดักจับและนับจำนวน SQL queries จาก Prisma Client จริง (`$on('query')`) ยืนยันว่าจำนวน query ไม่เพิ่มขึ้นเมื่อจำนวน Client เพิ่มขึ้นจาก 15 เป็น 20 ราย (คงที่ 3 queries: 1 client + 1 profile IN + 1 goals IN)
 - [x] Data Consistency: ผลลัพธ์ Health, Primary Goal, NBA, และ Summary ตรงกันทุก endpoint เมื่อประเมินด้วยข้อมูลและวันอ้างอิงเดียวกัน
 
 **Verification:**
-- [x] รัน API integration test suite ทั้งหมด: `npm run test:integration` (76 tests ใน 13 test files ผ่าน 100%)
-- [x] Matrix automated test suite ครอบคลุม RM cross-access tests, error envelopes, header security assertions (`Cache-Control: no-store`), และ Zero N+1 query proof ใน `backend/tests/integration/api/acceptance-matrix.test.ts`
-- [x] รวม 76 integration tests และ 169 unit tests ผ่าน 100%, lint 0 errors, typecheck 0 errors, build clean.
+- [x] รัน API integration test suite ทั้งหมด: `npm run test:integration` (78 tests ใน 13 test files ผ่าน 100%)
+- [x] Matrix automated test suite ครอบคลุม RM cross-access tests, error envelopes, header security assertions (`Cache-Control: no-store`), และ Zero N+1 query empirical proof ทั้งใน repository layer และ route level ใน `backend/tests/integration/api/acceptance-matrix.test.ts`
+- [x] รวม 78 integration tests และ 172 unit tests ผ่าน 100%, lint 0 errors, typecheck 0 errors, build clean.
 
 **Dependencies:** M3-016  
 **Files likely touched:**
@@ -591,24 +591,26 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 
 **Acceptance criteria:**
 - [x] อัปเดต `README.md` อธิบายคำสั่ง environment setup, secret generation, database migrations, seed data พร้อมการระบุ reference date, startup, และ testing จนสามารถทำตามได้ครบถ้วน
-- [x] ตรวจสอบจาก clean checkout: `npm ci`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run build`, และ `npm run test:integration` ผ่าน 100%
+- [x] ตรวจสอบจาก clean checkout: `npm ci`, `npm audit`, `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run build`, และ `npm run test:integration` ผ่าน 100%
 - [x] รัน seed ซ้ำและทดสอบ API smoke flow ได้อย่างราบรื่น
 - [x] จัดทำเอกสารสรุปผลการตรวจรับ: บันทึกวันที่, commit SHA, environment, commands, ผลลัพธ์จริง และ mapping FR/BR/NFR สำหรับ backend/API evidence เพื่อส่งต่อให้ Milestone 4 ใน `tasks/milestone-3/handover.md`
 
 **Verification:**
 - [x] Clean install และ verify commands:
   - `npm ci` (0 errors)
+  - `npm audit` (0 vulnerabilities, 0 High, 0 Critical หลังแก้ AUD-M3-002)
   - `npm run lint` (0 errors)
   - `npm run typecheck` (0 errors)
-  - `npm run test:unit` (169 tests passed across 23 test files: 168 backend, 1 frontend)
-  - `npm run build` (Next.js & backend tsc passed)
-  - `npm run test:integration` (76 tests passed across 13 test suites)
+  - `npm run test:unit` (172 tests passed across 23 test files: 171 backend, 1 frontend)
+  - `npm run build` (Next.js & backend tsc passed, safe dist cleaning)
+  - `npm run test:integration` (78 tests passed across 13 test suites)
   - `npm run db:seed -- --as-of 2026-09-08` (Idempotent seed verified)
 - [x] บันทึกสภาพแวดล้อมและ commit records:
   - Date: 2026-09-08
   - Environment: Windows 11 (PowerShell 5.1), Node.js `v25.2.1`, npm `11.6.2`, Docker Desktop (PostgreSQL 17 on 5432 & 5433, Caddy 2.10 on 8081)
-  - Commit SHA range: `b632b03..8140419` และ gate repair commits
-- [x] ปรับปรุง Requirement Traceability Matrix ใน `tasks/milestone-3/handover.md` ให้ตรงตาม `docs/context/03-requirements.md` (FR-01 ถึง FR-12) และ `docs/context/04-business-rules.md` (BR-01 ถึง BR-10) อย่างถูกต้องครบถ้วน
+  - Commit SHA range: `b632b03..08500d9` และ audit repair commits
+- [x] ปรับปรุง Requirement Traceability Matrix ใน `tasks/milestone-3/handover.md` ให้ตรงตาม `docs/context/03-requirements.md` (FR-01 ถึง FR-12) และ `docs/context/04-business-rules.md` (BR-01 ถึง BR-10) โดยโยง CI/CD & DevSecOps requirements ไปยัง Milestone 6 (`docs/context/08-delivery-roadmap.md:51-53`)
+- [x] แก้ไข Audit Findings AUD-M3-001 ถึง AUD-M3-009 ครบถ้วน
 - [x] ตรวจสอบ Markdown links ใน `README.md` และ `tasks/milestone-3/`
 - [x] Git diff สะอาด ไม่มี secrets หรือไฟล์ขยะหลงเหลือ
 
@@ -623,6 +625,6 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 ---
 
 ## Checkpoint F — Milestone 3 Final Acceptance & M4 Handover
-- [x] Live Caddy proxy container integration (`caddy-live-smoke.test.ts`) และ Express proxy header contracts (`caddy-flow.test.ts`) ผ่านการทดสอบ
-- [x] Acceptance matrix ผ่านครบทุก endpoints, security controls, data isolation checks, และ Zero N+1 query proof
-- [x] Clean checkout ผ่าน build, lint, typecheck, unit tests, และ integration tests 100% พร้อมส่งมอบให้ Milestone 4
+- [x] Fail-closed Live Caddy proxy container integration (`caddy-live-smoke.test.ts`) และ Express proxy header contracts (`caddy-flow.test.ts`) ผ่านการทดสอบ
+- [x] Acceptance matrix ผ่านครบทุก endpoints, security controls, data isolation checks, และ Zero N+1 query empirical proof ทั้งสอง endpoints
+- [x] Clean checkout ผ่าน build, lint, typecheck, unit tests, integration tests, และ dependency audit (`npm audit` 0 vulnerabilities) 100% พร้อมส่งมอบให้ Milestone 4

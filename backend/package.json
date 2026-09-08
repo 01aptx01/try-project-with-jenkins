@@ -8,9 +8,9 @@
     "start": "node --env-file-if-exists=../.env dist/server.js",
     "lint": "eslint . --config ../eslint.config.mjs",
     "typecheck": "tsc --noEmit",
-    "build": "tsc -p tsconfig.build.json",
-    "test:unit": "vitest run --config vitest.config.ts --exclude tests/integration/**",
-    "test:integration": "node --env-file-if-exists=../.env ../node_modules/vitest/vitest.mjs run --config vitest.config.ts tests/integration",
+    "build": "node -e \"try { fs.rmSync('dist', { recursive: true, force: true }); } catch {}\" && tsc -p tsconfig.build.json",
+    "test:unit": "vitest run --configLoader runner --config vitest.config.ts --exclude tests/integration/**",
+    "test:integration": "node --env-file-if-exists=../.env ../node_modules/vitest/vitest.mjs run --configLoader runner --config vitest.config.ts tests/integration",
     "prisma:generate": "node --env-file-if-exists=../.env ../node_modules/prisma/build/index.js generate",
     "prisma:migrate": "node --env-file-if-exists=../.env ../node_modules/prisma/build/index.js migrate deploy",
     "db:seed": "tsx --env-file-if-exists=../.env src/seed/seed.ts"

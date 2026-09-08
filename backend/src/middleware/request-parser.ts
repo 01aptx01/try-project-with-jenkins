@@ -9,12 +9,31 @@ export function requireJsonContentType(request: Request, _response: Response, ne
   const method = request.method.toUpperCase();
   if (method === "POST" || method === "PUT" || method === "PATCH") {
     const contentType = request.headers["content-type"];
-    const hasBody = request.headers["content-length"] !== undefined && request.headers["content-length"] !== "0";
+    const contentLength = request.headers["content-length"];
+    const transferEncoding = request.headers["transfer-encoding"];
+    const isChunked =
+      typeof transferEncoding === "string" &&
+      transferEncoding.toLowerCase().includes("chunked");
+    const hasBody =
+      (contentLength !== undefined && contentLength !== "0") || isChunked;
 
-    // For login or mutation routes with body, require application/json
+    // For mutation routes with body or Content-Type header, require strict JSON MIME type
     if (hasBody || contentType !== undefined) {
-      if (!contentType || !contentType.toLowerCase().includes("application/json")) {
-        return next(new UnsupportedMediaTypeError("Content-Type must be application/json"));
+      if (!contentType) {
+        return next(
+          new UnsupportedMediaTypeError("Content-Type header is required for request body")
+        );
+      }
+
+      // Express request.is checks full MIME type and parameters (e.g. application/json; charset=utf-8)
+      // Strictly rejects lookalike types such as text/application/json or application/jsonp
+      const isJson = Boolean(
+        request.is("application/json") || request.is("application/*+json")
+      );
+      if (!isJson) {
+        return next(
+          new UnsupportedMediaTypeError("Content-Type must be application/json")
+        );
       }
     }
   }

@@ -19,20 +19,18 @@ import {
 } from "../../../src/seed/catalogue.js";
 import { createTestHarness, type TestHarness } from "../../support/test-harness.js";
 
-describe("Live Caddy Reverse Proxy Smoke Tests (Container Routing)", () => {
+describe("Live Caddy Reverse Proxy Smoke Tests (Container Routing - Fail-Closed)", () => {
   let harness: TestHarness;
   let server: Server;
   const caddyPort = process.env.CADDY_PORT || "8081";
   const proxyOrigin = `http://localhost:${caddyPort}`;
   const caddyBaseUrl = `http://127.0.0.1:${caddyPort}`;
 
-  let caddyAvailable = false;
-
   beforeAll(async () => {
-    // 1. Check if Caddy container is actively listening
+    // 1. Check if Caddy container is actively listening (Fail-Closed AUD-M3-001)
+    let caddyAvailable = false;
     try {
-      const ping = await fetch(`${caddyBaseUrl}/health`, { signal: AbortSignal.timeout(1500) });
-      // Caddy without backend returns 502 Bad Gateway with Server: Caddy
+      const ping = await fetch(`${caddyBaseUrl}/health`, { signal: AbortSignal.timeout(2000) });
       const serverHeader = ping.headers.get("server") ?? "";
       if (serverHeader.toLowerCase().includes("caddy") || ping.status === 502) {
         caddyAvailable = true;
@@ -42,8 +40,10 @@ describe("Live Caddy Reverse Proxy Smoke Tests (Container Routing)", () => {
     }
 
     if (!caddyAvailable) {
-      console.warn(`[Live Caddy Smoke] Caddy container is not reachable on ${caddyBaseUrl}. Skipping live network tests.`);
-      return;
+      throw new Error(
+        `[AUD-M3-001 Fail-Closed Gate] Mandatory Caddy reverse proxy container is NOT reachable at ${caddyBaseUrl}. ` +
+        `Start Caddy via 'npm run proxy:up' before running live proxy acceptance tests.`
+      );
     }
 
     harness = await createTestHarness();
@@ -78,7 +78,7 @@ describe("Live Caddy Reverse Proxy Smoke Tests (Container Routing)", () => {
         const authRouter = createAuthRouter({
           authController,
           authGuard,
-          rateLimiterOptions: { windowMs: 60 * 1000, max: 20 },
+          rateLimiterOptions: { windowMs: 60 * 1000, max: 4 },
         });
         const clientRouter = createClientRouter({
           clientController,
@@ -108,8 +108,6 @@ describe("Live Caddy Reverse Proxy Smoke Tests (Container Routing)", () => {
   });
 
   it("routes /health through Caddy container to backend API", async () => {
-    if (!caddyAvailable) return;
-
     const res = await fetch(`${caddyBaseUrl}/health`);
     expect(res.status).toBe(200);
     const healthServerHeader = res.headers.get("server");
@@ -123,8 +121,6 @@ describe("Live Caddy Reverse Proxy Smoke Tests (Container Routing)", () => {
   });
 
   it("routes /api/auth/login and /api/clients through Caddy container with cookie and Origin", async () => {
-    if (!caddyAvailable) return;
-
     // 1. Login via Caddy
     const loginRes = await fetch(`${caddyBaseUrl}/api/auth/login`, {
       method: "POST",
@@ -178,5 +174,38 @@ describe("Live Caddy Reverse Proxy Smoke Tests (Container Routing)", () => {
     const clientsBody = (await clientsRes.json()) as { items: unknown[]; total: number };
     expect(clientsBody.total).toBe(15);
     expect(clientsBody.items).toHaveLength(15);
+  });
+
+  it("enforces Origin guard for requests through Caddy (rejects wrong or missing Origin)", async () => {
+    // Wrong Origin
+    const wrongOriginRes = await fetch(`${caddyBaseUrl}/api/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Origin: "http://malicious-origin.com",
+      },
+      body: JSON.stringify({
+        email: SEED_RM_1_EMAIL,
+        password: "Password123!",
+      }),
+    });
+
+    expect(wrongOriginRes.status).toBe(403);
+    const wrongBody = (await wrongOriginRes.json()) as { error: { code: string } };
+    expect(wrongBody.error.code).toBe("FORBIDDEN");
+
+    // Missing Origin
+    const missingOriginRes = await fetch(`${caddyBaseUrl}/api/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: SEED_RM_1_EMAIL,
+        password: "Password123!",
+      }),
+    });
+
+    expect(missingOriginRes.status).toBe(403);
   });
 });

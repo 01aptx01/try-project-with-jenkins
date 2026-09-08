@@ -5,6 +5,18 @@ const expectedPort = "5433";
 const expectedUser = "meridian_test";
 const allowedHosts = new Set(["127.0.0.1", "localhost", "[::1]"]);
 
+export function redactDatabaseUrl(rawUrl: string): string {
+  try {
+    const parsed = new URL(rawUrl);
+    if (parsed.password) {
+      parsed.password = "******";
+    }
+    return parsed.toString();
+  } catch {
+    return "[invalid-url]";
+  }
+}
+
 export function assertTestDatabaseUrl(
   url: string | undefined,
   primaryDbUrl: string | undefined = process.env.DATABASE_URL
@@ -31,7 +43,7 @@ export function assertTestDatabaseUrl(
     parsed.username !== expectedUser
   ) {
     throw new Error(
-      `TEST_DATABASE_URL must use ${expectedUser}@localhost:${expectedPort}/${expectedDatabaseName}, received: ${url}`
+      `TEST_DATABASE_URL must use ${expectedUser}@localhost:${expectedPort}/${expectedDatabaseName}, received: ${redactDatabaseUrl(url)}`
     );
   }
 }

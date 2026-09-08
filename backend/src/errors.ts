@@ -78,7 +78,8 @@ export function isPrismaDependencyError(error: unknown): boolean {
   if (error instanceof Prisma.PrismaClientRustPanicError) return true;
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     // P1xxx codes in Prisma indicate connection, host, or timeout failures
-    return error.code.startsWith("P1");
+    // P2024 indicates connection pool timeout (Timed out fetching a new connection from the pool)
+    return error.code.startsWith("P1") || error.code === "P2024";
   }
   return false;
 }

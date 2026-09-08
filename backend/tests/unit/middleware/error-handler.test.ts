@@ -101,6 +101,48 @@ describe("HTTP Middleware, Parsing, and Error Handling", () => {
     });
   });
 
+  it("strictly validates Content-Type media types (AUD-M3-004)", async () => {
+    const app = createApp({
+      ...dummyDependencies,
+      configureRoutes: (a) => {
+        a.post("/test-endpoint", (_req, res) => res.status(200).json({ ok: true }));
+      },
+    });
+
+    // 1. Accepts application/json with charset
+    const validCharset = await request(app)
+      .post("/test-endpoint")
+      .set("Content-Type", "application/json; charset=utf-8")
+      .send(JSON.stringify({ ok: true }));
+    expect(validCharset.status).toBe(200);
+
+    // 2. Accepts application/*+json (structured JSON suffix)
+    const validStructured = await request(app)
+      .post("/test-endpoint")
+      .set("Content-Type", "application/problem+json")
+      .send(JSON.stringify({ ok: true }));
+    expect(validStructured.status).toBe(200);
+
+    // 3. Strictly rejects lookalike text/application/json
+    const lookalike1 = await request(app)
+      .post("/test-endpoint")
+      .set("Content-Type", "text/application/json")
+      .send('{"data":1}');
+    expect(lookalike1.status).toBe(415);
+
+    // 4. Strictly rejects lookalike application/jsonp
+    const lookalike2 = await request(app)
+      .post("/test-endpoint")
+      .set("Content-Type", "application/jsonp")
+      .send('callback({"data":1})');
+    expect(lookalike2.status).toBe(415);
+
+    // 5. Allows POST without body and without Content-Type
+    const emptyPost = await request(app)
+      .post("/test-endpoint");
+    expect(emptyPost.status).toBe(200);
+  });
+
   it("handles known ApiError instances with custom status and codes", async () => {
     const app = createApp({
       ...dummyDependencies,
@@ -163,6 +205,30 @@ describe("HTTP Middleware, Parsing, and Error Handling", () => {
     const res2 = await request(app).get("/prisma-timeout-fail");
     expect(res2.status).toBe(503);
     expect(res2.body.error).toMatchObject({ code: "DEPENDENCY_UNAVAILABLE" });
+  });
+
+  it("returns 503 when Prisma connection pool timeout (P2024) occurs", async () => {
+    const app = createApp({
+      ...dummyDependencies,
+      configureRoutes: (a) => {
+        a.get("/prisma-pool-timeout", () => {
+          throw new Prisma.PrismaClientKnownRequestError(
+            "Timed out fetching a new connection from the pool. Please consider increasing the pool size; current limit: 10.",
+            {
+              code: "P2024",
+              clientVersion: "6.0.0",
+            }
+          );
+        });
+      },
+    });
+
+    const res = await request(app).get("/prisma-pool-timeout");
+    expect(res.status).toBe(503);
+    expect(res.body.error).toMatchObject({
+      code: "DEPENDENCY_UNAVAILABLE",
+      message: "Database dependency is currently unavailable",
+    });
   });
 
   it("returns 500 without leaking stack traces or credentials on unexpected errors", async () => {
