@@ -9,12 +9,29 @@ const server = app.listen(config.API_PORT, "0.0.0.0", () => {
   console.info(`Meridian API listening on port ${config.API_PORT}`);
 });
 
-async function shutdown() {
-  server.close(async () => {
-    await prisma.$disconnect();
-    process.exit(0);
+let isShuttingDown = false;
+async function shutdown(signal: string) {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  console.info(`Received ${signal}. Shutting down Meridian API gracefully...`);
+
+  const forceTimeout = setTimeout(() => {
+    console.error("Forced shutdown due to timeout.");
+    process.exit(1);
+  }, 5000);
+  forceTimeout.unref();
+
+  server.closeIdleConnections?.();
+  server.close(async (error) => {
+    clearTimeout(forceTimeout);
+    try {
+      await prisma.$disconnect();
+    } catch (disconnectError) {
+      console.error("Error disconnecting Prisma:", disconnectError);
+    }
+    process.exit(error ? 1 : 0);
   });
 }
 
-process.once("SIGINT", shutdown);
-process.once("SIGTERM", shutdown);
+process.once("SIGINT", () => void shutdown("SIGINT"));
+process.once("SIGTERM", () => void shutdown("SIGTERM"));

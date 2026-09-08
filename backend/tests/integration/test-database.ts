@@ -26,7 +26,7 @@ export function getTestDatabaseUrl(environment: NodeJS.ProcessEnv = process.env)
 
 export async function createVerifiedTestDatabase(environment: NodeJS.ProcessEnv = process.env): Promise<PrismaClient> {
   const client = new PrismaClient({ datasources: { db: { url: getTestDatabaseUrl(environment) } } });
-  const rows = await client.$queryRawUnsafe("SELECT current_database() AS \"databaseName\"") as Array<{ databaseName: string }>;
+  const rows = await client.$queryRaw`SELECT current_database() AS "databaseName"` as Array<{ databaseName: string }>;
   if (rows[0]?.databaseName !== expectedDatabaseName) {
     await client.$disconnect();
     throw new Error("Connected database does not match the approved integration-test database");

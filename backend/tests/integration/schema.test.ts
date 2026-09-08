@@ -5,7 +5,7 @@ describe("integration test database", () => {
   it("is the isolated database and has the committed schema", async () => {
     const database = await createVerifiedTestDatabase();
     try {
-      const rows = await database.$queryRawUnsafe("SELECT to_regclass('public.users')::text AS relation") as Array<{ relation: string | null }>;
+      const rows = await database.$queryRaw`SELECT to_regclass('public.users')::text AS relation` as Array<{ relation: string | null }>;
       expect(rows[0]?.relation).toBe("users");
     } finally {
       await database.$disconnect();

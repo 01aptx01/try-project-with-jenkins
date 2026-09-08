@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import express, { type NextFunction, type Request, type Response } from "express";
+import helmet from "helmet";
 import { ApiError, DependencyUnavailableError } from "./errors.js";
 import { checkReadiness, type DatabaseReadiness } from "./health/readiness.js";
 
@@ -10,7 +11,7 @@ export interface AppDependencies {
 
 export function createApp(dependencies: AppDependencies) {
   const app = express();
-  app.disable("x-powered-by");
+  app.use(helmet());
   app.use((_request, response, next) => {
     response.locals.requestId = randomUUID();
     next();
@@ -32,11 +33,12 @@ export function createApp(dependencies: AppDependencies) {
 
 function errorHandler(error: unknown, _request: Request, response: Response, _next: NextFunction) {
   void _next;
-  const requestId = response.locals.requestId as string;
+  const requestId = (response.locals.requestId as string) || randomUUID();
   if (error instanceof ApiError) {
     return response.status(error.status).json({ error: { code: error.code, message: error.message, requestId } });
   }
 
+  console.error(`[${requestId}] Unhandled internal server error:`, error);
   const internalError = new ApiError(500, "INTERNAL_ERROR", "An unexpected error occurred");
   return response.status(internalError.status).json({ error: { code: internalError.code, message: internalError.message, requestId } });
 }
