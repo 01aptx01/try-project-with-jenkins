@@ -579,6 +579,24 @@
 
 **M4-016 Verdict:** **DONE / PASS**
 
+---
+
+## 22. Checkpoint F & Milestone 4 Final Sign-off
+
+- [x] All 17 tickets (M4-001 through M4-017) are 100% DONE in `tasks/milestone-4/todo.md`.
+- [x] All 6 Checkpoints (A through F) are formally verified and closed with zero deferred items.
+- [x] Usability & Accessibility audit completed following `wcag-audit` skill (Issues `#C1`–`#C3`, `#F1`–`#F3`, `#T1`, `#S1`, `#M1`, `#R1` remediated and re-verified).
+- [x] Handover document prepared at `tasks/milestone-4/handover.md` articulating handover scope and test gaps for Milestone 5.
+- [x] README.md updated reflecting Milestone 4 completion, development origin, seed credentials, and command documentation.
+- [x] Quality Gates Summary:
+  - Unit tests: 284 passed (Backend 171 tests, Frontend 113 tests across 38 suites)
+  - Typecheck: 0 errors (`tsc --noEmit` across `@meridian/api` and `@meridian/web`)
+  - Lint: 0 errors (ESLint across workspace)
+  - Security audit: 0 vulnerabilities (`npm audit`)
+  - Production build: Clean compilation of all routes with Next.js Turbopack
+- [x] **Milestone 4 is formally CLOSED and ready for Milestone 5.**
+
+
 
 
 

@@ -1,10 +1,10 @@
 # Meridian
 
-แผน Milestone 4: [Dashboard, Profile and Family views](tasks/milestone-4/plan.md) และ [tickets M4-001–017](tasks/milestone-4/todo.md) — สถานะเริ่มต้น TODO; ยังเป็นแผนสำหรับพัฒนา
+ผลการส่งมอบ Milestone 4: [Dashboard, Profile and Family views](tasks/milestone-4/handover.md) และ [tickets M4-001–017](tasks/milestone-4/todo.md) — สถานะเสร็จสมบูรณ์ 100% (DONE) พร้อมส่งต่อ Milestone 5
 
 Meridian เป็น prototype สำหรับ Relationship Manager (RM) เอกสารผลิตภัณฑ์ฉบับปัจจุบันอยู่ที่ [docs/context/README.md](docs/context/README.md); [meridian_project_context.md](meridian_project_context.md) เป็นเอกสารต้นฉบับเพื่ออ้างอิงประวัติ
 
-## Milestone 1 & 3 local development
+## Milestone 1–4 local development
 
 ต้องมี Node.js 22.14–25, npm 10 ขึ้นไป และ Docker Desktop ที่กำลังทำงาน ใช้ Node สำหรับ Next.js/Express บนเครื่อง และใช้ Docker เฉพาะ PostgreSQL/Caddy
 
@@ -58,4 +58,4 @@ npm run build
 npm run test:integration
 ```
 
-ผลทดสอบจริงและสถานะ tickets อยู่ใน [tasks/milestone-1/todo.md](tasks/milestone-1/todo.md), [tasks/milestone-2/todo.md](tasks/milestone-2/todo.md) และ [tasks/milestone-3/todo.md](tasks/milestone-3/todo.md) โดยแยกจากแผนใน [tasks/milestone-1/plan.md](tasks/milestone-1/plan.md), [tasks/milestone-2/plan.md](tasks/milestone-2/plan.md) และ [tasks/milestone-3/plan.md](tasks/milestone-3/plan.md) รายละเอียดส่งมอบ Milestone 3 ไปยัง Milestone 4 อยู่ใน [tasks/milestone-3/handover.md](tasks/milestone-3/handover.md)
+ผลทดสอบจริงและสถานะ tickets อยู่ใน [tasks/milestone-1/todo.md](tasks/milestone-1/todo.md), [tasks/milestone-2/todo.md](tasks/milestone-2/todo.md), [tasks/milestone-3/todo.md](tasks/milestone-3/todo.md) และ [tasks/milestone-4/todo.md](tasks/milestone-4/todo.md) รายละเอียดส่งมอบ Milestone 4 ไปยัง Milestone 5 อยู่ใน [tasks/milestone-4/handover.md](tasks/milestone-4/handover.md)

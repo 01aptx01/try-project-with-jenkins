@@ -515,7 +515,7 @@
 
 ## M4-017 — ตรวจรับ M4 และส่งต่อ M5
 
-**Status:** TODO  
+**Status:** DONE  
 **Scope:** M  
 **Requirements:** FR-01–12 เฉพาะ UI; NFR-04, NFR-06; handover ไป M5
 
@@ -523,14 +523,14 @@
 
 **Acceptance criteria:**
 
-- [ ] README อธิบาย development origin/APP_ORIGIN, db seed แบบ idempotent, test DB, การรัน frontend/backend/proxy และ commands โดยใช้ชื่อ scripts จริง; clean-checkout root checks ผ่าน ไม่มี secrets หรือ generated outputs ใน diff
-- [ ] Manual browser smoke ผ่าน Caddy ครบ login→dashboard→search/filter/page→profile→family→logout; ใช้ normal seed 2 RM/30 Clients และ anomaly/cross-RM fixtures เฉพาะ isolated test environment พร้อมยืนยัน 404/expired session/incomplete display
-- [ ] Verification/handover บันทึก date/full SHA/environment/commands/results และ evidence ต่อ FR/US/ticket; ไม่ปิด ticket ด้วย mock tests อย่างเดียวสำหรับ browser-cookie/Origin/ownership และไม่อ้างผ่าน M5/M6/performance/automated E2E ที่ยังไม่ทำ
+- [x] README อธิบาย development origin/APP_ORIGIN, db seed แบบ idempotent, test DB, การรัน frontend/backend/proxy และ commands โดยใช้ชื่อ scripts จริง; clean-checkout root checks ผ่าน ไม่มี secrets หรือ generated outputs ใน diff
+- [x] Manual browser smoke ผ่าน Caddy ครบ login→dashboard→search/filter/page→profile→family→logout; ใช้ normal seed 2 RM/30 Clients และ anomaly/cross-RM fixtures เฉพาะ isolated test environment พร้อมยืนยัน 404/expired session/incomplete display
+- [x] Verification/handover บันทึก date/full SHA/environment/commands/results และ evidence ต่อ FR/US/ticket; ไม่ปิด ticket ด้วย mock tests อย่างเดียวสำหรับ browser-cookie/Origin/ownership และไม่อ้างผ่าน M5/M6/performance/automated E2E ที่ยังไม่ทำ
 
 **Verification:**
 
-- [ ] root lint/typecheck/test:unit/test:integration/build ตาม plan; manual smoke และ links/diff check; ถ้า command fail ให้บันทึก BLOCKED พร้อมสาเหตุจริง
-- [ ] บันทึก evidence ใน verification record และอัปเดตสถานะตามผลจริง
+- [x] root lint/typecheck/test:unit/test:integration/build ตาม plan; manual smoke และ links/diff check; ถ้า command fail ให้บันทึก BLOCKED พร้อมสาเหตุจริง
+- [x] บันทึก evidence ใน verification record และอัปเดตสถานะตามผลจริง
 
 **Dependencies:** M4-016 และ M4-001–015 DONE
 
@@ -543,6 +543,6 @@
 
 ### Checkpoint F — Milestone 4 acceptance
 
-- [ ] M4-001–017 มี evidence; root checks และ Caddy smoke ผ่าน; requirements mapping และ M5 handover มีผลจริงและข้อจำกัด
-- [ ] ทบทวนผลและ blockers ก่อนงานที่พึ่งพา; ไม่ใช้จำนวน tests หรือคะแนน audit แทน acceptance evidence
+- [x] M4-001–017 มี evidence; root checks และ Caddy smoke ผ่าน; requirements mapping และ M5 handover มีผลจริงและข้อจำกัด
+- [x] ทบทวนผลและ blockers ก่อนงานที่พึ่งพา; ไม่ใช้จำนวน tests หรือคะแนน audit แทน acceptance evidence
 
