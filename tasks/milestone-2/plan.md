@@ -39,4 +39,6 @@ M2-001 → M2-002 → M2-003 ───────┐
 - Task checklist: [todo.md](todo.md)
 - Milestone 1 plan: [tasks/milestone-1/plan.md](../milestone-1/plan.md)
 - Milestone 1 tickets: [tasks/milestone-1/todo.md](../milestone-1/todo.md)
+- Milestone 3 plan: [tasks/milestone-3/plan.md](../milestone-3/plan.md)
+- Milestone 3 tickets: [tasks/milestone-3/todo.md](../milestone-3/todo.md)
 

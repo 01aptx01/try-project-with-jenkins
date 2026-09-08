@@ -51,4 +51,4 @@ npm run build
 npm run test:integration
 ```
 
-ผลทดสอบจริงและสถานะ tickets อยู่ใน [tasks/milestone-1/todo.md](tasks/milestone-1/todo.md) และ [tasks/milestone-2/todo.md](tasks/milestone-2/todo.md) โดยแยกจากแผนใน [tasks/milestone-1/plan.md](tasks/milestone-1/plan.md) และ [tasks/milestone-2/plan.md](tasks/milestone-2/plan.md)
+ผลทดสอบจริงและสถานะ tickets อยู่ใน [tasks/milestone-1/todo.md](tasks/milestone-1/todo.md), [tasks/milestone-2/todo.md](tasks/milestone-2/todo.md) และ [tasks/milestone-3/todo.md](tasks/milestone-3/todo.md) โดยแยกจากแผนใน [tasks/milestone-1/plan.md](tasks/milestone-1/plan.md), [tasks/milestone-2/plan.md](tasks/milestone-2/plan.md) และ [tasks/milestone-3/plan.md](tasks/milestone-3/plan.md)

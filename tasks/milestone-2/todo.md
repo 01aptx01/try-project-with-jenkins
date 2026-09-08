@@ -241,7 +241,7 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
   - `npm run typecheck`: 0 TypeScript compiler errors across workspaces with strict settings.
   - `npm run build`: both `@meridian/api` (TypeScript) and `@meridian/web` (Next.js Turbopack) built cleanly.
 - [x] Environment: Windows host, Node `v25.2.1`, npm `11.6.2`, Vitest `v3.2.7`.
-- [x] Boundary scope verified: M2 delivers pure financial calculation functions. RM ownership authorization, Express endpoints, PostgreSQL queries, pagination, normal seed, and UI views remain deferred to Milestone 3.
+- [x] Boundary scope verified: M2 delivers pure financial calculation functions. RM ownership authorization, Express endpoints, PostgreSQL queries, pagination, normal seed, and UI views remain deferred to Milestone 3 (ดูแผนและ tickets ต่อเนื่องที่ [tasks/milestone-3/plan.md](../milestone-3/plan.md) และ [tasks/milestone-3/todo.md](../milestone-3/todo.md)).
 
 **Dependencies:** M2-001–009  
 **Files likely touched:**
