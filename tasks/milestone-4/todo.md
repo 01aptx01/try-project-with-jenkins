@@ -352,7 +352,7 @@
 
 ## M4-012 — แสดง NBA และ Summary จาก snapshot
 
-**Status:** TODO  
+**Status:** DONE  
 **Scope:** M  
 **Requirements:** FR-09, FR-10, FR-12, US-07, US-09, US-16, BR-05, BR-06
 
@@ -360,14 +360,14 @@
 
 **Acceptance criteria:**
 
-- [ ] NBA แสดงหนึ่ง object เท่านั้น มี action/reason/priority/rule และใช้ Priority badge เดิม; รวม Review Client Data MEDIUM ที่ backend เลือกเมื่อ incomplete
-- [ ] Summary แสดง string จาก snapshot เป็น text และใช้ primaryGoal/Health/NBA ใน snapshot เดียวกัน; ไม่ parse text เพื่อสร้าง recommendation ใหม่ ไม่ใช้ HTML injection
-- [ ] Tests ครอบคลุมทุก recommendation action, insufficient และข้อความพิเศษ; payload เดียวกันให้ action/reason ที่ตรงใน Dashboard/Profile/Summary และไม่มี sub-endpoint fetch เพิ่ม
+- [x] NBA แสดงหนึ่ง object เท่านั้น มี action/reason/priority/rule และใช้ Priority badge เดิม; รวม Review Client Data MEDIUM ที่ backend เลือกเมื่อ incomplete
+- [x] Summary แสดง string จาก snapshot เป็น text และใช้ primaryGoal/Health/NBA ใน snapshot เดียวกัน; ไม่ parse text เพื่อสร้าง recommendation ใหม่ ไม่ใช้ HTML injection
+- [x] Tests ครอบคลุมทุก recommendation action, insufficient และข้อความพิเศษ; payload เดียวกันให้ action/reason ที่ตรงใน Dashboard/Profile/Summary และไม่มี sub-endpoint fetch เพิ่ม
 
 **Verification:**
 
-- [ ] focused tests tests/recommendation-summary.test.tsx ร่วมกับ morning/profile tests; assertion ค่าเดียวกันใน shared fixture
-- [ ] บันทึก evidence ใน verification record และอัปเดตสถานะตามผลจริง
+- [x] focused tests tests/recommendation-summary.test.tsx ร่วมกับ morning/profile tests; assertion ค่าเดียวกันใน shared fixture
+- [x] บันทึก evidence ใน verification record (`tasks/milestone-4/verification.md`) และอัปเดตสถานะตามผลจริง
 
 **Dependencies:** M4-009, M4-011
 
@@ -380,8 +380,8 @@
 
 ### Checkpoint D — Financial explanation
 
-- [ ] Profile แสดงข้อมูลการเงิน/Goals/Health/NBA/Summary จาก payload เดียว; complete/incomplete อ่านได้; frontend suite/build ผ่าน
-- [ ] ทบทวนผลและ blockers ก่อนงานที่พึ่งพา; ไม่ใช้จำนวน tests หรือคะแนน audit แทน acceptance evidence
+- [x] Profile แสดงข้อมูลการเงิน/Goals/Health/NBA/Summary จาก payload เดียว; complete/incomplete อ่านได้; frontend suite/build ผ่าน
+- [x] ทบทวนผลและ blockers ก่อนงานที่พึ่งพา; ไม่ใช้จำนวน tests หรือคะแนน audit แทน acceptance evidence
 
 <a id="m4-013"></a>
 

@@ -3,9 +3,11 @@
 import React from 'react';
 import Link from 'next/link';
 import { useClientProfile } from '../hooks/use-client-profile.js';
-import { PriorityBadge, HealthBadge, RiskBadge } from './ui/badges.js';
+import { HealthBadge, RiskBadge } from './ui/badges.js';
 import { FinancialProfilePanel, GoalsPanel } from './financial-details.js';
 import { HealthPanel } from './health-panel.js';
+import { SummaryPanel } from './summary-panel.js';
+import { RecommendationCard } from './recommendation-card.js';
 import type { ClientProfileSnapshotResponse } from '../lib/api-contracts.js';
 
 export interface ClientProfileProps {
@@ -263,76 +265,10 @@ export function ClientProfile({ clientId }: ClientProfileProps) {
           </div>
 
           {/* AI Executive Summary Card */}
-          <section
-            aria-labelledby="summary-heading"
-            style={{
-              padding: '1.25rem 1.5rem',
-              backgroundColor: 'var(--bg-surface)',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border-color)',
-            }}
-          >
-            <h2
-              id="summary-heading"
-              style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text-primary)' }}
-            >
-              Portfolio Summary
-            </h2>
-            <p
-              data-testid="profile-summary-text"
-              style={{
-                marginTop: '0.5rem',
-                fontSize: '0.9375rem',
-                lineHeight: 1.6,
-                color: 'var(--text-secondary)',
-              }}
-            >
-              {data.summary}
-            </p>
-          </section>
+          <SummaryPanel summary={data.summary} />
 
           {/* Next Best Action Card */}
-          <section
-            aria-labelledby="nba-heading"
-            style={{
-              padding: '1.25rem 1.5rem',
-              backgroundColor: 'var(--bg-surface)',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border-color)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.75rem',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <h2
-                id="nba-heading"
-                style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text-primary)' }}
-              >
-                Next Best Action
-              </h2>
-              <PriorityBadge priority={data.recommendation.priority} />
-            </div>
-
-            <div>
-              <div
-                data-testid="profile-nba-action"
-                style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}
-              >
-                {data.recommendation.action}
-              </div>
-              <p
-                data-testid="profile-nba-reason"
-                style={{
-                  marginTop: '0.25rem',
-                  fontSize: '0.875rem',
-                  color: 'var(--text-secondary)',
-                }}
-              >
-                {data.recommendation.reason}
-              </p>
-            </div>
-          </section>
+          <RecommendationCard recommendation={data.recommendation} />
 
           {/* Financial Health Analysis Panel */}
           <HealthPanel health={data.health} />

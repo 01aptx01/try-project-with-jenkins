@@ -380,6 +380,53 @@
 
 **M4-011 Verdict:** **DONE / PASS**
 
+---
+
+## 15. M4-012 Verification Record: NBA & Summary Display from Snapshot
+
+### 15.1 Artifacts Delivered
+- Next Best Action component: `frontend/components/recommendation-card.tsx`
+  - Displays exactly one recommendation faithfully from snapshot.
+  - Renders action name, reason text, rule ID badge (`BR-04.1` through `BR-04.6`), and priority badge (`HIGH`, `MEDIUM`, `LOW`).
+  - No client-side recalculation or alternate action generation.
+- Portfolio summary component: `frontend/components/summary-panel.tsx`
+  - Renders executive portfolio summary text safely as plain text without HTML injection risks.
+  - Standardized card layout matching design system tokens.
+- Integration: `frontend/components/client-profile.tsx` renders `SummaryPanel` and `RecommendationCard`.
+- Unit tests: `frontend/tests/recommendation-summary.test.tsx` (8 test cases)
+  - All 6 recommendation rules tested with their mapped actions and priority levels:
+    - BR-04.1: Review Client Data (MEDIUM)
+    - BR-04.2: Review Emergency Fund (HIGH)
+    - BR-04.3: Review Debt Position (HIGH)
+    - BR-04.4: Review Goal Funding (MEDIUM)
+    - BR-04.5: Schedule Financial Health Review (MEDIUM)
+    - BR-04.6: Routine Financial Review (LOW)
+  - Safe plain-text rendering preventing XSS / script execution.
+  - Standard clean text rendering.
+
+### 15.2 Test Results
+- **Command:** `npm run test:unit -w @meridian/web`
+- **Output:** 80 tests passed across 12 test files (`api-client.test.ts` 15, `financial-details.test.tsx` 11, `client-filters.test.tsx` 10, `recommendation-summary.test.tsx` 8, `client-pagination.test.tsx` 6, `login.test.tsx` 6, `morning-action-plan.test.tsx` 5, `health-panel.test.tsx` 5, `client-list.test.tsx` 5, `session-shell.test.tsx` 4, `client-profile.test.tsx` 4, `home.test.tsx` 1)
+- **All Workspace Unit Tests:** 251 tests passed across 34 test files (Backend 171 tests, Frontend 80 tests)
+- **Lint & Typecheck:** 0 errors across `@meridian/api` and `@meridian/web`
+- **Security Audit:** `npm audit` returned 0 vulnerabilities
+- **Production Build:** `npm run build` cleanly compiled with Turbopack
+
+**M4-012 Verdict:** **DONE / PASS**
+
+---
+
+## 16. Checkpoint D Verification Sign-off
+
+- [x] Financial metrics formatted without float loss and zero vs null strictly preserved (`M4-010`)
+- [x] Primary goal and active goals table rendered with on-track progress and status badges (`M4-010`)
+- [x] Complete 5-pillar health score breakdown and INSUFFICIENT_DATA verbatim missing fields handled (`M4-011`)
+- [x] Next Best Action (single action, rule badge, priority badge) and Executive Summary safely rendered from snapshot (`M4-012`)
+- [x] Zero extra sub-endpoint requests (`/health`, `/recommendation`, `/summary`) executed; single snapshot integrity preserved
+- [x] Frontend unit tests (80/80 passed), Workspace unit tests (251/251 passed), Lint (0 errors), Typecheck (0 errors), Build (clean), Audit (0 vulnerabilities)
+- [x] Ready to proceed to Checkpoint E (`M4-013` through `M4-015`)
+
+
 
 
 

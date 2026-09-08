@@ -21,6 +21,7 @@ export function PriorityBadge({ priority }: { priority: PriorityLevel }) {
 
   return (
     <span
+      data-testid="priority-badge"
       style={{
         display: 'inline-flex',
         alignItems: 'center',
