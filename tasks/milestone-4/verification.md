@@ -107,3 +107,29 @@
 - [x] LoginForm tested and operational, handling success redirect, 401, 429 retry countdown, and accessibility
 - [x] Frontend unit tests (22/22 passed), lint (0 errors), typecheck (0 errors), build (clean)
 - [x] Ready to proceed to Checkpoint B (`M4-004` through `M4-006`)
+
+---
+
+## 5. M4-004 Verification Record: Session Shell & Protected Navigation
+
+### 5.1 Artifacts Delivered
+- Session context & provider: `frontend/components/session-provider.tsx`
+  - Revalidates session on mount via `api.getMe()`
+  - Enforces `requireAuth`: redirects to `/login` immediately if session is unauthorized (`401`)
+  - Clears local user state on unmount and logout
+- Application shell: `frontend/components/app-shell.tsx`
+  - Sticky header with accessible semantic `<nav>`
+  - Navigation links to Morning Action Plan (`/dashboard`) and Clients (`/clients`) with `aria-current="page"`
+  - RM name & role badge display (`Sarah Jenkins (RM)`)
+  - Sign out button with accessible label, calls `api.logout()` and clears session
+- Route group layout: `frontend/app/(authenticated)/layout.tsx`
+- Dashboard page placeholder: `frontend/app/(authenticated)/dashboard/page.tsx`
+- Component tests: `frontend/tests/session-shell.test.tsx` (4 test cases)
+
+### 5.2 Test Results
+- **Command:** `npm run test:unit -w @meridian/web`
+- **Output:** 26 tests passed across 4 test files (`tests/api-client.test.ts` 15, `tests/home.test.tsx` 1, `tests/login.test.tsx` 6, `tests/session-shell.test.tsx` 4)
+- **Lint & Typecheck:** 0 errors across workspace
+- **Production Build:** `npm run build` cleanly compiled `/dashboard` and `(authenticated)` route group with zero errors.
+
+**M4-004 Verdict:** **DONE / PASS**

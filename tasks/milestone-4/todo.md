@@ -103,7 +103,7 @@
 
 ## M4-004 — สร้าง session shell และ protected navigation
 
-**Status:** TODO  
+**Status:** DONE  
 **Scope:** M  
 **Requirements:** FR-01, US-01, NFR-01, NFR-06
 
@@ -111,14 +111,14 @@
 
 **Acceptance criteria:**
 
-- [ ] Session provider มี checking/authenticated/unauthenticated/error states; /dashboard, /clients และ /clients/[id] ไม่ mount sensitive content ระหว่าง checking; direct link และ / redirect เข้าสู่ flow เดียวกัน
-- [ ] แสดงชื่อ RM, Dashboard/Clients navigation และ Logout; 401 ไป /login, 503/network มี Retry โดยไม่วน redirect; logout รอ 204 แล้ว clear state และ replace ไป login
-- [ ] Tests ตรวจ direct protected navigation, session checking, success, 401, 503 และ logout failure; ปรับ test หน้าแรกให้ตรง routing ใหม่
+- [x] Session provider มี checking/authenticated/unauthenticated/error states; /dashboard, /clients และ /clients/[id] ไม่ mount sensitive content ระหว่าง checking; direct link และ / redirect เข้าสู่ flow เดียวกัน
+- [x] แสดงชื่อ RM, Dashboard/Clients navigation และ Logout; 401 ไป /login, 503/network มี Retry โดยไม่วน redirect; logout รอ 204 แล้ว clear state และ replace ไป login
+- [x] Tests ตรวจ direct protected navigation, session checking, success, 401, 503 และ logout failure; ปรับ test หน้าแรกให้ตรง routing ใหม่
 
 **Verification:**
 
-- [ ] focused tests tests/session-shell.test.tsx และ tests/home.test.tsx; frontend build เพื่อยืนยัน route groups
-- [ ] บันทึก evidence ใน verification record และอัปเดตสถานะตามผลจริง
+- [x] focused tests `tests/session-shell.test.tsx` (4 passed) และ `tests/home.test.tsx` (1 passed); frontend build เพื่อยืนยัน route groups ผ่าน 100%
+- [x] บันทึก evidence ใน verification record (`tasks/milestone-4/verification.md`) และอัปเดตสถานะตามผลจริง
 
 **Dependencies:** M4-003
 
