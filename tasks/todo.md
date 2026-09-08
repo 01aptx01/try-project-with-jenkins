@@ -137,6 +137,6 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 - [x] Task plan separates requirements from runtime evidence.
 - [x] Integration tests and proxy checks pass against live services with a commit SHA recorded.
 
-**Verification:** Working tree is based on `2933d9efe6a82b995a9442260fecbf677f20cd3a`; Node `v25.2.1`, npm `11.6.2`; `npm ci`, Prisma generation, lint, typecheck, 14 unit tests, 2 integration tests and both builds passed on 2026-09-08. Development/test migrations, volume persistence, health recovery and Caddy routing have live evidence. `npm run test:integration` loads `.env` automatically via `--env-file-if-exists=../.env`. `npm audit --omit=dev` reports three high-severity records through Prisma CLI's `deepmerge-ts` dependency; no forced upgrade was applied.
+**Verification:** Committed under `662e15d` (based on `2933d9e`); Node `v25.2.1`, npm `11.6.2`; `npm ci`, Prisma generation, lint, typecheck, 14 unit tests, 2 integration tests and both builds passed on 2026-09-08. Development/test migrations, volume persistence, health recovery and Caddy routing have live evidence. `npm run test:integration` loads `.env` automatically via `--env-file-if-exists=../.env`. `npm audit --omit=dev` reports three high-severity records through Prisma CLI's `deepmerge-ts` dependency; no forced upgrade was applied.
 
 **Dependencies:** M1-001–M1-009
