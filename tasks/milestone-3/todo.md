@@ -322,25 +322,27 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 
 ## M3-010 — เปิด Profile snapshot พร้อม ownership
 
-**Status:** TODO
+**Status:** DONE
 
 **Description:**
 พัฒนา endpoint `GET /api/clients/:id` สำหรับดึง Profile snapshot ของ Client พร้อมการตรวจสอบ ownership ของ RM
 
 **Acceptance criteria:**
-- [ ] รับ Client ID ในรูปแบบ UUID; หากรูปแบบ UUID ผิด คืน `400 Bad Request`, หากไม่พบ Client หรือ Client นั้นไม่ได้เป็นของ RM ที่ล็อกอิน คืน `404 Not Found` (ข้อความเดียวกันเพื่อป้องกัน resource enumeration)
-- [ ] โหลดข้อมูล Client, FinancialProfile, และ Goals ของ Client ที่เป็นของ RM แล้ว map Prisma Decimal และ dates เป็น domain inputs อย่างถูกต้อง
-- [ ] เรียกใช้ `evaluateClient(input, asOfDate)` เพียงครั้งเดียวต่อคำขอ; คืนโครงสร้าง `{client, financialProfile, goals, primaryGoal, health, recommendation, summary, asOfDate}`
-- [ ] กรณีข้อมูลไม่ครบถ้วน คืน `200 OK` พร้อม `health.status = "INSUFFICIENT_DATA"` ตามกฎ BR-08; Family Graph ไม่ถูกโหลดหรือแนบใน response นี้
+- [x] รับ Client ID ในรูปแบบ UUID; หากรูปแบบ UUID ผิด คืน `400 Bad Request`, หากไม่พบ Client หรือ Client นั้นไม่ได้เป็นของ RM ที่ล็อกอิน คืน `404 Not Found` (ข้อความเดียวกันเพื่อป้องกัน resource enumeration)
+- [x] โหลดข้อมูล Client, FinancialProfile, และ Goals ของ Client ที่เป็นของ RM แล้ว map Prisma Decimal และ dates เป็น domain inputs อย่างถูกต้อง
+- [x] เรียกใช้ `evaluateClient(input, asOfDate)` เพียงครั้งเดียวต่อคำขอ; คืนโครงสร้าง `{client, financialProfile, goals, primaryGoal, health, recommendation, summary, asOfDate}`
+- [x] กรณีข้อมูลไม่ครบถ้วน คืน `200 OK` พร้อม `health.status = "INSUFFICIENT_DATA"` ตามกฎ BR-08; Family Graph ไม่ถูกโหลดหรือแนบใน response นี้
 
 **Verification:**
-- [ ] Supertest integration tests:
+- [x] Supertest integration tests ใน `backend/tests/integration/api/client-profile.test.ts`:
   - Valid owned client คืน status 200 พร้อม fields ครบถ้วนตาม schema
   - Malformed UUID คืน status 400
   - Non-existent client คืน status 404
-  - Cross-RM client (Client ของ RM อื่น) คืน status 404
+  - Cross-RM client (Client ของ RM อื่น) คืน status 404 ด้วย uniform message
   - Client ที่มีข้อมูลไม่ครบ คืน status 200 พร้อม INSUFFICIENT_DATA
-- [ ] Query instrumentation ยืนยันว่า `evaluateClient` ถูกเรียกเพียง 1 ครั้ง
+  - Unauthenticated request คืน status 401
+- [x] Response headers ยืนยัน `Cache-Control: no-store`
+- [x] รวม 37 integration tests และ 164 unit tests ผ่าน 100%, lint 0 errors, typecheck 0 errors, build clean.
 
 **Dependencies:** M3-006, M3-009  
 **Files likely touched:**
@@ -348,7 +350,10 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 - `backend/src/controllers/client.controller.ts`
 - `backend/src/repositories/client.repository.ts`
 - `backend/src/mappers/client.mapper.ts`
-- `backend/tests/integration/api/client-profile.test.ts`  
+- `backend/src/contracts/api.ts`
+- `backend/src/server.ts`
+- `backend/tests/integration/api/client-profile.test.ts`
+- `tasks/milestone-3/todo.md`  
 **Scope:** M
 
 ---

@@ -101,13 +101,13 @@ export interface ClientPersonalProfile {
 
 export interface ClientFinancialProfileDetail {
   id: string;
-  monthlyIncome: string;
-  monthlyExpense: string;
-  liquidAssets: string;
-  totalAssets: string;
-  totalDebt: string;
-  savings: string;
-  investments: string;
+  monthlyIncome: string | null;
+  monthlyExpense: string | null;
+  liquidAssets: string | null;
+  totalAssets: string | null;
+  totalDebt: string | null;
+  savings: string | null;
+  investments: string | null;
 }
 
 export interface ClientGoalDetail {
