@@ -199,7 +199,7 @@
 
 ## M4-007 — เพิ่ม Pagination และ browser history
 
-**Status:** TODO  
+**Status:** DONE  
 **Scope:** M  
 **Requirements:** FR-02, FR-04, BR-09, US-03, US-04
 
@@ -207,14 +207,14 @@
 
 **Acceptance criteria:**
 
-- [ ] Pagination ใช้ page/pageSize/total จาก API; default 20 และเลือก 20/50/100, disable Next/Previous ตามขอบเขต; page ที่เกินผลแสดง empty พร้อมกลับหน้าแรก ไม่เปลี่ยน total เป็นศูนย์เอง
-- [ ] Back/Forward และ link กลับจาก Profile คืน query/page เดิม; ไม่มี client-side re-sort/re-filter หรือแบ่งหน้าซ้ำ; invalid page/pageSize normalize ก่อน request
-- [ ] Tests ใช้ dataset fixture มากกว่า 20 แถวและ HIGH ที่อยู่ท้ายข้อมูลต้นทางเพื่อยืนยันว่าแสดงตาม server page; ตรวจ page-size change, total หลัง filter, history และ response race
+- [x] Pagination ใช้ page/pageSize/total จาก API; default 20 และเลือก 20/50/100, disable Next/Previous ตามขอบเขต; page ที่เกินผลแสดง empty พร้อมกลับหน้าแรก ไม่เปลี่ยน total เป็นศูนย์เอง
+- [x] Back/Forward และ link กลับจาก Profile คืน query/page เดิม; ไม่มี client-side re-sort/re-filter หรือแบ่งหน้าซ้ำ; invalid page/pageSize normalize ก่อน request
+- [x] Tests ใช้ dataset fixture มากกว่า 20 แถวและ HIGH ที่อยู่ท้ายข้อมูลต้นทางเพื่อยืนยันว่าแสดงตาม server page; ตรวจ page-size change, total หลัง filter, history และ response race
 
 **Verification:**
 
-- [ ] focused tests tests/client-pagination.test.tsx และ browser Back/Forward; frontend checks
-- [ ] บันทึก evidence ใน verification record และอัปเดตสถานะตามผลจริง
+- [x] focused tests tests/client-pagination.test.tsx (6 passed) และ browser Back/Forward; frontend checks
+- [x] บันทึก evidence ใน verification record (`tasks/milestone-4/verification.md`) และอัปเดตสถานะตามผลจริง
 
 **Dependencies:** M4-006
 

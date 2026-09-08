@@ -13,6 +13,7 @@ import type {
 } from '../lib/api-contracts.js';
 import { PriorityBadge, HealthBadge, RiskBadge } from './ui/badges.js';
 import { ClientFilters } from './client-filters.js';
+import { Pagination } from './pagination.js';
 import {
   normalizeClientQuery,
   buildClientQueryString,
@@ -133,6 +134,25 @@ export function ClientListView({ initialData }: ClientListViewProps) {
     router.push(pathname);
   };
 
+  const handlePageChange = (newPage: number) => {
+    const updatedQuery: ParsedClientQuery = {
+      ...currentQuery,
+      page: newPage,
+    };
+    const qs = buildClientQueryString(updatedQuery);
+    router.push(qs ? `${pathname}?${qs}` : pathname);
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    const updatedQuery: ParsedClientQuery = {
+      ...currentQuery,
+      pageSize: newPageSize,
+      page: 1, // Reset to page 1 on page size change
+    };
+    const qs = buildClientQueryString(updatedQuery);
+    router.push(qs ? `${pathname}?${qs}` : pathname);
+  };
+
   const hasFiltersApplied = Boolean(
     currentQuery.search || currentQuery.priority || currentQuery.health
   );
@@ -249,124 +269,164 @@ export function ClientListView({ initialData }: ClientListViewProps) {
           }}
         >
           <p style={{ fontSize: '1rem', fontWeight: 500 }}>No clients found.</p>
-          <p style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>
-            {hasFiltersApplied
-              ? 'No client records match the selected filter criteria.'
-              : 'No client records assigned to your RM portfolio.'}
-          </p>
-          {hasFiltersApplied && (
-            <button
-              type="button"
-              onClick={handleResetFilters}
-              style={{
-                marginTop: '1rem',
-                padding: '0.5rem 1rem',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                backgroundColor: 'var(--bg-card)',
-                color: 'var(--primary)',
-                border: '1px solid var(--primary)',
-                borderRadius: 'var(--radius-sm)',
-                cursor: 'pointer',
-              }}
-            >
-              Clear Filters
-            </button>
+          {data.total > 0 ? (
+            <div>
+              <p style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                Page {data.page} has no results. Total {data.total} clients available across{' '}
+                {Math.ceil(data.total / data.pageSize)} pages.
+              </p>
+              <button
+                type="button"
+                id="pagination-back-first-page-btn"
+                onClick={() => handlePageChange(1)}
+                style={{
+                  marginTop: '1rem',
+                  padding: '0.5rem 1rem',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  backgroundColor: 'var(--primary)',
+                  color: 'var(--primary-contrast)',
+                  border: 'none',
+                  borderRadius: 'var(--radius-sm)',
+                  cursor: 'pointer',
+                }}
+              >
+                Back to First Page
+              </button>
+            </div>
+          ) : (
+            <div>
+              <p style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                {hasFiltersApplied
+                  ? 'No client records match the selected filter criteria.'
+                  : 'No client records assigned to your RM portfolio.'}
+              </p>
+              {hasFiltersApplied && (
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  style={{
+                    marginTop: '1rem',
+                    padding: '0.5rem 1rem',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    backgroundColor: 'var(--bg-card)',
+                    color: 'var(--primary)',
+                    border: '1px solid var(--primary)',
+                    borderRadius: 'var(--radius-sm)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Clear Filters
+                </button>
+              )}
+            </div>
           )}
         </div>
       )}
 
       {/* Data Table */}
       {!isLoading && !errorMessage && data && data.items.length > 0 && (
-        <div
-          style={{
-            overflowX: 'auto',
-            backgroundColor: 'var(--bg-surface)',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--border-color)',
-            boxShadow: 'var(--shadow-sm)',
-          }}
-        >
-          <table
+        <>
+          <div
             style={{
-              width: '100%',
-              borderCollapse: 'collapse',
-              textAlign: 'left',
-              fontSize: '0.875rem',
+              overflowX: 'auto',
+              backgroundColor: 'var(--bg-surface)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-color)',
+              boxShadow: 'var(--shadow-sm)',
             }}
           >
-            <thead>
-              <tr
-                style={{
-                  borderBottom: '1px solid var(--border-color)',
-                  backgroundColor: 'var(--bg-muted)',
-                  color: 'var(--text-secondary)',
-                  fontWeight: 600,
-                }}
-              >
-                <th style={{ padding: '0.75rem 1rem' }}>Code</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Client Name</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Risk Level</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Health Status</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Priority</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Next Best Action</th>
-                <th style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.items.map((client: ClientCard) => (
+            <table
+              style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                textAlign: 'left',
+                fontSize: '0.875rem',
+              }}
+            >
+              <thead>
                 <tr
-                  key={client.id}
                   style={{
                     borderBottom: '1px solid var(--border-color)',
-                    transition: 'background-color 0.1s ease',
+                    backgroundColor: 'var(--bg-muted)',
+                    color: 'var(--text-secondary)',
+                    fontWeight: 600,
                   }}
                 >
-                  <td style={{ padding: '0.875rem 1rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                    {client.customerCode}
-                  </td>
-                  <td style={{ padding: '0.875rem 1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                    <Link
-                      href={`/clients/${client.id}`}
-                      style={{ color: 'var(--primary)', textDecoration: 'none' }}
-                    >
-                      {client.displayName}
-                    </Link>
-                  </td>
-                  <td style={{ padding: '0.875rem 1rem' }}>
-                    <RiskBadge riskLevel={client.riskLevel} />
-                  </td>
-                  <td style={{ padding: '0.875rem 1rem' }}>
-                    <HealthBadge health={client.health} />
-                  </td>
-                  <td style={{ padding: '0.875rem 1rem' }}>
-                    <PriorityBadge priority={client.recommendation.priority} />
-                  </td>
-                  <td style={{ padding: '0.875rem 1rem', color: 'var(--text-secondary)' }}>
-                    {client.recommendation.action}
-                  </td>
-                  <td style={{ padding: '0.875rem 1rem', textAlign: 'right' }}>
-                    <Link
-                      href={`/clients/${client.id}`}
-                      style={{
-                        padding: '0.375rem 0.625rem',
-                        fontSize: '0.8125rem',
-                        fontWeight: 600,
-                        backgroundColor: 'var(--bg-muted)',
-                        color: 'var(--text-primary)',
-                        borderRadius: 'var(--radius-sm)',
-                        textDecoration: 'none',
-                        border: '1px solid var(--border-color)',
-                      }}
-                    >
-                      Profile
-                    </Link>
-                  </td>
+                  <th style={{ padding: '0.75rem 1rem' }}>Code</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Client Name</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Risk Level</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Health Status</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Priority</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>Next Best Action</th>
+                  <th style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {data.items.map((client: ClientCard) => (
+                  <tr
+                    key={client.id}
+                    style={{
+                      borderBottom: '1px solid var(--border-color)',
+                      transition: 'background-color 0.1s ease',
+                    }}
+                  >
+                    <td style={{ padding: '0.875rem 1rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                      {client.customerCode}
+                    </td>
+                    <td style={{ padding: '0.875rem 1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                      <Link
+                        href={`/clients/${client.id}`}
+                        style={{ color: 'var(--primary)', textDecoration: 'none' }}
+                      >
+                        {client.displayName}
+                      </Link>
+                    </td>
+                    <td style={{ padding: '0.875rem 1rem' }}>
+                      <RiskBadge riskLevel={client.riskLevel} />
+                    </td>
+                    <td style={{ padding: '0.875rem 1rem' }}>
+                      <HealthBadge health={client.health} />
+                    </td>
+                    <td style={{ padding: '0.875rem 1rem' }}>
+                      <PriorityBadge priority={client.recommendation.priority} />
+                    </td>
+                    <td style={{ padding: '0.875rem 1rem', color: 'var(--text-secondary)' }}>
+                      {client.recommendation.action}
+                    </td>
+                    <td style={{ padding: '0.875rem 1rem', textAlign: 'right' }}>
+                      <Link
+                        href={`/clients/${client.id}`}
+                        style={{
+                          padding: '0.375rem 0.625rem',
+                          fontSize: '0.8125rem',
+                          fontWeight: 600,
+                          backgroundColor: 'var(--bg-muted)',
+                          color: 'var(--text-primary)',
+                          borderRadius: 'var(--radius-sm)',
+                          textDecoration: 'none',
+                          border: '1px solid var(--border-color)',
+                        }}
+                      >
+                        Profile
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <Pagination
+            page={data.page}
+            pageSize={data.pageSize}
+            total={data.total}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            isLoading={isLoading}
+          />
+        </>
       )}
     </div>
   );

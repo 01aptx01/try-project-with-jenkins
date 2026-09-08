@@ -207,3 +207,38 @@
 - [x] Full test suite (212 unit tests), lint (0 errors), typecheck (0 errors), build (clean), and audit (0 vulnerabilities) verified.
 - [x] Ready to proceed to M4-007 (Pagination & Browser History) and Checkpoint C (`M4-007` through `M4-009`).
 
+---
+
+## 9. M4-007 Verification Record: Pagination & Browser History
+
+### 9.1 Artifacts Delivered
+- Pagination component: `frontend/components/pagination.tsx`
+  - Range display: "Showing {from}–{to} of {total} clients (Page {page} of {totalPages})".
+  - Accessible `<nav role="navigation" aria-label="Pagination controls">`.
+  - Previous and Next buttons with accessible `aria-label`, disabled on boundaries or during loading.
+  - Page size dropdown with options: 20, 50, 100 per page.
+- Client list integration: `frontend/components/client-list-view.tsx`
+  - Passes API `page`, `pageSize`, `total` directly from server response to `Pagination`.
+  - Changing page updates `?page=...` while strictly preserving active `search`, `priority`, `health`, and `pageSize`.
+  - Changing pageSize resets `page=1` while preserving active filters.
+  - Out-of-bounds handling: if `page` exceeds available pages (e.g. `page=99`), shows empty state with "Back to First Page" button without mutating or resetting `total` to 0.
+  - Zero client-side re-sorting or re-filtering: data is displayed faithfully according to server response order.
+- Unit tests: `frontend/tests/client-pagination.test.tsx` (6 test cases)
+  - Range display, Previous disabled on page 1, Next enabled and triggers `page=2`.
+  - Dataset fixture with 45 records where HIGH priority items reside in later pages, proving zero client re-sorting.
+  - Next disabled on last page, Previous enabled and triggers navigation.
+  - Page size change resets page to 1.
+  - Out-of-bounds page handling retains non-zero total count and provides first page button.
+  - Search and filter queries preserved across page transitions.
+
+### 9.2 Test Results
+- **Command:** `npm run test:unit -w @meridian/web`
+- **Output:** 47 tests passed across 7 test files (`api-client.test.ts` 15, `client-filters.test.tsx` 10, `client-pagination.test.tsx` 6, `login.test.tsx` 6, `client-list.test.tsx` 5, `session-shell.test.tsx` 4, `home.test.tsx` 1)
+- **All Workspace Unit Tests:** 218 tests passed across 29 test files (Backend 171 tests, Frontend 47 tests)
+- **Lint & Typecheck:** 0 errors across `@meridian/api` and `@meridian/web`
+- **Security Audit:** `npm audit` returned 0 vulnerabilities
+- **Production Build:** `npm run build` cleanly compiled all routes with Turbopack
+
+**M4-007 Verdict:** **DONE / PASS**
+
+
