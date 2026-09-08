@@ -425,25 +425,28 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 
 ## M3-013 — เปิด Morning Action Plan API
 
-**Status:** TODO
+**Status:** DONE
 
 **Description:**
 พัฒนา endpoint `GET /api/dashboard/morning-action-plan` สำหรับแสดง Action Cards บน Dashboard โดยใช้ pipeline ร่วมกับ Client List
 
 **Acceptance criteria:**
-- [ ] รองรับ query parameters เช่นเดียวกับ Client List (`search`, `priority`, `health`, `page`, `pageSize`) และคืนโครงสร้าง `{items, page, pageSize, total, asOfDate}`
-- [ ] ข้อมูลใน `items` แต่ละรายการใช้ `ClientCard` schema เดียวกันกับ Client List โดยข้อมูล Action, reason, Priority และ Health ต้องตรงกับ Client List และ Profile ทุกประการเมื่อประเมินที่วันเดียวกัน
-- [ ] พฤติกรรมเมื่อไม่พบข้อมูล, validation error, หรือ cross-RM isolation สอดคล้องกับ Client List; ห้ามเขียน logic การกรองหรือ scoring ซ้ำซ้อนขึ้นมาใหม่ใน controller
+- [x] รองรับ query parameters เช่นเดียวกับ Client List (`search`, `priority`, `health`, `page`, `pageSize`) และคืนโครงสร้าง `{items, page, pageSize, total, asOfDate}`
+- [x] ข้อมูลใน `items` แต่ละรายการใช้ `ClientCard` schema เดียวกันกับ Client List โดยข้อมูล Action, reason, Priority และ Health ต้องตรงกับ Client List และ Profile ทุกประการเมื่อประเมินที่วันเดียวกัน
+- [x] พฤติกรรมเมื่อไม่พบข้อมูล, validation error, หรือ cross-RM isolation สอดคล้องกับ Client List; ห้ามเขียน logic การกรองหรือ scoring ซ้ำซ้อนขึ้นมาใหม่ใน controller
 
 **Verification:**
-- [ ] Parity integration tests: เปรียบเทียบผลลัพธ์ระหว่าง `GET /api/dashboard/morning-action-plan` และ `GET /api/clients` ยืนยันว่าค่าที่ได้ตรงกัน 100%
-- [ ] AsOfDate verification: ยืนยันว่า response แนบ `asOfDate` ที่ถูกต้อง
-- [ ] Edge cases: ทดสอบวันที่ข้าม UTC midnight และการแบ่งหน้า
+- [x] Parity integration tests: เปรียบเทียบผลลัพธ์ระหว่าง `GET /api/dashboard/morning-action-plan` และ `GET /api/clients` ยืนยันว่าค่าที่ได้ตรงกัน 100% ใน `backend/tests/integration/api/dashboard-action-plan.test.ts`
+- [x] AsOfDate verification: ยืนยันว่า response แนบ `asOfDate` ที่ถูกต้อง
+- [x] Edge cases: ทดสอบวันที่ข้าม UTC midnight และการแบ่งหน้า
+- [x] รวม 50 integration tests และ 164 unit tests ผ่าน 100%, lint 0 errors, typecheck 0 errors, build clean.
 
 **Dependencies:** M3-012  
 **Files likely touched:**
 - `backend/src/routes/dashboard.routes.ts`
 - `backend/src/controllers/dashboard.controller.ts`
+- `backend/src/services/client-list.service.ts`
+- `backend/src/server.ts`
 - `backend/tests/integration/api/dashboard-action-plan.test.ts`  
 **Scope:** S
 

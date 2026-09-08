@@ -2,6 +2,7 @@ import { createApp } from "./app.js";
 import { loadConfig } from "./config/env.js";
 import { AuthController } from "./controllers/auth.controller.js";
 import { ClientController } from "./controllers/client.controller.js";
+import { DashboardController } from "./controllers/dashboard.controller.js";
 import { prisma } from "./db/prisma.js";
 import { createPrismaReadiness } from "./health/prisma-readiness.js";
 import { createAuthGuard } from "./middleware/auth-guard.js";
@@ -9,6 +10,7 @@ import { PrismaClientRepository } from "./repositories/client.repository.js";
 import { PrismaUserRepository } from "./repositories/user.repository.js";
 import { createAuthRouter } from "./routes/auth.routes.js";
 import { createClientRouter } from "./routes/client.routes.js";
+import { createDashboardRouter } from "./routes/dashboard.routes.js";
 import { AuthService } from "./services/auth.service.js";
 
 const config = loadConfig();
@@ -30,6 +32,9 @@ const authGuard = createAuthGuard({
 const clientController = new ClientController({
   clientRepository,
 });
+const dashboardController = new DashboardController({
+  clientRepository,
+});
 
 const app = createApp({
   readiness: createPrismaReadiness(prisma),
@@ -45,9 +50,14 @@ const app = createApp({
       clientController,
       authGuard,
     });
+    const dashboardRouter = createDashboardRouter({
+      dashboardController,
+      authGuard,
+    });
 
     expressApp.use("/api/auth", authRouter);
     expressApp.use("/api/clients", clientRouter);
+    expressApp.use("/api/dashboard", dashboardRouter);
   },
 });
 

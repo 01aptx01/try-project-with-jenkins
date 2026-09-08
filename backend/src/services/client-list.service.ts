@@ -1,4 +1,8 @@
-import type { ClientCard, ClientListResponse } from "../contracts/api.js";
+import type {
+  ClientCard,
+  ClientListResponse,
+  MorningActionPlanResponse,
+} from "../contracts/api.js";
 import {
   compareEvaluatedClients,
   evaluateClient,
@@ -37,7 +41,13 @@ export class ClientListService {
       });
   }
 
-  async getClientList(params: ClientListParams): Promise<ClientListResponse> {
+  private async evaluateAndPaginate(params: ClientListParams): Promise<{
+    items: ClientCard[];
+    page: number;
+    pageSize: number;
+    total: number;
+    asOfDate: string;
+  }> {
     const page = params.page ?? 1;
     const pageSize = params.pageSize ?? 20;
     const asOfDate = this.clock();
@@ -115,6 +125,22 @@ export class ClientListService {
       page,
       pageSize,
       total,
+      asOfDate,
     };
   }
+
+  async getClientList(params: ClientListParams): Promise<ClientListResponse> {
+    const result = await this.evaluateAndPaginate(params);
+    return {
+      items: result.items,
+      page: result.page,
+      pageSize: result.pageSize,
+      total: result.total,
+    };
+  }
+
+  async getMorningActionPlan(params: ClientListParams): Promise<MorningActionPlanResponse> {
+    return this.evaluateAndPaginate(params);
+  }
 }
+
