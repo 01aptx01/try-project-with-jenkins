@@ -74,6 +74,35 @@ describe('Client Summary Template Generation', () => {
     expect(summary).not.toContain('null');
   });
 
+  it('AUD-003: distinguishes empty goals from invalid goals truthfully in summary', () => {
+    const rec: RecommendationResult = {
+      action: 'Review Client Data',
+      reason: 'ข้อมูลทางการเงินไม่ครบถ้วน',
+      priority: 'MEDIUM',
+      rule: 'BR-04.1',
+    };
+
+    // Case A: 0 goals recorded
+    const summaryNoGoals = generateClientSummary({
+      health: { ...completeHealth, status: 'INSUFFICIENT_DATA', score: null },
+      primaryGoal: null,
+      recommendation: rec,
+      goalsCount: 0,
+    });
+    expect(summaryNoGoals).toContain('ไม่มีเป้าหมายทางการเงินที่บันทึกไว้ในระบบ');
+
+    // Case B: Goals were recorded, but all were invalid (primaryGoal is null)
+    const summaryInvalidGoals = generateClientSummary({
+      health: { ...completeHealth, status: 'INSUFFICIENT_DATA', score: null },
+      primaryGoal: null,
+      recommendation: rec,
+      goalsCount: 2,
+    });
+    expect(summaryInvalidGoals).toContain('ยังไม่สามารถระบุเป้าหมายทางการเงินหลักได้ (ข้อมูลเป้าหมายไม่ครบถ้วนหรือไม่ผ่านเกณฑ์)');
+    // Must NOT claim no goals were recorded!
+    expect(summaryInvalidGoals).not.toContain('ไม่มีเป้าหมายทางการเงินที่บันทึกไว้ในระบบ');
+  });
+
   it('handles insufficient data status and reports missing fields in summary', () => {
     const insufficientHealth: HealthResult = {
       score: null,

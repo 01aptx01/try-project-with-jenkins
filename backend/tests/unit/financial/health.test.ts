@@ -201,6 +201,34 @@ describe('Financial Health Aggregation and Insufficient Data', () => {
       'goals[bad-goal].targetAmount',
       'goals[bad-goal].targetDate',
     ]);
+  });
 
+  it('AUD-005: enforces asOfDate requirement when evaluating raw goals, allows omitting with pre-evaluated result', async () => {
+    const { evaluateGoals } = await import('../../../src/domain/financial/goals.js');
+
+    // 1. Raw goals without asOfDate throws runtime error
+    expect(() => {
+      // @ts-expect-error - Testing missing asOfDate parameter at compile-time and runtime
+      calculateHealthResult(validProfile, validGoals);
+    }).toThrow('asOfDate is required when evaluating raw GoalInput[]');
+
+    // 2. Pre-evaluated GoalsComponentResult does not require asOfDate
+    const preEvaluated = evaluateGoals(validGoals, asOfDate);
+    const resultFromEvaluated = calculateHealthResult(validProfile, preEvaluated);
+    expect(resultFromEvaluated.status).toBe('COMPLETE');
+    expect(resultFromEvaluated.score).toBe(100);
+  });
+
+  it('serializes cleanly with JSON.stringify for both COMPLETE and INSUFFICIENT_DATA', () => {
+    const completeRes = calculateHealthResult(validProfile, validGoals, asOfDate);
+    expect(() => JSON.stringify(completeRes)).not.toThrow();
+    const json = JSON.parse(JSON.stringify(completeRes));
+    expect(json.status).toBe('COMPLETE');
+    expect(json.score).toBe(100);
+
+    const insufficientRes = calculateHealthResult(null, validGoals, asOfDate);
+    expect(() => JSON.stringify(insufficientRes)).not.toThrow();
+    const jsonInsuff = JSON.parse(JSON.stringify(insufficientRes));
+    expect(jsonInsuff.status).toBe('INSUFFICIENT_DATA');
   });
 });

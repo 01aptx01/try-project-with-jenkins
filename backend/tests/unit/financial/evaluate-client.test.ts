@@ -150,4 +150,18 @@ describe('Unified evaluateClient Entrypoint and Priority Comparator', () => {
       expect(sorted.map((c) => c.client.customerCode)).toEqual(['C-001', 'C-002', 'C-010']);
     });
   });
+
+  it('AUD-001 regression: full ClientEvaluationResult serializes cleanly with JSON.stringify without BigInt errors', () => {
+    const evaluated = evaluateClient(baseInput, asOfDate);
+    expect(() => JSON.stringify(evaluated)).not.toThrow();
+
+    const serialized = JSON.stringify(evaluated);
+    expect(serialized).not.toContain('progressNumerator');
+    expect(serialized).not.toContain('progressDenominator');
+
+    const parsed = JSON.parse(serialized);
+    expect(parsed.client.customerCode).toBe('C-001');
+    expect(parsed.health.score).toBe(100);
+    expect(parsed.primaryGoal.id).toBe('goal-1');
+  });
 });

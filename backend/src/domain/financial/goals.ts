@@ -9,9 +9,41 @@ export interface GoalsComponentResult {
 }
 
 /**
- * Validates and evaluates a single goal against a given UTC asOfDate.
+ * Exact rational representation for intermediate calculations.
+ * Invariant: denominator > 0n.
  */
-export function evaluateGoal(goal: GoalInput, asOfDate: string): GoalEvaluationResult {
+export interface ExactRatio {
+  readonly numerator: bigint;
+  readonly denominator: bigint;
+}
+
+/**
+ * Deterministic ordinal comparator for Goal entities:
+ * 1. targetDate ascending (earlier date first)
+ * 2. id ascending (lexical/ordinal code-point comparison, locale-independent)
+ */
+export function compareGoalTargetDateThenId(
+  a: { targetDate: string; id: string },
+  b: { targetDate: string; id: string }
+): number {
+  if (a.targetDate !== b.targetDate) {
+    return a.targetDate < b.targetDate ? -1 : 1;
+  }
+  return a.id < b.id ? -1 : (a.id > b.id ? 1 : 0);
+}
+
+interface GoalEvaluationInternal {
+  readonly result: GoalEvaluationResult;
+  readonly missingFields: string[];
+  readonly exactRatio?: ExactRatio;
+}
+
+/**
+ * Internal single-pass validation and evaluation of a GoalInput.
+ * Returns public GoalEvaluationResult (completely JSON-safe, no BigInt),
+ * validation field errors, and internal ExactRatio if valid.
+ */
+function evaluateGoalInternal(goal: GoalInput, asOfDate: string): GoalEvaluationInternal {
   // Validate asOfDate format (throws if invalid caller date)
   parseUtcDate(asOfDate);
 
@@ -50,18 +82,21 @@ export function evaluateGoal(goal: GoalInput, asOfDate: string): GoalEvaluationR
 
   if (missingOrInvalidFields.length > 0 || targetSatang === null || targetSatang <= 0n || currentSatang === null || currentSatang < 0n) {
     return {
-      id: goal.id,
-      goalType: goal.goalType,
-      targetAmount: goal.targetAmount,
-      currentAmount: goal.currentAmount,
-      startDate: goal.startDate,
-      targetDate: goal.targetDate,
-      isValid: false,
-      expectedAmount: '0.00',
-      cappedProgress: 0,
-      isBehind: false,
-      isCompleted: false,
-      daysRemaining: 0,
+      result: {
+        id: goal.id,
+        goalType: goal.goalType,
+        targetAmount: goal.targetAmount,
+        currentAmount: goal.currentAmount,
+        startDate: goal.startDate,
+        targetDate: goal.targetDate,
+        isValid: false,
+        expectedAmount: '0.00',
+        cappedProgress: 0,
+        isBehind: false,
+        isCompleted: false,
+        daysRemaining: 0,
+      },
+      missingFields: missingOrInvalidFields,
     };
   }
 
@@ -72,20 +107,22 @@ export function evaluateGoal(goal: GoalInput, asOfDate: string): GoalEvaluationR
   // Case 1: asOfDate <= startDate (not started yet or on start date)
   if (isDateOnOrBefore(asOfDate, goal.startDate)) {
     return {
-      id: goal.id,
-      goalType: goal.goalType,
-      targetAmount: formatSatang(targetSatang),
-      currentAmount: formatSatang(currentSatang),
-      startDate: goal.startDate,
-      targetDate: goal.targetDate,
-      isValid: true,
-      expectedAmount: '0.00',
-      cappedProgress: 1,
-      progressNumerator: 1n,
-      progressDenominator: 1n,
-      isBehind: false,
-      isCompleted,
-      daysRemaining,
+      result: {
+        id: goal.id,
+        goalType: goal.goalType,
+        targetAmount: formatSatang(targetSatang),
+        currentAmount: formatSatang(currentSatang),
+        startDate: goal.startDate,
+        targetDate: goal.targetDate,
+        isValid: true,
+        expectedAmount: '0.00',
+        cappedProgress: 1,
+        isBehind: false,
+        isCompleted,
+        daysRemaining,
+      },
+      missingFields: [],
+      exactRatio: { numerator: 1n, denominator: 1n },
     };
   }
 
@@ -96,20 +133,22 @@ export function evaluateGoal(goal: GoalInput, asOfDate: string): GoalEvaluationR
     const isBehind = currentSatang < targetSatang;
 
     return {
-      id: goal.id,
-      goalType: goal.goalType,
-      targetAmount: formatSatang(targetSatang),
-      currentAmount: formatSatang(currentSatang),
-      startDate: goal.startDate,
-      targetDate: goal.targetDate,
-      isValid: true,
-      expectedAmount: formatSatang(targetSatang),
-      cappedProgress: progress,
-      progressNumerator: cappedSatang,
-      progressDenominator: targetSatang,
-      isBehind,
-      isCompleted,
-      daysRemaining,
+      result: {
+        id: goal.id,
+        goalType: goal.goalType,
+        targetAmount: formatSatang(targetSatang),
+        currentAmount: formatSatang(currentSatang),
+        startDate: goal.startDate,
+        targetDate: goal.targetDate,
+        isValid: true,
+        expectedAmount: formatSatang(targetSatang),
+        cappedProgress: progress,
+        isBehind,
+        isCompleted,
+        daysRemaining,
+      },
+      missingFields: [],
+      exactRatio: { numerator: cappedSatang, denominator: targetSatang },
     };
   }
 
@@ -131,21 +170,31 @@ export function evaluateGoal(goal: GoalInput, asOfDate: string): GoalEvaluationR
     (targetSatang * BigInt(elapsedDays) * 2n + BigInt(totalDays)) / (BigInt(totalDays) * 2n);
 
   return {
-    id: goal.id,
-    goalType: goal.goalType,
-    targetAmount: formatSatang(targetSatang),
-    currentAmount: formatSatang(currentSatang),
-    startDate: goal.startDate,
-    targetDate: goal.targetDate,
-    isValid: true,
-    expectedAmount: formatSatang(expectedSatang),
-    cappedProgress: progress,
-    progressNumerator: cappedScaled,
-    progressDenominator: targetScaled,
-    isBehind,
-    isCompleted,
-    daysRemaining,
+    result: {
+      id: goal.id,
+      goalType: goal.goalType,
+      targetAmount: formatSatang(targetSatang),
+      currentAmount: formatSatang(currentSatang),
+      startDate: goal.startDate,
+      targetDate: goal.targetDate,
+      isValid: true,
+      expectedAmount: formatSatang(expectedSatang),
+      cappedProgress: progress,
+      isBehind,
+      isCompleted,
+      daysRemaining,
+    },
+    missingFields: [],
+    exactRatio: { numerator: cappedScaled, denominator: targetScaled },
   };
+}
+
+/**
+ * Validates and evaluates a single goal against a given UTC asOfDate.
+ * Returns public GoalEvaluationResult containing only JSON-safe primitives (no BigInt).
+ */
+export function evaluateGoal(goal: GoalInput, asOfDate: string): GoalEvaluationResult {
+  return evaluateGoalInternal(goal, asOfDate).result;
 }
 
 /**
@@ -164,54 +213,14 @@ export function evaluateGoals(goals: GoalInput[], asOfDate: string): GoalsCompon
     };
   }
 
-  const evaluatedGoals: GoalEvaluationResult[] = [];
-  const missingFields: string[] = [];
-
-  for (const goal of goals) {
-    // Validate individual fields explicitly to record in missingFields
-    const targetSatang = tryParseSatang(goal.targetAmount);
-    if (targetSatang === null || targetSatang <= 0n) {
-      missingFields.push(`goals[${goal.id}].targetAmount`);
-    }
-
-    const currentSatang = tryParseSatang(goal.currentAmount);
-    if (currentSatang === null || currentSatang < 0n) {
-      missingFields.push(`goals[${goal.id}].currentAmount`);
-    }
-
-    let startValid = true;
-    try {
-      parseUtcDate(goal.startDate);
-    } catch {
-      missingFields.push(`goals[${goal.id}].startDate`);
-      startValid = false;
-    }
-
-    let targetValid = true;
-    try {
-      parseUtcDate(goal.targetDate);
-    } catch {
-      missingFields.push(`goals[${goal.id}].targetDate`);
-      targetValid = false;
-    }
-
-    if (startValid && targetValid) {
-      if (daysBetween(goal.startDate, goal.targetDate) <= 0) {
-        missingFields.push(`goals[${goal.id}].targetDate`);
-      }
-    }
-
-    const evaluated = evaluateGoal(goal, asOfDate);
-    evaluatedGoals.push(evaluated);
-  }
+  const evaluated = goals.map((g) => evaluateGoalInternal(g, asOfDate));
+  const missingFields = Array.from(new Set(evaluated.flatMap((e) => e.missingFields))).sort();
 
   if (missingFields.length > 0) {
-    // Deduplicate and sort missing fields
-    const sortedMissing = Array.from(new Set(missingFields)).sort();
     return {
       score: null,
-      missingFields: sortedMissing,
-      evaluatedGoals,
+      missingFields,
+      evaluatedGoals: evaluated.map((e) => e.result),
     };
   }
 
@@ -219,9 +228,11 @@ export function evaluateGoals(goals: GoalInput[], asOfDate: string): GoalsCompon
   let sumNum = 0n;
   let sumDen = 1n;
 
-  for (const g of evaluatedGoals) {
-    const num = g.progressNumerator ?? 0n;
-    const den = g.progressDenominator ?? 1n;
+  for (const item of evaluated) {
+    if (!item.exactRatio || item.exactRatio.denominator <= 0n) {
+      throw new Error(`Invariant violation: valid goal ${item.result.id} missing valid exactRatio`);
+    }
+    const { numerator: num, denominator: den } = item.exactRatio;
 
     const gGcd = gcd(sumDen, den);
     const term1 = sumNum * (den / gGcd);
@@ -236,15 +247,15 @@ export function evaluateGoals(goals: GoalInput[], asOfDate: string): GoalsCompon
     }
   }
 
-  // Score = 15 * (sumNum / sumDen) / evaluatedGoals.length
+  // Score = 15 * (sumNum / sumDen) / evaluated.length
   const scoreNumerator = 15n * sumNum;
-  const scoreDenominator = BigInt(evaluatedGoals.length) * sumDen;
+  const scoreDenominator = BigInt(evaluated.length) * sumDen;
   const score = roundRationalHalfUp(scoreNumerator, scoreDenominator, 2);
 
   return {
     score,
     missingFields: [],
-    evaluatedGoals,
+    evaluatedGoals: evaluated.map((e) => e.result),
   };
 }
 

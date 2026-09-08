@@ -166,4 +166,34 @@ describe('Deterministic Primary Goal Selection', () => {
     const primary = selectPrimaryGoal(goals);
     expect(primary?.id).toBe('good-goal');
   });
+
+  it('AUD-004: breaks ties using strict ordinal/lexical comparison across mixed-case and punctuation', () => {
+    // In ASCII/Unicode ordinal order, uppercase 'G' (71) < lowercase 'g' (103)
+    // and '-' (45) < '_' (95)
+    const goals = [
+      evaluateGoal(
+        {
+          id: 'goal-a',
+          targetAmount: '1000.00',
+          currentAmount: '100.00',
+          startDate: '2026-01-01',
+          targetDate: '2027-01-01',
+        },
+        asOfDate
+      ),
+      evaluateGoal(
+        {
+          id: 'Goal_A',
+          targetAmount: '1000.00',
+          currentAmount: '100.00',
+          startDate: '2026-01-01',
+          targetDate: '2027-01-01',
+        },
+        asOfDate
+      ),
+    ];
+
+    const primary = selectPrimaryGoal(goals);
+    expect(primary?.id).toBe('Goal_A');
+  });
 });

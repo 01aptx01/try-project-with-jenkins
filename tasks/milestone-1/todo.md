@@ -104,10 +104,10 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 
 **Acceptance criteria:**
 - [x] Ready database returns `200` with `status` and configured version; no session is required.
-- [x] dependency failure and timeout return generic `503` without connection details.
+- [x] dependency failure and timeout return generic `503` without connection details, while programming faults preserve `500 INTERNAL_ERROR`.
 - [x] Live test confirms a stopped/restarted PostgreSQL transitions from `503` back to `200`.
 
-**Verification:** Unit timeout coverage passes. Through Caddy, `/health` returned `503 DEPENDENCY_UNAVAILABLE` while PostgreSQL was stopped and returned `200` with `caddy-runtime-check` after readiness recovered.
+**Verification:** Unit timeout coverage and fault classification pass (503 for timeout/dependency unavailability, 500 for programming faults). Through Caddy, `/health` returned `503 DEPENDENCY_UNAVAILABLE` while PostgreSQL was stopped and returned `200` with `caddy-runtime-check` after readiness recovered.
 
 **Dependencies:** M1-002, M1-007
 

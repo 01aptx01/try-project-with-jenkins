@@ -1,3 +1,4 @@
+import { compareGoalTargetDateThenId } from './goals.js';
 import type { GoalEvaluationResult, PrimaryGoalResult } from './types.js';
 
 /**
@@ -20,21 +21,12 @@ export function selectPrimaryGoal(
     return null;
   }
 
-  const comparator = (a: GoalEvaluationResult, b: GoalEvaluationResult) => {
-    // 1. targetDate ascending (YYYY-MM-DD is lexicographically chronological)
-    if (a.targetDate !== b.targetDate) {
-      return a.targetDate < b.targetDate ? -1 : 1;
-    }
-    // 2. Tie-break: id ascending (ordinal)
-    return a.id.localeCompare(b.id);
-  };
-
   const uncompleted = validGoals.filter((g) => !g.isCompleted);
 
   const selected =
     uncompleted.length > 0
-      ? [...uncompleted].sort(comparator)[0]
-      : [...validGoals].sort(comparator)[0];
+      ? [...uncompleted].sort(compareGoalTargetDateThenId)[0]
+      : [...validGoals].sort(compareGoalTargetDateThenId)[0];
 
   if (!selected) {
     return null;

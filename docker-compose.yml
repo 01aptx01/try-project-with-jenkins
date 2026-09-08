@@ -1,5 +1,7 @@
 services:
   postgres:
+    # Local development PostgreSQL 17 on Alpine Linux.
+    # Note (AUD-009): Pinned to major version tag for local dev; Milestone 6 production CI pins immutable sha256 digests.
     image: postgres:17-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-meridian_dev}

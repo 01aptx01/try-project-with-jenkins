@@ -22,21 +22,38 @@ export interface HealthEvaluationContext {
 
 /**
  * Aggregates the 5 financial components into a complete HealthResult.
- * Can accept either raw GoalInput[] (with asOfDate) or a pre-evaluated GoalsComponentResult.
+ * Overload 1: Accepts pre-evaluated GoalsComponentResult (no asOfDate needed).
+ * Overload 2: Accepts raw GoalInput[] with mandatory asOfDate.
  * If any component is null, status is INSUFFICIENT_DATA, score is null, and missingFields are exposed.
  */
+export function calculateHealthResult(
+  profile: FinancialProfileInput | null,
+  goalsResult: GoalsComponentResult
+): HealthResult;
+export function calculateHealthResult(
+  profile: FinancialProfileInput | null,
+  goals: GoalInput[],
+  asOfDate: string
+): HealthResult;
 export function calculateHealthResult(
   profile: FinancialProfileInput | null,
   goalsOrResult: GoalInput[] | GoalsComponentResult,
   asOfDate?: string
 ): HealthResult {
+  let goalsResult: GoalsComponentResult;
+  if (Array.isArray(goalsOrResult)) {
+    if (!asOfDate) {
+      throw new Error('asOfDate is required when evaluating raw GoalInput[]');
+    }
+    goalsResult = calculateGoalsScore(goalsOrResult, asOfDate);
+  } else {
+    goalsResult = goalsOrResult;
+  }
+
   const liquidity = calculateLiquidityScore(profile);
   const debt = calculateDebtScore(profile);
   const savings = calculateSavingsScore(profile);
   const investment = calculateInvestmentScore(profile);
-  const goalsResult = Array.isArray(goalsOrResult)
-    ? calculateGoalsScore(goalsOrResult, asOfDate!)
-    : goalsOrResult;
 
   const breakdown: HealthScoreBreakdown = {
     liquidity: liquidity.score,

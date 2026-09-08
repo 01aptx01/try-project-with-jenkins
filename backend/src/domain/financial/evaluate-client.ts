@@ -35,7 +35,12 @@ export function evaluateClient(
     profile: input.financialProfile,
     evaluatedGoals: goalsResult.evaluatedGoals,
   });
-  const summary = generateClientSummary({ health, primaryGoal, recommendation });
+  const summary = generateClientSummary({
+    health,
+    primaryGoal,
+    recommendation,
+    goalsCount: input.goals.length,
+  });
 
   return {
     client: input.client,

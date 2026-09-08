@@ -233,9 +233,10 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 
 **Verification:**
 - [x] Unit tests pass: `npm run test:unit -w @meridian/api -- tests/unit/financial/matrix.test.ts` (8 tests passed).
-- [x] All 9 financial unit test files pass: 82 financial unit tests (primitives: 11, components: 9, goals: 14, health: 6, primary-goal: 6, recommendation: 15, summary: 6, evaluate-client: 7, matrix: 8) with 0 database dependencies. Includes exact rational half-up rounding (0.14 for 9/1000, 0.00 for 0.01/10^15), early asOfDate validation, single-pass goals evaluation across Health and NBA, near-boundary non-contradictory recommendation messages, and health classification boundary checks including 79.99 MODERATE.
+- [x] All 9 financial unit test files pass: 88 financial unit tests (primitives: 11, components: 9, goals: 15, health: 8, primary-goal: 7, recommendation: 15, summary: 7, evaluate-client: 8, matrix: 8) with 0 database dependencies. Includes JSON-safe serialization, exact rational half-up rounding (0.14 for 9/1000, 0.00 for 0.01/10^15), early asOfDate validation, single-pass goals evaluation across Health and NBA, near-boundary non-contradictory recommendation messages, ordinal tie-breaking, truthful summary distinguishing empty vs invalid goals, and health classification boundary checks including 79.99 MODERATE.
 - [x] All workspaces pass quality checks on 2026-09-08:
-  - `npm run test:unit`: 15 test files, 97 unit tests passed across `@meridian/api` (96 tests) and `@meridian/web` (1 test).
+  - `npm run test:unit`: 16 test files, 108 unit tests passed across `@meridian/api` (15 files, 107 tests) and `@meridian/web` (1 file, 1 test).
+  - `npm run test:integration`: 1 test file, 2 integration tests passed against postgres-test.
   - `npm run lint`: 0 ESLint errors across workspaces.
   - `npm run typecheck`: 0 TypeScript compiler errors across workspaces with strict settings.
   - `npm run build`: both `@meridian/api` (TypeScript) and `@meridian/web` (Next.js Turbopack) built cleanly.

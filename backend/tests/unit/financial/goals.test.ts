@@ -238,5 +238,47 @@ describe('Goal Progress and Goals Component Scoring', () => {
     it('regression: validates asOfDate before early return on empty goals', () => {
       expect(() => calculateGoalsScore([], '2026-02-30')).toThrow();
     });
+
+    it('AUD-001 regression: public GoalEvaluationResult contains no BigInt and serializes cleanly with JSON.stringify', () => {
+      const goals = [
+        {
+          id: 'goal-pre-start',
+          targetAmount: '1000.00',
+          currentAmount: '0.00',
+          startDate: '2026-10-01',
+          targetDate: '2027-10-01',
+        },
+        {
+          id: 'goal-mid',
+          targetAmount: '1000.00',
+          currentAmount: '250.00',
+          startDate: '2026-01-01',
+          targetDate: '2026-12-31',
+        },
+        {
+          id: 'goal-due',
+          targetAmount: '1000.00',
+          currentAmount: '9.00',
+          startDate: '2026-01-01',
+          targetDate: '2026-09-08',
+        },
+      ];
+
+      for (const g of goals) {
+        const single = evaluateGoal(g, asOfDate);
+        expect(() => JSON.stringify(single)).not.toThrow();
+        const json = JSON.parse(JSON.stringify(single));
+        expect(typeof json.cappedProgress).toBe('number');
+        expect(typeof json.expectedAmount).toBe('string');
+        expect('progressNumerator' in json).toBe(false);
+        expect('progressDenominator' in json).toBe(false);
+      }
+
+      const componentResult = calculateGoalsScore(goals, asOfDate);
+      expect(() => JSON.stringify(componentResult)).not.toThrow();
+      const compJson = JSON.parse(JSON.stringify(componentResult));
+      expect(compJson.score).toBeTypeOf('number');
+      expect(Array.isArray(compJson.evaluatedGoals)).toBe(true);
+    });
   });
 });

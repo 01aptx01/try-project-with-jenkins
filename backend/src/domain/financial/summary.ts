@@ -8,13 +8,14 @@ export interface SummaryContext {
   health: HealthResult;
   primaryGoal: PrimaryGoalResult | null;
   recommendation: RecommendationResult;
+  goalsCount?: number;
 }
 
 /**
  * Generates a deterministic, templated Thai client summary based on already evaluated results.
  * Strictly adheres to BR-06:
  * - Includes Health status or insufficient data status
- * - Includes Primary Goal details if present, or indicates absence
+ * - Includes Primary Goal details if present, or indicates absence truthfully
  * - Includes Main Issue directly drawn from the NBA reason
  * - Includes NBA Action, Priority, and Rule ID matching the recommendation
  * - Never invents facts, never outputs "undefined" or "null", never queries DB or clocks.
@@ -42,8 +43,12 @@ export function generateClientSummary(context: SummaryContext): string {
   if (primaryGoal) {
     const completionNote = primaryGoal.isCompleted ? ' (บรรลุเป้าหมายแล้ว)' : '';
     goalSegment = `เป้าหมายหลักคือ ${primaryGoal.id} (เป้าหมาย ${primaryGoal.targetAmount} บาท, ยอดปัจจุบัน ${primaryGoal.currentAmount} บาท, ครบกำหนด ${primaryGoal.targetDate}${completionNote})`;
+  } else if (context.goalsCount === 0) {
+    goalSegment = 'ปัจจุบันไม่มีเป้าหมายทางการเงินที่บันทึกไว้ในระบบ';
+  } else if (context.goalsCount !== undefined && context.goalsCount > 0) {
+    goalSegment = 'ปัจจุบันยังไม่สามารถระบุเป้าหมายทางการเงินหลักได้ (ข้อมูลเป้าหมายไม่ครบถ้วนหรือไม่ผ่านเกณฑ์)';
   } else {
-    goalSegment = 'ปัจจุบันยังไม่มีเป้าหมายทางการเงินหลักที่บันทึกไว้ในระบบ';
+    goalSegment = 'ปัจจุบันยังไม่มีเป้าหมายทางการเงินหลักที่ระบุได้ในระบบ';
   }
 
   // 3. Main Issue from NBA reason

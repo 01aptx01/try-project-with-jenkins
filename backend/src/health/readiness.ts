@@ -13,9 +13,6 @@ export async function checkReadiness(readiness: DatabaseReadiness, timeoutMs = 2
         timeout = setTimeout(() => reject(new DependencyUnavailableError()), timeoutMs);
       })
     ]);
-  } catch (error) {
-    if (error instanceof DependencyUnavailableError) throw error;
-    throw new DependencyUnavailableError();
   } finally {
     if (timeout) clearTimeout(timeout);
   }

@@ -1,3 +1,4 @@
+import { compareGoalTargetDateThenId } from './goals.js';
 import { tryParseSatang } from './money.js';
 import type {
   FinancialProfileInput,
@@ -86,13 +87,8 @@ export function evaluateRecommendation(
   );
 
   if (qualifyingBehindGoals.length > 0) {
-    // Pick the one with earliest targetDate, tie-break by id ascending
-    const sortedBehind = [...qualifyingBehindGoals].sort((a, b) => {
-      if (a.targetDate !== b.targetDate) {
-        return a.targetDate < b.targetDate ? -1 : 1;
-      }
-      return a.id.localeCompare(b.id);
-    });
+    // Pick the one with earliest targetDate, tie-break by id ascending (ordinal)
+    const sortedBehind = [...qualifyingBehindGoals].sort(compareGoalTargetDateThenId);
 
     const chosenGoal = sortedBehind[0];
     if (chosenGoal) {
