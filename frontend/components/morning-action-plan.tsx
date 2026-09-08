@@ -270,6 +270,9 @@ export function MorningActionPlanView({ initialData }: MorningActionPlanViewProp
       {!isLoading && !errorMessage && data && data.items.length > 0 && (
         <>
           <div
+            tabIndex={0}
+            role="region"
+            aria-label="Morning action plan table"
             style={{
               overflowX: 'auto',
               backgroundColor: 'var(--bg-surface)',

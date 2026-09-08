@@ -315,7 +315,12 @@ export function GoalsPanel({ primaryGoal, goals }: GoalsPanelProps) {
 
       {/* Other Goals List */}
       {goals.length > 0 && (
-        <div style={{ overflowX: 'auto', marginTop: '0.5rem' }}>
+        <div
+          tabIndex={0}
+          role="region"
+          aria-label="Active goals table"
+          style={{ overflowX: 'auto', marginTop: '0.5rem' }}
+        >
           <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
             All Active Goals ({goals.length})
           </h4>

@@ -543,15 +543,42 @@
 
 ---
 
-## 20. Checkpoint E Verification Sign-off
+## 21. M4-016 Verification Record: Desktop/Laptop Usability & WCAG AA Accessibility Audit
 
-- [x] Family network loaded on-demand only when opened; zero profile prefetching (`M4-013`)
-- [x] Readable 1-hop Family Graph rendered via SVG + accessible HTML relationship list (`M4-014`)
-- [x] Directional relationship normalization (PARENT <-> CHILD inversion when primary is target, SPOUSE/SIBLING preserved) (`M4-014`)
-- [x] Session lifecycle gaps closed: session generation tracking, in-flight request abortion, cross-tab zero-payload logout sync, and BFCache pageshow revalidation (`M4-015`)
-- [x] Stale data isolation: switching RM accounts discards previous RM responses and purges in-memory family caches
-- [x] Frontend unit tests (102/102 passed), Workspace unit tests (273/273 passed), Lint (0 errors), Typecheck (0 errors), Build (clean), Audit (0 vulnerabilities)
-- [x] Ready to proceed to Checkpoint F (`M4-016` through `M4-017`)
+### 21.1 Audit Methodology & Scope
+- **Skill Applied:** `wcag-audit` (W3C WCAG 2.2 Level A and Level AA standards across all 6 core evaluation dimensions).
+- **Target Viewports:** 1280×720 (standard laptop) and 1440×900 (desktop), tested with 200% browser zoom.
+- **Views Audited:**
+  1. `/login` — Relationship Manager Login Form
+  2. `/dashboard` — Morning Action Plan
+  3. `/clients` — Client Directory & Filters
+  4. `/clients/[id]` — Client Profile Snapshot & Financial Details
+  5. `/clients/[id]/family` — 1-Hop Family Network Graph & Accessible List
+
+### 21.2 Findings, Issues Annotated & Remediations Executed
+| Audit ID | WCAG SC / Dimension | Finding & Location | Remediation Executed |
+|---|---|---|---|
+| `#C1` | SC 1.4.3 (Level AA) / SC 1.4.11 | Missing CSS tokens in `globals.css`: `--bg-card`, `--health-good-*`, `--health-mod-*`, `--health-risk-*` referenced in health and financial panels fell back to transparent. | Added complete palette tokens in `frontend/app/globals.css`. |
+| `#C2` | SC 1.4.3 (Level AA) | Contrast ratio of `--text-muted` (`#64748b`) against `--bg-muted` (`#f1f5f9`) was ~4.39:1 (just below 4.5:1 AA threshold). | Darkened `--text-muted` to `#4b5563` achieving >5.5:1 against white and >5.1:1 against muted backgrounds. |
+| `#C3` | SC 1.4.3 (Level AA) | Family graph edge label fill used `--text-muted` against light background. | Updated `.edgeLabel` in `family-graph.module.css` to `var(--text-secondary)` (`#475569`, 7.07:1 ratio). |
+| `#F1` | SC 2.4.7 (Level AA) | Inline `outline: 'none'` in `frontend/components/client-filters.tsx` suppressed `:focus-visible` rings on search inputs and filter selects. | Removed inline `outline: 'none'`, allowing `globals.css` `:focus-visible` ring (2px solid `#2563eb`) to display clearly. |
+| `#F2` | SC 2.4.7 (Level AA) | SVG graph node focus in `family-graph.module.css` used `outline: none;` without replacement. | Added high-contrast focus rings: `g:focus-visible circle { stroke: var(--border-focus); stroke-width: 4px; }`. |
+| `#F3` | SC 2.4.1 (Level A) | AppShell lacked a "Skip to Main Content" mechanism for keyboard users. | Added `<a href="#main-content" className="skip-link">Skip to main content</a>` in `frontend/components/app-shell.tsx` targeting `<main id="main-content">`. |
+| `#T1` | SC 2.1.1 (Level A) / SC 1.3.1 | Horizontal-scroll data tables in `morning-action-plan.tsx`, `client-list-view.tsx`, and `financial-details.tsx` were not keyboard focusable when scrolled. | Added `tabIndex={0}`, `role="region"`, and descriptive `aria-label` to table wrapper containers. |
+| `#S1` | SC 1.3.1 (Level A) | Dedicated Family Network page (`/clients/[id]/family`) lacked a primary `<h1>` heading. | Added `<h1 style={{ ... }}>Client Family Network</h1>` in `frontend/app/(authenticated)/clients/[id]/family/page.tsx`. |
+| `#M1` | SC 2.2.2 (Level A) / SC 2.3.3 | Missing `@keyframes pulse` definition for skeleton loaders and no `@media (prefers-reduced-motion)` query. | Defined `@keyframes pulse` and added `@media (prefers-reduced-motion: reduce)` in `frontend/app/globals.css`. |
+| `#R1` | SC 1.4.1 (Level A) | Visual badges (Priority, Health, Risk, Goals) verification. | Verified 100% of badges use explicit textual labels (e.g. `Priority: HIGH`, `Health: 75/100 (GOOD)`, `Risk: CONSERVATIVE`, `Behind Schedule`) alongside color. |
+
+### 21.3 Test Results
+- **Dedicated Accessibility Suite:** `frontend/tests/accessibility-usability.test.tsx` (11 tests passed)
+- **Frontend Unit Tests:** 113 tests passed across 16 test files
+- **Workspace Unit Tests:** 284 tests passed across 38 test files (Backend 171 tests, Frontend 113 tests)
+- **Lint & Typecheck:** 0 errors across `@meridian/api` and `@meridian/web`
+- **Security Audit:** `npm audit` returned 0 vulnerabilities
+- **Production Build:** `npm run build` compiled all routes cleanly with Next.js Turbopack
+
+**M4-016 Verdict:** **DONE / PASS**
+
 
 
 

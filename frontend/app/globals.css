@@ -2,9 +2,10 @@
   --bg-primary: #f8fafc;
   --bg-surface: #ffffff;
   --bg-muted: #f1f5f9;
+  --bg-card: #ffffff;
   --text-primary: #0f172a;
   --text-secondary: #475569;
-  --text-muted: #64748b;
+  --text-muted: #4b5563;
   --border-color: #e2e8f0;
   --border-focus: #2563eb;
 
@@ -23,6 +24,17 @@
   --priority-low-text: #15803d;
   --priority-low-bg: #f0fdf4;
   --priority-low-border: #bbf7d0;
+
+  /* Health & Category color tokens */
+  --health-good-text: #15803d;
+  --health-good-bg: #f0fdf4;
+  --health-good-border: #bbf7d0;
+  --health-mod-text: #b45309;
+  --health-mod-bg: #fffbeb;
+  --health-mod-border: #fde68a;
+  --health-risk-text: #b91c1c;
+  --health-risk-bg: #fef2f2;
+  --health-risk-border: #fecaca;
 
   --radius-sm: 4px;
   --radius-md: 8px;
@@ -65,7 +77,9 @@ button, input, select, textarea {
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
-a:focus-visible {
+a:focus-visible,
+div:focus-visible,
+g:focus-visible {
   outline: 2px solid var(--border-focus);
   outline-offset: 2px;
 }
@@ -80,4 +94,47 @@ a:focus-visible {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 1rem;
+  background: var(--primary);
+  color: var(--primary-contrast);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.875rem;
+  z-index: 100;
+  text-decoration: none;
+  box-shadow: var(--shadow-md);
+  transition: top 0.15s ease;
+}
+
+.skip-link:focus {
+  top: 1rem;
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+  text-decoration: none;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

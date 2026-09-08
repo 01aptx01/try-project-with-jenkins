@@ -18,6 +18,10 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+
       <header
         style={{
           backgroundColor: 'var(--bg-surface)',
@@ -141,6 +145,7 @@ export function AppShell({ children }: AppShellProps) {
       </header>
 
       <main
+        id="main-content"
         style={{
           flex: 1,
           maxWidth: '1280px',

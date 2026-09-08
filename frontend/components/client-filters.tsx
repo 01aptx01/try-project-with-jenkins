@@ -121,7 +121,6 @@ export function ClientFilters({
             border: '1px solid var(--border-color)',
             backgroundColor: 'var(--bg-card)',
             color: 'var(--text-primary)',
-            outline: 'none',
           }}
         />
         <button
@@ -161,7 +160,6 @@ export function ClientFilters({
             border: '1px solid var(--border-color)',
             backgroundColor: 'var(--bg-card)',
             color: 'var(--text-primary)',
-            outline: 'none',
             cursor: 'pointer',
           }}
         >
@@ -189,7 +187,6 @@ export function ClientFilters({
             border: '1px solid var(--border-color)',
             backgroundColor: 'var(--bg-card)',
             color: 'var(--text-primary)',
-            outline: 'none',
             cursor: 'pointer',
           }}
         >

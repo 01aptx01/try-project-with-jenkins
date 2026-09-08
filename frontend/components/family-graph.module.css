@@ -30,7 +30,7 @@
 
 .edgeLabel {
   font-size: 10px;
-  fill: var(--text-muted);
+  fill: var(--text-secondary);
   font-weight: 600;
   text-anchor: middle;
 }
@@ -43,10 +43,14 @@
   transition: transform 0.2s ease, filter 0.2s ease;
 }
 
-.primaryNodeCircle:hover,
-.primaryNodeCircle:focus {
+.primaryNodeCircle:hover {
   filter: drop-shadow(0 0 6px rgba(10, 37, 64, 0.4));
-  outline: none;
+}
+
+.primaryNodeCircle:focus,
+g:focus-visible .primaryNodeCircle {
+  stroke: var(--border-focus);
+  stroke-width: 4px;
 }
 
 .relatedNodeCircle {
@@ -57,10 +61,14 @@
   transition: transform 0.2s ease, fill 0.2s ease;
 }
 
-.relatedNodeCircle:hover,
-.relatedNodeCircle:focus {
+.relatedNodeCircle:hover {
   fill: var(--bg-muted);
-  outline: none;
+}
+
+.relatedNodeCircle:focus,
+g:focus-visible .relatedNodeCircle {
+  stroke: var(--border-focus);
+  stroke-width: 4px;
 }
 
 .nodeTextPrimary {

@@ -31,6 +31,10 @@ export default async function ClientFamilyPage({ params }: PageProps) {
         </Link>
       </div>
 
+      <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+        Client Family Network
+      </h1>
+
       <Suspense
         fallback={
           <div role="status" aria-label="Loading family network">

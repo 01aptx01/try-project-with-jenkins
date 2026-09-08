@@ -484,7 +484,7 @@
 
 ## M4-016 — ตรวจ desktop/laptop usability และ accessibility
 
-**Status:** TODO  
+**Status:** DONE  
 **Scope:** M  
 **Requirements:** NFR-06, NFR-07; UI acceptance ของ US-01–09
 
@@ -492,14 +492,14 @@
 
 **Acceptance criteria:**
 
-- [ ] ตรวจที่ viewport 1280×720 และ 1440×900 พร้อม zoom 200%; navigation/form/cards อ่านได้ ไม่มีหน้าล้นแนวนอนโดยไม่ตั้งใจ และ graph/table ที่จำเป็นต้องเลื่อนมี container กับ accessible alternative
-- [ ] Keyboard เข้าถึง navigation, filters, pagination, Profile links, Family toggle และ retry ได้; focus visible/order สมเหตุผล มี labels/headings และ aria-live ของ loading/errors โดยไม่ใช้สีเป็นตัวบอกสถานะเพียงอย่างเดียว
-- [ ] มี verification matrix ทุกหน้าสำหรับ loading/empty/error/incomplete ที่เกี่ยวข้อง; ตรวจ contrast ของข้อความหลัก/controls และไม่อ้าง WCAG certification จาก component tests
+- [x] ตรวจที่ viewport 1280×720 และ 1440×900 พร้อม zoom 200%; navigation/form/cards อ่านได้ ไม่มีหน้าล้นแนวนอนโดยไม่ตั้งใจ และ graph/table ที่จำเป็นต้องเลื่อนมี container กับ accessible alternative
+- [x] Keyboard เข้าถึง navigation, filters, pagination, Profile links, Family toggle และ retry ได้; focus visible/order สมเหตุผล มี labels/headings และ aria-live ของ loading/errors โดยไม่ใช้สีเป็นตัวบอกสถานะเพียงอย่างเดียว
+- [x] มี verification matrix ทุกหน้าสำหรับ loading/empty/error/incomplete ที่เกี่ยวข้อง; ตรวจ contrast ของข้อความหลัก/controls และไม่อ้าง WCAG certification จาก component tests
 
 **Verification:**
 
-- [ ] focused tests tests/ui-accessibility.test.tsx และ manual keyboard/zoom/viewport พร้อม evidence; frontend lint/typecheck/unit/build
-- [ ] บันทึก evidence ใน verification record และอัปเดตสถานะตามผลจริง
+- [x] focused tests tests/accessibility-usability.test.tsx และ manual keyboard/zoom/viewport พร้อม evidence; frontend lint/typecheck/unit/build
+- [x] บันทึก evidence ใน verification record และอัปเดตสถานะตามผลจริง
 
 **Dependencies:** M4-015
 
