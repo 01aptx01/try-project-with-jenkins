@@ -283,21 +283,22 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 
 ## M3-009 — สร้าง fixtures และ API integration harness
 
-**Status:** TODO
+**Status:** DONE
 
 **Description:**
 เตรียม anomaly test fixtures และ test harness สำหรับการทดสอบ integration API ที่แยกขาดจาก normal seed dataset
 
 **Acceptance criteria:**
-- [ ] สร้าง fixture factories สำหรับเคสผิดปกติ: missing profile, missing fields, zero denominators, ไม่มี goal, invalid goal, และ cross-RM family relationships
-- [ ] มี database guard ตรวจสอบว่า target database ต้องเป็น test database (`TEST_DATABASE_URL` ที่ชี้ `meridian_test` port `5433`) เท่านั้น ป้องกันการรัน fixture หรือ cleanup บน development database
-- [ ] Test harness รองรับการ inject clock (UTC date) และ mock dependencies ได้ โดยใช้ Prisma client เชื่อมต่อ PostgreSQL จริง และ isolate rate limiter memory state ต่อ test suite
-- [ ] ฟังก์ชัน cleanup จัดการเฉพาะ fixture records ที่สร้างขึ้นระหว่างทดสอบ ไม่กระทบ seed records ทั่วไป
+- [x] สร้าง fixture factories สำหรับเคสผิดปกติ: missing profile, missing fields, zero denominators, ไม่มี goal, invalid goal, และ cross-RM family relationships
+- [x] มี database guard ตรวจสอบว่า target database ต้องเป็น test database (`TEST_DATABASE_URL` ที่ชี้ `meridian_test` port `5433`) เท่านั้น ป้องกันการรัน fixture หรือ cleanup บน development database
+- [x] Test harness รองรับการ inject clock (UTC date) และ mock dependencies ได้ โดยใช้ Prisma client เชื่อมต่อ PostgreSQL จริง และ isolate rate limiter memory state ต่อ test suite
+- [x] ฟังก์ชัน cleanup จัดการเฉพาะ fixture records ที่สร้างขึ้นระหว่างทดสอบ ไม่กระทบ seed records ทั่วไป
 
 **Verification:**
-- [ ] Test harness self-test: ยืนยันว่า guard บล็อกการทำงานทันทีหากชี้ไปยัง database ที่ไม่ใช่ `meridian_test`
-- [ ] Fixture creation & cleanup verification: ตรวจสอบความสะอาดของ database ก่อนและหลังรัน suite
-- [ ] Anomaly fixtures สามารถประเมินผลผ่าน pure evaluation และคืน `INSUFFICIENT_DATA` หรือ fallback ตามกฎของ M2
+- [x] Test harness self-test: ยืนยันว่า guard บล็อกการทำงานทันทีหากชี้ไปยัง database ที่ไม่ใช่ `meridian_test` ใน `backend/tests/integration/support/harness.test.ts`
+- [x] Fixture creation & cleanup verification: ตรวจสอบความสะอาดของ database ก่อนและหลังรัน suite ยืนยันว่า normal seed records 30 รายการไม่ได้รับผลกระทบ
+- [x] Anomaly fixtures สามารถประเมินผลผ่าน pure evaluation และคืน `INSUFFICIENT_DATA` หรือ fallback ตามกฎของ M2
+- [x] รวม 31 integration tests และ 164 unit tests ผ่าน 100%, lint 0 errors, typecheck 0 errors, build clean.
 
 **Dependencies:** M3-006, M3-008  
 **Files likely touched:**
@@ -305,15 +306,17 @@ Status values: `TODO`, `IN_PROGRESS`, `DONE`, `BLOCKED`. A ticket is only `DONE`
 - `backend/tests/fixtures/anomaly.fixtures.ts`
 - `backend/tests/support/test-harness.ts`
 - `backend/tests/support/db-guard.ts`
-- `backend/tests/integration/support/harness.test.ts`  
+- `backend/tests/integration/support/harness.test.ts`
+- `backend/vitest.config.ts`
+- `tasks/milestone-3/todo.md`  
 **Scope:** M
 
 ---
 
 ## Checkpoint C — Seed & Integration Test Harness
-- [ ] Normal seed 2 RMs / 30 Clients รันซ้ำได้ (idempotent) และ rollback ปลอดภัยเมื่อเกิดข้อผิดพลาด
-- [ ] Test harness แยกต่างหาก ป้องกันไม่ให้รันโดน production/development database
-- [ ] Anomaly fixtures พร้อมรองรับการทดสอบ edge cases สำหรับ API endpoints ถัดไป
+- [x] Normal seed 2 RMs / 30 Clients รันซ้ำได้ (idempotent) และ rollback ปลอดภัยเมื่อเกิดข้อผิดพลาด
+- [x] Test harness แยกต่างหาก ป้องกันไม่ให้รันโดน production/development database
+- [x] Anomaly fixtures พร้อมรองรับการทดสอบ edge cases สำหรับ API endpoints ถัดไป
 
 ---
 

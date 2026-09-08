@@ -21,6 +21,13 @@ describe("Idempotent Seed Runner (M3-008)", () => {
 
   beforeAll(async () => {
     database = await createVerifiedTestDatabase();
+    // Clean up to guarantee pristine baseline
+    await database.familyRelationship.deleteMany();
+    await database.goal.deleteMany();
+    await database.financialProfile.deleteMany();
+    await database.client.deleteMany();
+    await database.user.deleteMany();
+
     rm1PasswordHash = await hashPassword(rm1Password);
     rm2PasswordHash = await hashPassword(rm2Password);
     catalogue = buildSeedCatalogue(asOfDate, {
