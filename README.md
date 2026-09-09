@@ -35,7 +35,7 @@ npm run proxy:up
 ระบบทดสอบของ Meridian แบ่งออกเป็น 3 เลเยอร์อย่างเคร่งครัดตามหลักการ Data Isolation:
 1. **Development Database:** PostgreSQL bind `127.0.0.1:5432` (`meridian`)
 2. **Integration Test Database:** PostgreSQL bind `127.0.0.1:5433` (`meridian_test` ใน Compose profile `test`)
-3. **E2E Acceptance Database:** PostgreSQL bind `127.0.0.1:5544` (`meridian_e2e` ใน Compose profile `e2e` มี fail-closed guard ปฏิเสธการแตะต้องฐานข้อมูลอื่น)
+3. **E2E Acceptance Database:** PostgreSQL bind `127.0.0.1:5544` (`meridian_e2e` ใน Compose profile `e2e` มี fail-closed guard ปฏิเสธการแตะต้องฐานข้อมูลอื่น) ส่วน API, Next.js และ Caddy สำหรับ E2E bind `127.0.0.1` ทั้งหมด เพื่อไม่เปิด upstream ports ออกสู่ network
 
 ### คำสั่งตรวจรับคุณภาพทั้งระบบ:
 
@@ -54,6 +54,8 @@ npm run test:integration
 npm run build
 
 # 5. การทดสอบระดับ End-to-End Acceptance (Playwright Chromium บนพอร์ต 8180 & DB 5544)
+#    เตรียม native Caddy ครั้งแรก (ตรวจ checksum ของ official release)
+powershell -ExecutionPolicy Bypass -File e2e/install-caddy.ps1
 npm run test:e2e
 ```
 

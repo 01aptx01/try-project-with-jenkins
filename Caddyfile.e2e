@@ -1,9 +1,14 @@
-:8080 {
-  @api path /api/* /health
-  handle @api {
-    reverse_proxy host.docker.internal:3101
-  }
-  handle {
-    reverse_proxy host.docker.internal:3100
-  }
+{
+	admin off
+	auto_https off
+}
+http://127.0.0.1:8180 {
+	bind 127.0.0.1
+	@api path /api/* /health
+	handle @api {
+		reverse_proxy 127.0.0.1:3101
+	}
+	handle {
+		reverse_proxy 127.0.0.1:3100
+	}
 }

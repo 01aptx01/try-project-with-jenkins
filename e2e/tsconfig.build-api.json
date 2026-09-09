@@ -1,0 +1,5 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": { "noEmit": false, "rootDir": "..", "outDir": "../.tools/e2e-api", "types": ["node"] },
+  "include": ["../backend/src/e2e-server.ts", "../backend/src/types/**/*.d.ts"]
+}

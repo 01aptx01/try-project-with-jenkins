@@ -12,8 +12,10 @@
     "npm": ">=10"
   },
   "scripts": {
-    "lint": "npm run lint -w @meridian/api && npm run lint -w @meridian/web",
-    "typecheck": "npm run typecheck -w @meridian/api && npm run typecheck -w @meridian/web",
+    "lint": "npm run lint -w @meridian/api && npm run lint -w @meridian/web && npm run lint:e2e",
+    "typecheck": "npm run typecheck -w @meridian/api && npm run typecheck -w @meridian/web && npm run typecheck:e2e",
+    "lint:e2e": "eslint e2e playwright.config.ts --config eslint.config.mjs",
+    "typecheck:e2e": "tsc -p e2e/tsconfig.json",
     "test:unit": "npm run test:unit -w @meridian/api && npm run test:unit -w @meridian/web",
     "test:integration": "npm run test:integration -w @meridian/api",
     "build": "npm run build -w @meridian/api && npm run build -w @meridian/web",

@@ -9,7 +9,7 @@ function resolveCommitSha(): string {
   try {
     return execSync("git rev-parse HEAD", { encoding: "utf8" }).trim();
   } catch {
-    return "c4528cffafaa08a48504024d1c31a0b37bd39bc2";
+    throw new Error("Cannot determine E2E checkout SHA");
   }
 }
 
@@ -36,7 +36,7 @@ const { app, config, db } = buildServerApp({
   },
 });
 
-const server = app.listen(config.API_PORT, "0.0.0.0", () => {
+const server = app.listen(config.API_PORT, "127.0.0.1", () => {
   console.info(
     `[Meridian E2E API] Listening on port ${config.API_PORT} (Version: ${config.APP_VERSION}, Clock: 2026-09-08)`
   );
