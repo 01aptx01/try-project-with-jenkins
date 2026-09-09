@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type APIResponse } from "@playwright/test";
 import { authenticateContext, SEED_RM_1_ID } from "./support/fixtures.js";
 import { resetE2EDatabase } from "./support/seed-e2e.js";
 
@@ -12,7 +12,7 @@ test.describe("Authentication & Session Contracts E2E (M5-006)", () => {
     context,
   }) => {
     // 1. Intercept network responses to inspect payload
-    let loginResponseBody: any = null;
+    let loginResponseBody: { user: { id: string; name: string; role: string }; token?: string; jwt?: string; passwordHash?: string } | undefined;
     page.on("response", async (response) => {
       if (response.url().includes("/api/auth/login") && response.request().method() === "POST") {
         try {
@@ -47,6 +47,7 @@ test.describe("Authentication & Session Contracts E2E (M5-006)", () => {
 
     // 6. Verify response body does NOT contain tokens or password hashes
     expect(loginResponseBody).toBeDefined();
+    if (!loginResponseBody) throw new Error("Login response was not captured");
     expect(loginResponseBody.user).toBeDefined();
     expect(loginResponseBody.user.name).toBe("Somchai Jaidee");
     expect(loginResponseBody.user.role).toBe("RM");
@@ -146,12 +147,14 @@ test.describe("Authentication & Session Contracts E2E (M5-006)", () => {
     expect(page.url()).toContain("/dashboard");
   });
 
-  test("enforces live production rate limiter through Caddy: 6th login attempt returns HTTP 429 with Retry-After header", async ({
+  test("exposes the live limiter's 429 contract through Caddy", async ({
     request,
   }) => {
-    let rateLimitedRes: any = null;
+    let rateLimitedRes: APIResponse | null = null;
 
-    // Send requests until rate limited (budget is max 5 per minute)
+    // The exact 1–5 / 6th-request boundary has a fresh limiter instance in
+    // unit/integration tests. This shared E2E API instance verifies only that
+    // Caddy preserves the 429 contract after the limiter is exhausted.
     for (let i = 1; i <= 6; i++) {
       const res = await request.post("http://127.0.0.1:8180/api/auth/login", {
         headers: {
@@ -172,6 +175,7 @@ test.describe("Authentication & Session Contracts E2E (M5-006)", () => {
     }
 
     expect(rateLimitedRes).not.toBeNull();
+    if (!rateLimitedRes) throw new Error("Limiter did not reject request");
     expect(rateLimitedRes.status()).toBe(429);
     const retryAfter = rateLimitedRes.headers()["retry-after"];
     expect(retryAfter).toBeDefined();
@@ -181,4 +185,3 @@ test.describe("Authentication & Session Contracts E2E (M5-006)", () => {
     expect(body.error?.code).toBe("TOO_MANY_REQUESTS");
   });
 });
-

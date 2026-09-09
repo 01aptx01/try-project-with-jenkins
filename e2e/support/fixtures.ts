@@ -232,6 +232,14 @@ export async function createPaginationFixtures(
   });
   createdClients.push(boundaryHighClient);
 
+  // Complete Goals: HIGH must come from financial rules, not missing data.
+  for (const client of createdClients) {
+    await prisma.goal.create({ data: {
+      clientId: client.id, goalType: "OTHER", targetAmount: "10000.00",
+      currentAmount: "10000.00", startDate: new Date("2025-01-01T00:00:00Z"),
+      targetDate: new Date("2027-01-01T00:00:00Z"),
+    } });
+  }
   return {
     extraClients: createdClients,
     boundaryHighClient,

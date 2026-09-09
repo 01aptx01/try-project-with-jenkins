@@ -139,8 +139,10 @@ describe('Session Lifecycle & RM Data Isolation (M4-015)', () => {
 
     // Initial mount completed with call 1.
     // Trigger refresh A (slow, call 2) and refresh B (fast, call 3)
-    void latestRefreshSession!();
-    void latestRefreshSession!();
+    await act(async () => {
+      void latestRefreshSession!();
+      void latestRefreshSession!();
+    });
 
     // Request B resolves first with rmUserB
     await act(async () => {
@@ -181,7 +183,9 @@ describe('Session Lifecycle & RM Data Isolation (M4-015)', () => {
     });
 
     // getMe finally resolves late
-    resolveMe!(rmUserA);
+    await act(async () => {
+      resolveMe!(rmUserA);
+    });
 
     // Generation mismatch must prevent user from being set
     expect(screen.queryByTestId('current-user-name')).toBeNull();

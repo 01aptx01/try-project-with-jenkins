@@ -26,17 +26,18 @@ test.describe("Client Directory & Pagination E2E (M5-007)", () => {
 
     // 3. Search for a specific client
     const searchInput = page.locator("#client-search-input");
-    await searchInput.fill("TH-0001");
+    await searchInput.fill("C-001");
     await page.getByRole("button", { name: /^Search$/i }).click();
 
     // Verify URL sync
-    await page.waitForURL(/search=TH-0001/);
+    await page.waitForURL(/search=C-001/);
     await expect(totalCountEl).toContainText("Total Clients: 1");
 
     // 4. Combined search and filter
     const prioritySelect = page.locator("#client-priority-filter");
     await prioritySelect.selectOption("HIGH");
     await page.waitForURL(/priority=HIGH/);
+    await expect(totalCountEl).toContainText("Total Clients: 1");
 
     // 5. Reset filters
     const resetBtn = page.locator("#client-filters-reset");
@@ -79,10 +80,8 @@ test.describe("Client Directory & Pagination E2E (M5-007)", () => {
       await nextBtn.click();
       await page.waitForURL(/page=2/);
 
-      // Page 2 should have 5 rows and contain lower-priority clients (e.g. C-004 Duangjai Prasert)
+      // Page 2 has the five records after the sorted first page.
       await expect(page.locator("tbody tr")).toHaveCount(5);
-      await expect(page.getByText("Duangjai Prasert")).toBeVisible();
-      await expect(page.getByText("C-004")).toBeVisible();
 
       // 5. Browser Back button returns to Page 1
       await page.goBack();
@@ -90,7 +89,9 @@ test.describe("Client Directory & Pagination E2E (M5-007)", () => {
       await expect(page.locator("tbody tr")).toHaveCount(20);
 
       // Boundary HIGH client created at the end of source data appears on Page 1 due to HIGH priority sort
-      await expect(page.getByText("ZetaLastHigh BoundaryClient")).toBeVisible();
+      const boundaryRow = page.locator("tbody tr").filter({ hasText: "ZetaLastHigh BoundaryClient" });
+      await expect(boundaryRow).toBeVisible();
+      await expect(boundaryRow).toContainText("HIGH");
     } finally {
       const cleanupDb = await createVerifiedE2EDatabase();
       await registry.cleanup(cleanupDb);

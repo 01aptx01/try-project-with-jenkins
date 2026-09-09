@@ -82,7 +82,8 @@ test.describe("Failure Recovery & Error Classification E2E (M5-011)", () => {
     } finally {
       // 4. Guaranteed recovery: restart postgres-e2e container and wait for readiness
       execSync("docker compose --profile e2e start postgres-e2e", { stdio: "pipe" });
-      await waitForE2EDatabase(30000);
+      const recoveredDb = await waitForE2EDatabase(30000);
+      await recoveredDb.$disconnect();
     }
 
     // 5. Verify healthy state is fully restored

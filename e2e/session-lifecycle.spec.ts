@@ -7,7 +7,7 @@ test.describe("Session Lifecycle & RM Data Isolation E2E (M5-010)", () => {
     await resetE2EDatabase();
   });
 
-  test("RM switch triggers keyed subtree remount and purges sensitive client data immediately (AUD-M4-001)", async ({
+  test("logout then RM switch cannot load an unowned profile", async ({
     page,
     context,
   }) => {
@@ -28,23 +28,24 @@ test.describe("Session Lifecycle & RM Data Isolation E2E (M5-010)", () => {
     await page.goto(`/clients/${client1Id}`);
     await page.waitForURL(new RegExp(`/clients/${client1Id}`));
 
-    // Keyed remount and ownership check must immediately show 404 Not Found, never Anan Prasert
+    // The new RM receives only the ownership-safe not-found view.
     await expect(page.locator("[data-testid='client-not-found']")).toBeVisible();
     await expect(page.locator("[data-testid='profile-display-name']")).not.toBeVisible();
   });
 
-  test("in-flight request race condition during RM switch: delayed response for prior RM is discarded and does not mount", async ({
+  test("a delayed profile request after a cookie switch remains ownership-safe", async ({
     page,
     context,
   }) => {
     const client1Id = "00000000-0000-4000-8000-000000000001";
 
-    // 1. Authenticate as RM 1 and open client 1
+    // The deterministic mounted-session race is covered in frontend unit tests.
+    // This browser test covers the server-side ownership boundary after a cookie change.
     await authenticateContext(context, SEED_RM_1_ID);
     await page.goto(`/clients/${client1Id}`);
     await expect(page.locator("[data-testid='profile-display-name']")).toHaveText("Anan Prasert");
 
-    // 2. Delay any client profile response by 1200ms
+    // Delay the request that is made under RM 2's cookie.
     let delayPromiseResolve: (() => void) | null = null;
     await page.route(`**/api/clients/${client1Id}`, async (route) => {
       await new Promise<void>((resolve) => {
@@ -66,7 +67,7 @@ test.describe("Session Lifecycle & RM Data Isolation E2E (M5-010)", () => {
     }
     await navPromise;
 
-    // 4. Assert RM 2 receives 404 and does NOT mount RM 1's client data
+    // RM 2 receives 404 and does not mount RM 1's client data.
     await expect(page.locator("[data-testid='client-not-found']")).toBeVisible();
     await expect(page.locator("[data-testid='profile-display-name']")).not.toBeVisible();
 
@@ -152,7 +153,7 @@ test.describe("Session Lifecycle & RM Data Isolation E2E (M5-010)", () => {
     await tabB.close();
   });
 
-  test("BFCache protection: browser back button after logout redirects to login and prevents viewing cached profile", async ({
+  test("back navigation after logout redirects to login and prevents a cached profile view", async ({
     page,
     context,
   }) => {
@@ -168,9 +169,9 @@ test.describe("Session Lifecycle & RM Data Isolation E2E (M5-010)", () => {
 
     // Track pageshow event
     await page.evaluate(() => {
-      (window as any).__pageshowPersisted = null;
+      (window as Window & { __pageshowPersisted?: boolean | null }).__pageshowPersisted = null;
       window.addEventListener("pageshow", (event) => {
-        (window as any).__pageshowPersisted = event.persisted;
+        (window as Window & { __pageshowPersisted?: boolean | null }).__pageshowPersisted = event.persisted;
       });
     });
 

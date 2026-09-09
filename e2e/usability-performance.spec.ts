@@ -3,11 +3,12 @@ import { authenticateContext, SEED_RM_1_ID } from "./support/fixtures.js";
 import { resetE2EDatabase } from "./support/seed-e2e.js";
 
 function computeStats(samples: number[]) {
+  if (!samples.length || samples.some((n) => !Number.isFinite(n))) throw new Error("Invalid samples");
   const sorted = [...samples].sort((a, b) => a - b);
-  const min = Math.round(sorted[0] * 100) / 100;
-  const max = Math.round(sorted[sorted.length - 1] * 100) / 100;
-  const p50 = Math.round(sorted[Math.floor(sorted.length * 0.5)] * 100) / 100;
-  const p95 = Math.round(sorted[Math.floor(sorted.length * 0.95)] * 100) / 100;
+  const min = Math.round(sorted[0]! * 100) / 100;
+  const max = Math.round(sorted[sorted.length - 1]! * 100) / 100;
+  const p50 = Math.round(sorted[Math.ceil(sorted.length * 0.5) - 1]! * 100) / 100;
+  const p95 = Math.round(sorted[Math.ceil(sorted.length * 0.95) - 1]! * 100) / 100;
   const avg = Math.round((sorted.reduce((a, b) => a + b, 0) / sorted.length) * 100) / 100;
   return { min, p50, p95, max, avg };
 }
